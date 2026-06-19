@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "style_anchor": "凡人修仙早期小人物冒险；半写实东方奇幻卡牌插画；低饱和玉青、朱砂、旧金、夜蓝；克制墨色边缘；避免直接复刻具体受版权保护的人物、地名和剧情。",
+  "generated_assets": [
+    {
+      "id": "card_back_qinglan_trial",
+      "kind": "card_back",
+      "name": "青岚谷试炼牌背",
+      "path": "res://assets/card_back_qinglan_trial.png",
+      "status": "generated",
+      "prompt_focus": "旧符纸、竹纹、低阶灵石碎光、外门试炼感"
+    },
+    {
+      "id": "enemy_wolf_shadow",
+      "kind": "enemy",
+      "name": "野狼妖影",
+      "path": "res://assets/enemy_wolf_shadow.png",
+      "status": "generated",
+      "prompt_focus": "月下竹谷、低阶妖兽残影、黑雾轮廓清晰"
+    },
+    {
+      "id": "enemy_rogue_cultivator",
+      "kind": "enemy",
+      "name": "落魄散修",
+      "path": "res://assets/enemy_rogue_cultivator.png",
+      "status": "generated",
+      "prompt_focus": "旧法袍、破储物袋、低阶符箓、资源匮乏"
+    },
+    {
+      "id": "enemy_black_cult_deacon",
+      "kind": "enemy",
+      "name": "黑煞教执事",
+      "path": "res://assets/enemy_black_cult_deacon.png",
+      "status": "generated",
+      "prompt_focus": "阴冷执事服、黑雾护体、筑基门槛压迫"
+    },
+    {
+      "id": "card_iron_sword",
+      "kind": "card",
+      "card_id": "iron_sword",
+      "name": "青竹剑诀",
+      "path": "res://assets/card_iron_sword.png",
+      "status": "generated",
+      "prompt_focus": "竹林、朴素青色剑光、低阶剑诀"
+    },
+    {
+      "id": "card_body_ward",
+      "kind": "card",
+      "card_id": "body_ward",
+      "name": "护体灵光",
+      "path": "res://assets/card_body_ward.png",
+      "status": "generated",
+      "prompt_focus": "贴身薄灵光罩、朴素防御法门"
+    },
+    {
+      "id": "card_cloudstep",
+      "kind": "card",
+      "card_id": "cloudstep",
+      "name": "御风步",
+      "path": "res://assets/card_cloudstep.png",
+      "status": "generated",
+      "prompt_focus": "山石间青风符纹、身法残影"
+    },
+    {
+      "id": "card_breath_cycle",
+      "kind": "card",
+      "card_id": "breath_cycle",
+      "name": "吐纳术",
+      "path": "res://assets/card_breath_cycle.png",
+      "status": "generated",
+      "prompt_focus": "盘坐吐纳、微弱灵气入体"
+    },
+    {
+      "id": "card_fire_talisman",
+      "kind": "card",
+      "card_id": "fire_talisman",
+      "name": "火弹符",
+      "path": "res://assets/card_fire_talisman.png",
+      "status": "generated",
+      "prompt_focus": "符纸激发低阶火弹、朱砂火光"
+    },
+    {
+      "id": "card_clear_heart",
+      "kind": "card",
+      "card_id": "clear_heart",
+      "name": "清心诀",
+      "path": "res://assets/card_clear_heart.png",
+      "status": "generated",
+      "prompt_focus": "玉简清光、符灰杂念被驱散"
+    },
+    {
+      "id": "card_sword_array",
+      "kind": "card",
+      "card_id": "sword_array",
+      "name": "小五行剑阵",
+      "path": "res://assets/card_sword_array.png",
+      "status": "generated",
+      "prompt_focus": "五道剑光结成攻守阵势"
+    },
+    {
+      "id": "card_spirit_stone",
+      "kind": "card",
+      "card_id": "spirit_stone",
+      "name": "灵石催发",
+      "path": "res://assets/card_spirit_stone.png",
+      "status": "generated",
+      "prompt_focus": "低阶灵石碎裂释放短促灵气"
+    },
+    {
+      "id": "card_blood_escape",
+      "kind": "card",
+      "card_id": "blood_escape",
+      "name": "血遁秘术",
+      "path": "res://assets/card_blood_escape.png",
+      "status": "generated",
+      "prompt_focus": "禁术赤色遁光、自损换爆发"
+    },
+    {
+      "id": "card_foundation_surge",
+      "kind": "card",
+      "card_id": "foundation_surge",
+      "name": "筑基一击",
+      "path": "res://assets/card_foundation_surge.png",
+      "status": "generated",
+      "prompt_focus": "灵压凝成沉重剑芒、筑基前压迫"
+    }
+  ],
+  "planned_assets": [
+    {
+      "id": "card_soul_guard",
+      "kind": "card",
+      "card_id": "soul_guard",
+      "name": "镇魂符",
+      "priority": "high",
+      "target_path": "res://assets/card_soul_guard.png",
+      "prompt": "Use case: stylized-concept\nAsset type: roguelike deckbuilder card illustration\nPrimary request: 镇魂符，低阶修士以旧黄符镇住心魔杂念\nScene/backdrop: dim cultivation chamber, scattered talisman ash and cracked jade slip glow\nSubject: cinnabar talisman suppressing dark ink-like intrusive thoughts, no monster body\nStyle: semi-realistic Chinese fantasy card art, restrained ink-wash edges, painterly lighting, clear silhouette, low-saturation jade cyan, cinnabar red, aged gold, night blue\nComposition: vertical 2:3 card art, centered talisman, readable at small card size\nAvoid: readable text, logo, watermark, modern items, excessive divine grandeur"
+    },
+    {
+      "id": "card_thunder_body",
+      "kind": "card",
+      "card_id": "thunder_body",
+      "name": "雷纹护体",
+      "priority": "high",
+      "target_path": "res://assets/card_thunder_body.png",
+      "prompt": "Use case: stylized-concept\nAsset type: roguelike deckbuilder card illustration\nPrimary request: 雷纹护体，筑基雷云前的护身法门\nScene/backdrop: storm-lit stone platform under dark clouds\nSubject: low-rank cultivator silhouette guarded by thin blue-white thunder patterns on a humble robe\nStyle: semi-realistic Chinese fantasy card art, restrained ink-wash edges, painterly lighting, clear silhouette, low-saturation jade cyan, cinnabar red, aged gold, night blue\nComposition: vertical 2:3 card art, centered defensive aura, strong silhouette\nAvoid: sci-fi electricity, modern armor, readable text, logo, watermark, godlike scale"
+    },
+    {
+      "id": "card_moon_eclipse_slash",
+      "kind": "card",
+      "card_id": "eclipse_blade",
+      "name": "月蚀斩",
+      "priority": "medium",
+      "target_path": "res://assets/card_moon_eclipse_slash.png",
+      "prompt": "Use case: stylized-concept\nAsset type: roguelike deckbuilder card illustration\nPrimary request: 月蚀斩，高风险多段剑光在暗月下划开煞雾\nScene/backdrop: night valley with eclipsed moon and low black mist\nSubject: three restrained jade-cyan sword arcs cutting through dark spiritual fog\nStyle: semi-realistic Chinese fantasy card art, restrained ink-wash edges, painterly lighting, clear silhouette\nComposition: vertical 2:3, diagonal motion but uncluttered, no characters required\nAvoid: gore, modern effects, readable text, logo, watermark, giant celestial spectacle"
+    },
+    {
+      "id": "enemy_thunder_pool_guardian",
+      "kind": "enemy",
+      "enemy_name": "雷池守阵者",
+      "priority": "high",
+      "target_path": "res://assets/enemy_thunder_pool_guardian.png",
+      "prompt": "Use case: stylized-concept\nAsset type: enemy portrait for a roguelike deckbuilder\nPrimary request: 雷池守阵者，终幕高护体守阵敌人\nScene/backdrop: cracked thunder pool formation, wet stone, storm clouds\nSubject: stern formation guardian silhouette in worn ritual armor, thunder talismans orbiting close to body\nStyle: semi-realistic Chinese fantasy enemy portrait, restrained ink-wash edges, painterly lighting, jade cyan and night blue\nComposition: vertical 2:3 enemy portrait, full body centered, readable at mobile size\nAvoid: named canon character likeness, modern armor, sci-fi tech, text, logo, watermark",
+      "name": "雷池守阵者"
+    },
+    {
+      "id": "enemy_xuanyin_guide",
+      "kind": "enemy",
+      "enemy_name": "玄阴引路鬼",
+      "priority": "medium",
+      "target_path": "res://assets/enemy_xuanyin_guide.png",
+      "prompt": "Use case: stylized-concept\nAsset type: enemy portrait for a roguelike deckbuilder\nPrimary request: 玄阴引路鬼，中期以错路回声污染牌组的阴冷敌人\nScene/backdrop: narrow mountain path, ghost lantern glow, cold fog\nSubject: tattered guide-like shade holding a dim lantern, face indistinct, posture misleading rather than monstrous\nStyle: semi-realistic Chinese fantasy enemy portrait, restrained ink edges, low saturation jade cyan and night blue\nComposition: vertical 2:3, centered silhouette, clear lantern focal point\nAvoid: horror gore, comedy, modern clothing, text, logo, watermark",
+      "name": "玄阴引路鬼"
+    },
+    {
+      "id": "ui_market_background",
+      "kind": "event_background",
+      "node_type": "market",
+      "name": "山脚坊市背景",
+      "priority": "medium",
+      "target_path": "res://assets/bg_market_stall.png",
+      "prompt": "Use case: stylized-concept\nAsset type: event choice background for a roguelike deckbuilder\nPrimary request: 山脚坊市购牌选择背景，用于玩家购买术法和小物\nScene/backdrop: early-stage xianxia roadside market at dusk, humble stalls with talismans, jade slips, herb bottles, and low-grade spirit stones\nSubject: grounded market stall close-up with clear empty center for UI cards\nStyle: semi-realistic Chinese fantasy interface background, painterly texture, restrained details, jade cyan, cinnabar red, aged gold, night blue\nComposition: 16:9 horizontal background, props around edges, calm center\nAvoid: readable text, logo, watermark, modern shop signs, luxury palace market, crowded characters, neon lighting"
+    },
+    {
+      "id": "ui_spirit_rift_background",
+      "kind": "event_background",
+      "node_type": "spirit_rift",
+      "name": "灵脉裂隙背景",
+      "priority": "medium",
+      "target_path": "res://assets/bg_spirit_rift.png",
+      "prompt": "Use case: stylized-concept\nAsset type: event choice background for a roguelike deckbuilder\nPrimary request: 灵脉裂隙选择背景，用于玩家强取灵气、凝晶或封存术法\nScene/backdrop: cracked mountain floor at night, unstable jade-cyan spiritual veins leaking mist and small stone fragments\nSubject: glowing rift in the earth with humble talisman stakes around it, no large character focus\nStyle: semi-realistic Chinese fantasy interface background, painterly texture, restrained ink edges, low-saturation jade cyan, aged gold, night blue\nComposition: 16:9 horizontal background, visual energy along left and right edges, calm empty center for UI cards\nAvoid: readable text, logo, watermark, sci-fi reactor, modern equipment, huge cosmic portal, crowded figures"
+    },
+    {
+      "id": "ui_secret_realm_background",
+      "kind": "event_background",
+      "node_type": "secret_realm",
+      "name": "月隐秘境背景",
+      "priority": "medium",
+      "target_path": "res://assets/bg_secret_realm.png",
+      "prompt": "Use case: stylized-concept\nAsset type: event choice background for a roguelike deckbuilder\nPrimary request: 月隐秘境选择背景，用于观星悟道、饮月井水或取秘境遗卷\nScene/backdrop: temporary moonlit doorway in a quiet valley, old stone steps, shallow moonwell reflection, drifting paper seals\nSubject: ancient small-scale secret realm entrance with a faint lunar shimmer, grounded and worn rather than divine\nStyle: semi-realistic Chinese fantasy interface background, restrained ink-wash edges, painterly moonlight, jade cyan, aged gold, night blue\nComposition: 16:9 horizontal background, doorway and props around edges, clear empty center for UI choices\nAvoid: readable text, logo, watermark, palace grandeur, named canon location, giant celestial spectacle, crowded characters"
+    },
+    {
+      "id": "ui_soul_shrine_background",
+      "kind": "event_background",
+      "node_type": "soul_shrine",
+      "name": "镇魂古龛背景",
+      "priority": "medium",
+      "target_path": "res://assets/bg_soul_shrine.png",
+      "prompt": "Use case: stylized-concept\nAsset type: event choice background for a roguelike deckbuilder\nPrimary request: 镇魂古龛选择背景，用于净心、悟道或夺取法器\nScene/backdrop: ruined roadside shrine inside a cold mountain alcove, old incense ash, cracked talismans, dim lantern glow\nSubject: small worn soul-calming shrine with shadowy ink wisps held back by cinnabar seals, no ghost face or readable writing\nStyle: semi-realistic Chinese fantasy interface background, restrained ink edges, painterly low light, cinnabar red, jade cyan, aged gold, night blue\nComposition: 16:9 horizontal background, shrine slightly off-center, calm empty center for UI cards\nAvoid: readable text, logo, watermark, horror gore, comedy, modern objects, protected canon place or character likeness"
+    },
+    {
+      "id": "ui_dark_forge_background",
+      "kind": "event_background",
+      "node_type": "dark_forge",
+      "name": "阴火残炉背景",
+      "priority": "medium",
+      "target_path": "res://assets/bg_dark_forge.png",
+      "prompt": "Use case: stylized-concept\nAsset type: event choice background for a roguelike deckbuilder\nPrimary request: 阴火残炉选择背景，用于重淬术法、铸成阴雷或取走炉炭\nScene/backdrop: abandoned low-grade alchemy forge in a cave, cracked furnace, dull blue-black flame, scattered failed talisman scraps\nSubject: worn furnace and ritual tools with restrained firelight, grounded early-cultivation workshop feeling\nStyle: semi-realistic Chinese fantasy interface background, painterly texture, restrained ink-wash edges, cinnabar ember, jade cyan, aged gold, night blue\nComposition: 16:9 horizontal background, furnace and tools near edges, clear empty center for UI choices\nAvoid: readable text, logo, watermark, modern foundry, sci-fi machinery, luxury workshop, excessive flames"
+    },
+    {
+      "id": "ui_thunder_pool_background",
+      "kind": "event_background",
+      "node_type": "thunder_pool",
+      "name": "洗雷池背景",
+      "priority": "high",
+      "target_path": "res://assets/bg_thunder_pool.png",
+      "prompt": "Use case: stylized-concept\nAsset type: event choice background for a roguelike deckbuilder\nPrimary request: 洗雷池选择背景，用于引雷悟剑、雷池淬体或镇压余魔\nScene/backdrop: cracked ritual pool under low storm clouds, wet dark stone, thin blue-white lightning crawling over shallow water\nSubject: dangerous but small-scale thunder tempering pool, old formation stones and talismans around the edges\nStyle: semi-realistic Chinese fantasy interface background, painterly storm light, restrained ink edges, jade cyan, night blue, aged gold\nComposition: 16:9 horizontal background, pool forms a quiet center with UI-safe space, lightning and stones frame the edges\nAvoid: readable text, logo, watermark, sci-fi electricity, godlike scale, modern armor, giant heavenly tribulation spectacle"
+    }
+  ]
+}
