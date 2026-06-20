@@ -13,6 +13,11 @@
   - `/tmp/qinglan-web-combat-960.png`
   - `/tmp/qinglan-web-combat-motion-599.png`
   - `/tmp/qinglan-web-combat-final-599.png`
+  - `/tmp/qinglan-guide-mobile-3.png`
+  - `/tmp/qinglan-boss-mobile.png`
+  - `/tmp/qinglan-settings-mobile.png`
+  - `/tmp/qinglan-summary-mobile.png`
+  - `/tmp/qinglan-collection-mobile.png`
 - Combined comparison: `/tmp/qinglan-web-comparison.png`
 - Viewports: 1280×720, 960×720, 599×772 and 430×932
 - States: mobile home, chapter selection, six-profession selection, story dialogue/choice, card collection, growth tree, route map, combat, card play/enemy turn, reward selection
@@ -60,6 +65,11 @@ No actionable P0, P1 or P2 findings remain in the tested states.
 - Added a responsive 960×720 card layout and reduced-motion handling.
 - Added scene mist, breathing backdrops, staggered page entrances, lacquer screen curtains, material highlights and reward-card reveal motion.
 - Added a complete combat feedback chain for card casting, impact, enemy recoil, enemy attack and player damage.
+- Added a non-blocking first-battle guide and visually verified that the 430×932 prompt leaves enemy intent, hand cards, qi and end-turn controls unobstructed.
+- Added five chapter-specific boss cycles and verified at 430×932 that current mechanics, phase note and next intent remain readable above the battlefield.
+- Added persistent sound, haptic and volume controls; the settings scroll was tightened to prevent its two-column feedback controls from widening the mobile overlay.
+- Replaced the fixed chapter grade and fake cultivation reward with a performance-based result sheet showing real combat, card, damage and progression totals.
+- Converted the card archive into a persistent discovery collection with per-profession progress, refined-form counts and styled unknown-card clues.
 - Added a 599×772 responsive pass and locked the battle viewport against focus-induced scrolling.
 - Removed the React development-root duplication warning during hot updates.
 - Added a mobile home hub, five-chapter campaign archive, six distinct professions, 120-card library, 108 recommended deck recipes, permanent talent growth and local profile persistence.
@@ -67,7 +77,7 @@ No actionable P0, P1 or P2 findings remain in the tested states.
 - Replaced equal-weight route tiles with a current-choice journey surface that exposes risk, reward and narrative consequence before selection.
 - Replaced static five-card hands with a real draw/discard/exhaust/reshuffle loop and a visible deck-origin draw animation.
 - Reworked all 120 cards to include unique names, main effects, conditional synergies, keywords, rarity and refinement direction; each profession now covers 8–10 distinct mechanic families.
-- Added tap-to-inspect and explicit cast confirmation so card rules remain readable on 430×932 mobile screens.
+- Card play uses single-tap immediate casting; unaffordable or busy cards are disabled, while ready synergies remain visible through the old-gold “联” seal.
 - Added visible profession resources for all six classes: sword edge, talisman seals, cold/heat medicine nature, beast contracts, devices/cunning and soul lamps.
 - Added profession-specific shrine choices and made the earlier gatekeeper dialogue choice alter later route/event copy.
 - Added persistent profession mastery and an automated game-design content gate (`npm run check:game`).

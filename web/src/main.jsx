@@ -3,20 +3,192 @@ import { createRoot } from "react-dom/client";
 import "./styles.css";
 import {
   ALL_CARDS,
+  BOSS_MOVE_PATTERNS,
   CHAPTERS,
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
   CHAPTER_STORIES,
   DECK_RECIPES,
   META_TALENTS,
+  MASTERY_MILESTONES,
+  MASTERY_SIGNATURE_BY_JOB,
+  MASTERY_TREASURE_BY_JOB,
   PROFESSIONS,
   ROUTE_ROWS,
+  TREASURES,
   getProfession,
 } from "./gameData";
 
 const origins = PROFESSIONS.map((job) => ({ ...job, line: job.style }));
 
-const cards = Object.fromEntries(PROFESSIONS.map((job) => [job.id, job.cards.slice(0, 8)]));
+const cards = Object.fromEntries(PROFESSIONS.map((job) => [job.id, job.cards.slice(0, 12)]));
+
+function treasureValue(treasures, key) {
+  return treasures.reduce((sum, treasure) => sum + (treasure[key] || 0), 0);
+}
+
+function addProfileXp(profile, amount) {
+  const xp = (profile.xp || 0) + amount;
+  return { ...profile, xp, level: Math.max(profile.level || 1, 3 + Math.floor(xp / 100)) };
+}
+
+function analyzeDeck(deck) {
+  const profile = {
+    total: deck.length,
+    attack: 0,
+    defense: 0,
+    draw: 0,
+    heal: 0,
+    highCost: 0,
+    refined: 0,
+    costs: [0, 0, 0, 0],
+    keywords: {},
+  };
+  deck.forEach((card) => {
+    if (["攻击", "术法"].includes(card.type) && /造成|伤害|毒|燃烧/.test(`${card.text}${card.combo || ""}`)) profile.attack += 1;
+    if (/护盾|驱散|净除/.test(`${card.text}${card.combo || ""}`)) profile.defense += 1;
+    if (/抽\s*\d*\s*张牌|返回手牌|发现/.test(`${card.text}${card.combo || ""}`)) profile.draw += 1;
+    if (/恢复/.test(card.text)) profile.heal += 1;
+    if (card.cost >= 2) profile.highCost += 1;
+    if (card.refined) profile.refined += 1;
+    profile.costs[Math.min(3, card.cost)] += 1;
+    profile.keywords[card.keyword] = (profile.keywords[card.keyword] || 0) + 1;
+  });
+  const priorities = [];
+  if (profile.attack <= Math.max(3, Math.floor(profile.total * 0.28))) priorities.push("稳定伤害");
+  if (profile.defense + profile.heal <= 3) priorities.push("护盾 / 恢复");
+  if (profile.draw <= 2 && profile.total >= 12) priorities.push("过牌 / 压缩");
+  if (profile.highCost >= Math.ceil(profile.total * 0.38)) priorities.push("低费运转");
+  if (profile.total >= 16) priorities.push("删去冗余");
+  const keyComponents = Object.entries(profile.keywords)
+    .filter(([, count]) => count >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
+  return { ...profile, priorities: priorities.slice(0, 4), keyComponents };
+}
+
+function rewardFit(card, deck) {
+  const profile = analyzeDeck(deck);
+  let score = 1;
+  const reasons = [];
+  const keywordCount = profile.keywords[card.keyword] || 0;
+  if (keywordCount >= 2) {
+    score += 3;
+    reasons.push(`衔接 ${keywordCount} 张「${card.keyword}」`);
+  } else if (keywordCount === 1) {
+    score += 1;
+    reasons.push(`延伸「${card.keyword}」组件`);
+  }
+  if (profile.attack <= 3 && /造成|伤害|毒|燃烧/.test(`${card.text}${card.combo || ""}`)) {
+    score += 2;
+    reasons.push("补足伤害");
+  }
+  if (profile.defense + profile.heal <= 3 && /护盾|恢复|驱散/.test(`${card.text}${card.combo || ""}`)) {
+    score += 2;
+    reasons.push("稳住血线");
+  }
+  if (profile.draw <= 2 && /抽|返回手牌|发现/.test(`${card.text}${card.combo || ""}`)) {
+    score += 2;
+    reasons.push("改善循环");
+  }
+  if (card.cost >= 2 && profile.highCost >= 5) {
+    score -= 2;
+    reasons.push("当前高费偏多");
+  }
+  const duplicateCount = deck.filter((item) => item.name === card.name).length;
+  if (duplicateCount >= 2) {
+    score -= 1;
+    reasons.push("已有多张同名牌");
+  }
+  return {
+    rank: score >= 5 ? "高" : score >= 3 ? "中" : "低",
+    reason: reasons.slice(0, 2).join(" · ") || "独立强度稳定",
+  };
+}
+
+function refinedVersion(card, profession) {
+  if (card.refined) return null;
+  const index = profession.cards.findIndex((item) => item.id === card.id);
+  return index >= 0 && index < 10 ? profession.cards[index + 10] : null;
+}
+
+function masteryStarterDeck(profession, mastery) {
+  const starter = profession.cards.slice(0, 12);
+  if (mastery < 50) return starter;
+  const signature = MASTERY_SIGNATURE_BY_JOB[profession.id];
+  const baseIndex = starter.findIndex((card) => card.baseName === signature && !card.refined);
+  const refined = profession.cards.find((card) => card.baseName === signature && card.refined);
+  return baseIndex >= 0 && refined
+    ? starter.map((card, index) => index === baseIndex ? refined : card)
+    : starter;
+}
+
+function masteryOpeningState(job, mastery) {
+  const state = freshJobState();
+  if (mastery < 75) return state;
+  if (job === "talisman") state.seals = 1;
+  if (job === "alchemy") state.heat = 1;
+  if (job === "beast") {
+    state.activeBeast = "玄狼";
+    state.contracts = ["玄狼"];
+  }
+  if (job === "artificer") {
+    state.devices = 1;
+    state.cunning = 1;
+  }
+  if (job === "soul") state.lamps = 1;
+  return state;
+}
+
+function defaultDiscoveredCards() {
+  return PROFESSIONS.flatMap((profession) => profession.cards.slice(0, 12).map((card) => card.id));
+}
+
+function createFeedbackEngine() {
+  let context = null;
+  const tone = (frequency, duration, type, start, volume) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(volume, start);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start(start);
+    oscillator.stop(start + duration);
+  };
+  return (kind, preferences) => {
+    try {
+      if (preferences?.sound !== false) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          context ||= new AudioContext();
+          if (context.state === "suspended") context.resume();
+          const now = context.currentTime;
+          const volume = Math.max(0.01, Math.min(1, preferences?.volume ?? 0.55)) * 0.12;
+          const patterns = {
+            tap: [[420, .05, "sine", 0, .4]],
+            cast: [[260, .12, "triangle", 0, .6], [520, .18, "sine", .05, .75]],
+            impact: [[130, .14, "sawtooth", 0, .9], [72, .2, "triangle", .02, .7]],
+            guard: [[360, .13, "sine", 0, .55], [540, .18, "sine", .07, .55]],
+            heal: [[440, .14, "sine", 0, .45], [660, .2, "sine", .08, .65]],
+            draw: [[330, .08, "triangle", 0, .35], [440, .08, "triangle", .06, .4], [560, .12, "triangle", .12, .45]],
+            enemy: [[95, .28, "sawtooth", 0, .72], [150, .18, "square", .08, .28]],
+            hurt: [[110, .2, "square", 0, .7]],
+            reward: [[392, .14, "sine", 0, .5], [523, .16, "sine", .1, .55], [784, .3, "sine", .2, .7]],
+          };
+          (patterns[kind] || patterns.tap).forEach(([frequency, duration, type, offset, gain]) => tone(frequency, duration, type, now + offset, volume * gain));
+        }
+      }
+      if (preferences?.haptics !== false && navigator.vibrate) {
+        const vibrations = { cast: 12, impact: [18, 18, 28], guard: 16, heal: 10, draw: 8, enemy: [24, 20, 38], hurt: 42, reward: [16, 28, 16] };
+        navigator.vibrate(vibrations[kind] || 6);
+      }
+    } catch {
+      // Feedback is optional; unsupported browsers should never interrupt play.
+    }
+  };
+}
 
 const enemyByChapter = {
   1: {
@@ -46,6 +218,59 @@ const enemyByChapter = {
   },
 };
 
+function buildEnemyMoves(chapter, encounterStage, enemyName) {
+  const pressure = 5 + chapter * 2 + encounterStage * 2;
+  if (encounterStage === 3) {
+    return BOSS_MOVE_PATTERNS[chapter] || [
+      { name: `${enemyName}·试探`, damage: pressure, note: "稳健攻击" },
+      { name: "镇命护体", damage: Math.max(4, pressure - 4), shield: 8 + chapter * 2, note: `攻击并获得 ${8 + chapter * 2} 点护体` },
+      { name: "命数倾覆", damage: pressure + 7, weak: 2, note: "重击并施加 2 层虚弱" },
+    ];
+  }
+  if (encounterStage === 2) {
+    return [
+      { name: "煞影连袭", damage: pressure + 1, hits: 2, note: "两段攻击，护盾需分段承受" },
+      { name: "聚煞护身", damage: 0, shield: 7 + chapter, note: `获得 ${7 + chapter} 点护体` },
+      { name: "破气重击", damage: pressure + 5, weak: 1, note: "重击并施加 1 层虚弱" },
+    ];
+  }
+  return [
+    { name: "窥隙", damage: pressure, note: "直接攻击" },
+    { name: "蓄势", damage: 0, shield: 5 + chapter, note: `获得 ${5 + chapter} 点护体` },
+    { name: "扑杀", damage: pressure + 4, note: "蓄势后的强力攻击" },
+  ];
+}
+
+function intentLabel(move) {
+  const parts = [];
+  if (move.damage) parts.push(`${move.damage}${move.hits ? `×${move.hits}` : ""}`);
+  if (move.shield) parts.push(`护体 ${move.shield}`);
+  if (move.heal) parts.push(`恢复 ${move.heal}`);
+  if (move.weak) parts.push(`虚弱 ${move.weak}`);
+  if (move.drainQi) parts.push(`灵气 -${move.drainQi}`);
+  if (move.drawPenalty) parts.push(`少抽 ${move.drawPenalty}`);
+  if (move.curse) parts.push("心魔入牌堆");
+  return `${move.name}${parts.length ? ` · ${parts.join(" · ")}` : ""}`;
+}
+
+const FATE_CURSE = {
+  id: "enemy-curse-missing-page",
+  job: "curse",
+  baseName: "命册缺页",
+  name: "命册缺页",
+  cost: 9,
+  type: "心魔",
+  rarity: "诅咒",
+  tier: 4,
+  art: "/card_clear_heart.png",
+  keyword: "心魔",
+  text: "无法打出。占据手牌，回合结束后进入弃牌堆。",
+  combo: "净心牌可以将其永久净除。",
+  upgrade: "不可精研",
+  tags: ["心魔"],
+  refined: false,
+};
+
 const freshJobState = () => ({
   seals: 0,
   cold: 0,
@@ -55,19 +280,107 @@ const freshJobState = () => ({
   devices: 0,
   cunning: 0,
   lamps: 0,
+  attackBonus: 0,
+  burnMultiplier: 1,
+  talismanDiscount: 0,
+  alchemyDiscount: 0,
+  beastDiscount: 0,
+  symbolCardsPlayed: 0,
+  lastWasInstruction: false,
+  whiteDeerGuard: false,
+  mirrorDamage: 0,
 });
+
+const freshRunStats = () => ({
+  cardsPlayed: 0,
+  damageDealt: 0,
+  damageTaken: 0,
+  turns: 0,
+  combatsWon: 0,
+  rewardsTaken: 0,
+  xpGained: 0,
+  spiritGained: 0,
+  jadeGained: 0,
+});
+
+function evaluateRun(stats, hp, maxHp) {
+  const hpRatio = Math.max(0, Math.min(1, hp / maxHp));
+  const expectedTurns = Math.max(1, stats.combatsWon * 3);
+  const pace = Math.max(0, Math.min(1, 1 - Math.max(0, stats.turns - expectedTurns) / 12));
+  const endurance = Math.max(0, Math.min(1, 1 - stats.damageTaken / Math.max(1, maxHp * 1.5)));
+  const completion = Math.min(1, stats.combatsWon / 3);
+  const score = Math.round(hpRatio * 35 + pace * 20 + endurance * 20 + completion * 25);
+  const grade = score >= 90 ? "甲上" : score >= 80 ? "甲" : score >= 68 ? "乙上" : score >= 55 ? "乙" : "丙";
+  const title = hpRatio >= .75
+    ? "道心稳固"
+    : stats.damageTaken <= maxHp
+      ? "险中求胜"
+      : "浴血破局";
+  return { score, grade, title };
+}
 
 function App() {
   const query = new URLSearchParams(window.location.search);
   const initialScreen = query.get("screen") || "home";
   const initialOrigin = PROFESSIONS.some((job) => job.id === query.get("origin")) ? query.get("origin") : "sword";
   const initialChapter = Math.min(5, Math.max(1, Number(query.get("chapter")) || 1));
+  const initialStage = Math.min(3, Math.max(1, Number(query.get("stage")) || 1));
+  const initialStory = import.meta.env.DEV ? Math.min(2, Math.max(0, Number(query.get("story")) || 0)) : 0;
+  const debugEnemyHp = import.meta.env.DEV ? Math.max(0, Number(query.get("enemyHp")) || 0) : 0;
+  const debugTreasures = import.meta.env.DEV
+    ? (query.get("treasures") || "").split(",").map((id) => TREASURES.find((treasure) => treasure.id === id)).filter(Boolean)
+    : [];
+  const debugOverlay = import.meta.env.DEV && ["guide", "codex", "settings", "map", "deck"].includes(query.get("overlay"))
+    ? query.get("overlay")
+    : null;
+  const debugChoice = import.meta.env.DEV ? query.get("choice") : null;
+  const debugCard = import.meta.env.DEV
+    ? ALL_CARDS.find((card) => card.id === query.get("card") || card.baseName === query.get("card"))
+    : null;
+  const debugNumber = (key, fallback = 0) => import.meta.env.DEV ? Math.max(0, Number(query.get(key)) || fallback) : fallback;
+  const debugAutoplay = import.meta.env.DEV && query.get("autoplay") === "1";
+  const debugAutoClick = import.meta.env.DEV && query.get("autoclick") === "1";
+  const debugAutoEnd = import.meta.env.DEV && query.get("autoend") === "1";
+  const debugTutorial = import.meta.env.DEV && query.get("tutorial") === "1";
+  const debugMastery = import.meta.env.DEV ? debugNumber("mastery") : 0;
+  const debugMoveIndex = import.meta.env.DEV ? debugNumber("move") : 0;
+  const makeEnemy = (chapter, encounterStage) => {
+    const enemyData = { ...enemyByChapter[chapter][encounterStage] };
+    const moves = buildEnemyMoves(chapter, encounterStage, enemyData.name);
+    enemyData.moves = moves;
+    enemyData.moveIndex = Math.min(moves.length - 1, debugMoveIndex);
+    enemyData.intent = intentLabel(moves[enemyData.moveIndex]);
+    if (debugEnemyHp > 0) enemyData.hp = Math.min(enemyData.max, debugEnemyHp);
+    return enemyData;
+  };
   const [screen, setScreen] = useState(initialScreen);
+  const [savedRun, setSavedRun] = useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem("qinglan-run-v1")) || null;
+    } catch {
+      return null;
+    }
+  });
   const [origin, setOrigin] = useState(initialOrigin);
-  const [stage, setStage] = useState(1);
+  const [stage, setStage] = useState(initialStage);
   const [selectedChapter, setSelectedChapter] = useState(initialChapter);
-  const [storyIndex, setStoryIndex] = useState(0);
+  const [storyIndex, setStoryIndex] = useState(initialStory);
   const [routeProgress, setRouteProgress] = useState(0);
+  const [runChoices, setRunChoices] = useState([]);
+  const [runChronicle, setRunChronicle] = useState([]);
+  const [nextEnemyShield, setNextEnemyShield] = useState(0);
+  const [runStats, setRunStats] = useState(() => ({
+    ...freshRunStats(),
+    cardsPlayed: debugNumber("cards"),
+    damageDealt: debugNumber("damage"),
+    damageTaken: debugNumber("taken"),
+    turns: debugNumber("turns"),
+    combatsWon: debugNumber("wins"),
+    rewardsTaken: debugNumber("rewards"),
+    xpGained: debugNumber("xp"),
+    spiritGained: debugNumber("spiritGained"),
+    jadeGained: debugNumber("jadeGained"),
+  }));
   const [profile, setProfile] = useState(() => {
     const saved = window.localStorage.getItem("qinglan-profile-v2");
     const base = saved ? JSON.parse(saved) : {
@@ -81,50 +394,102 @@ function App() {
       choices: [],
       talentLevels: { meridian: 2, mind: 1, edge: 0 },
       jobMastery: {},
+      discoveredTreasures: [],
+      discoveredCards: defaultDiscoveredCards(),
+      unlockedEndings: [],
+      tutorialFlags: {},
+      feedback: { sound: true, haptics: true, volume: 0.55 },
     };
     return {
       ...base,
       unlockedJobs: PROFESSIONS.map((job) => job.id),
       talentLevels: base.talentLevels || { meridian: 2, mind: 1, edge: 0 },
-      jobMastery: base.jobMastery || {},
+      jobMastery: {
+        ...(base.jobMastery || {}),
+        ...(import.meta.env.DEV && query.has("mastery") ? { [initialOrigin]: debugMastery } : {}),
+      },
+      choices: debugChoice ? [...(base.choices || []), debugChoice] : (base.choices || []),
+      discoveredTreasures: base.discoveredTreasures || [],
+      discoveredCards: base.discoveredCards || defaultDiscoveredCards(),
+      unlockedEndings: base.unlockedEndings || [],
+      tutorialFlags: base.tutorialFlags || {},
+      feedback: { sound: true, haptics: true, volume: 0.55, ...(base.feedback || {}) },
     };
   });
-  const [hp, setHp] = useState(72);
-  const [qi, setQi] = useState(3);
-  const [shield, setShield] = useState(0);
-  const [edge, setEdge] = useState(0);
-  const [jobState, setJobState] = useState(freshJobState);
-  const [enemyBurn, setEnemyBurn] = useState(0);
-  const [enemyPoison, setEnemyPoison] = useState(0);
-  const [enemyWeak, setEnemyWeak] = useState(0);
+  const [hp, setHp] = useState(() => 72 + (profile.talentLevels.meridian || 0) * 4);
+  const [qi, setQi] = useState(debugNumber("qi", 3 + treasureValue(debugTreasures, "maxQi") + treasureValue(debugTreasures, "firstTurnQi")));
+  const [maxQi, setMaxQi] = useState(3 + treasureValue(debugTreasures, "maxQi"));
+  const [shield, setShield] = useState(treasureValue(debugTreasures, "startShield"));
+  const [edge, setEdge] = useState(debugNumber("edge"));
+  const [jobState, setJobState] = useState(() => ({
+    ...freshJobState(),
+    seals: debugNumber("seals"),
+    cold: debugNumber("cold"),
+    heat: debugNumber("heat"),
+    contracts: debugNumber("contracts") > 0 ? ["玄狼", "白鹿", "青鸾", "石猿", "灵狐"].slice(0, debugNumber("contracts")) : [],
+    devices: debugNumber("devices"),
+    cunning: debugNumber("cunning"),
+    lamps: debugNumber("lamps"),
+  }));
+  const [enemyBurn, setEnemyBurn] = useState(debugNumber("burn"));
+  const [enemyPoison, setEnemyPoison] = useState(debugNumber("poison"));
+  const [enemyWeak, setEnemyWeak] = useState(debugNumber("weak"));
+  const [enemyShield, setEnemyShield] = useState(0);
+  const [playerWeak, setPlayerWeak] = useState(0);
   const [stones, setStones] = useState(18);
-  const [enemy, setEnemy] = useState(enemyByChapter[initialChapter][1]);
+  const [consumables, setConsumables] = useState({ spirit: 2, skin: 1, clarity: 1, thunder: 1 });
+  const [treasures, setTreasures] = useState(debugTreasures);
+  const [enemy, setEnemy] = useState(() => makeEnemy(initialChapter, initialStage));
   const [runDeck, setRunDeck] = useState(cards[initialOrigin]);
-  const [hand, setHand] = useState(cards[initialOrigin].slice(0, 5));
-  const [drawPile, setDrawPile] = useState(cards[initialOrigin].slice(5));
-  const [discardPile, setDiscardPile] = useState([]);
+  const initialHandSize = Math.min(7, debugNumber("hand", 5 + treasureValue(debugTreasures, "firstTurnDraw")));
+  const initialHand = debugCard ? [debugCard, ...cards[initialOrigin].filter((card) => card.id !== debugCard.id).slice(0, initialHandSize - 1)] : cards[initialOrigin].slice(0, initialHandSize);
+  const initialDiscard = import.meta.env.DEV ? cards[initialOrigin].filter((card) => !initialHand.includes(card)).slice(0, debugNumber("discard")) : [];
+  const [hand, setHand] = useState(initialHand);
+  const [drawPile, setDrawPile] = useState(cards[initialOrigin].filter((card) => !initialHand.includes(card) && !initialDiscard.includes(card)));
+  const [discardPile, setDiscardPile] = useState(initialDiscard);
   const [exhaustPile, setExhaustPile] = useState([]);
   const [drawFx, setDrawFx] = useState(null);
   const [combatTurn, setCombatTurn] = useState(1);
   const [log, setLog] = useState("雨落石阶。妖影从竹林间显形。");
-  const [overlay, setOverlay] = useState(null);
+  const [overlay, setOverlay] = useState(debugOverlay);
   const [combatFx, setCombatFx] = useState(null);
   const [combatBusy, setCombatBusy] = useState(false);
   const [playerFx, setPlayerFx] = useState(null);
+  const [triggerFx, setTriggerFx] = useState(null);
   const [transition, setTransition] = useState("");
   const timers = useRef([]);
+  const feedbackEngine = useRef(null);
+  const combatResolved = useRef(false);
+  const firstAttackUsed = useRef(false);
+  const firstSkillUsed = useRef(false);
+  const enemyShieldRef = useRef(0);
+  const enemyHpRef = useRef(enemy.hp);
+  const playedThisTurnRef = useRef([]);
+  const lastPlayedCardRef = useRef(null);
+  const maxHp = 72 + (profile.talentLevels.meridian || 0) * 4;
+  const startingStones = 18 + (profile.talentLevels.mind || 0) * 2;
+  const feedback = (kind) => {
+    feedbackEngine.current ||= createFeedbackEngine();
+    feedbackEngine.current(kind, profile.feedback);
+  };
 
   useEffect(() => {
     const root = document.querySelector(".app");
     if (root) root.scrollTop = 0;
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   }, [screen]);
+  useEffect(() => {
+    enemyShieldRef.current = enemyShield;
+  }, [enemyShield]);
+  useEffect(() => {
+    enemyHpRef.current = enemy.hp;
+  }, [enemy.hp]);
 
   useEffect(() => {
     const handler = (event) => {
       if (event.key === "Escape") setOverlay(null);
       if (screen === "combat" && event.code === "Space" && !combatBusy) endTurn();
-      if (screen === "combat" && /^[1-5]$/.test(event.key) && !combatBusy) playCard(Number(event.key) - 1);
+      if (screen === "combat" && /^[1-7]$/.test(event.key) && !combatBusy) playCard(Number(event.key) - 1);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -134,6 +499,96 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem("qinglan-profile-v2", JSON.stringify(profile));
   }, [profile]);
+  useEffect(() => {
+    if (!runDeck.length) return;
+    setProfile((value) => {
+      const discovered = new Set(value.discoveredCards || defaultDiscoveredCards());
+      const before = discovered.size;
+      runDeck.forEach((card) => {
+        if (card?.job !== "curse" && card?.id) discovered.add(card.id);
+      });
+      return discovered.size === before ? value : { ...value, discoveredCards: [...discovered] };
+    });
+  }, [runDeck]);
+  useEffect(() => {
+    if (!["story", "map", "event", "market", "rest", "training", "combat", "reward"].includes(screen)) return;
+    const snapshot = {
+      version: 3,
+      origin,
+      selectedChapter,
+      stage,
+      hp,
+      qi,
+      shield,
+      edge,
+      playerWeak,
+      stones,
+      maxQi,
+      consumables,
+      treasures: treasures.map((treasure) => treasure.id),
+      storyIndex,
+      routeProgress,
+      runChoices,
+      runChronicle,
+      nextEnemyShield,
+      runStats,
+      screen,
+      deck: runDeck,
+      hand,
+      drawPile,
+      discardPile,
+      exhaustPile,
+      enemy,
+      enemyBurn,
+      enemyPoison,
+      enemyWeak,
+      enemyShield,
+      combatTurn,
+      jobState,
+      log,
+      playedThisTurn: playedThisTurnRef.current,
+      lastPlayedCard: lastPlayedCardRef.current,
+      firstAttackUsed: firstAttackUsed.current,
+      firstSkillUsed: firstSkillUsed.current,
+      savedAt: Date.now(),
+    };
+    window.localStorage.setItem("qinglan-run-v1", JSON.stringify(snapshot));
+    setSavedRun(snapshot);
+  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, runChoices, runChronicle, nextEnemyShield, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log]);
+  useEffect(() => {
+    if (screen === "combat" && enemy.hp <= 0 && !combatResolved.current) {
+      finishCombat("敌影溃散");
+    }
+  }, [enemy.hp, screen]);
+  useEffect(() => {
+    if (screen === "combat" && hp <= 0 && !combatResolved.current) {
+      combatResolved.current = true;
+      setCombatBusy(true);
+      setLog("道心失守，眼前的雨夜沉入黑暗……");
+      later(() => changeScreen("defeat", 180), 620);
+    }
+  }, [hp, screen]);
+  useEffect(() => {
+    if (!debugAutoplay || screen !== "combat") return;
+    const id = window.setTimeout(() => playCard(0), 300);
+    return () => window.clearTimeout(id);
+  }, []);
+  useEffect(() => {
+    if (!debugAutoClick || screen !== "combat") return;
+    const id = window.setTimeout(() => document.querySelector(".hand .game-card:not(:disabled)")?.click(), 300);
+    return () => window.clearTimeout(id);
+  }, []);
+  useEffect(() => {
+    if (!debugAutoEnd || screen !== "combat") return;
+    const id = window.setTimeout(() => endTurn(), debugAutoplay ? 1550 : 350);
+    return () => window.clearTimeout(id);
+  }, []);
+  useEffect(() => {
+    if (["summary", "defeat"].includes(screen)) {
+      window.localStorage.removeItem("qinglan-run-v1");
+      setSavedRun(null);
+    }
+  }, [screen]);
 
   const selectedOrigin = origins.find((item) => item.id === origin);
 
@@ -152,20 +607,101 @@ function App() {
     }, delay);
   }
 
-  function beginRun() {
-    const starter = cards[origin];
+  function beginRun(chapterId = selectedChapter) {
+    setSelectedChapter(chapterId);
+    const mastery = profile.jobMastery[origin] || 0;
+    const starter = masteryStarterDeck(getProfession(origin), mastery);
+    const masteryTreasure = mastery >= 100
+      ? TREASURES.find((treasure) => treasure.id === MASTERY_TREASURE_BY_JOB[origin])
+      : null;
     setRunDeck(starter);
     prepareDeck(starter, false);
     setStage(1);
-    setHp(72);
-    setStones(18);
+    setHp(maxHp);
+    setStones(startingStones + (mastery >= 25 ? 4 : 0));
+    setMaxQi(3 + (masteryTreasure?.maxQi || 0));
+    setConsumables({ spirit: 2, skin: 1, clarity: 1, thunder: 1 });
+    setTreasures(masteryTreasure ? [masteryTreasure] : []);
     setStoryIndex(0);
     setRouteProgress(0);
+    setRunChoices([]);
+    setRunStats(freshRunStats());
+    const inherited = MASTERY_MILESTONES.filter((milestone) => mastery >= milestone.level).map((milestone) => milestone.name);
+    setRunChronicle([
+      `第 ${chapterId} 章启程 · ${getProfession(origin).name}`,
+      ...(inherited.length ? [`道途传承 · ${inherited.join(" / ")}`] : []),
+    ]);
+    setNextEnemyShield(0);
     setProfile((value) => ({
       ...value,
       jobMastery: { ...value.jobMastery, [origin]: (value.jobMastery[origin] || 0) + 10 },
+      discoveredTreasures: masteryTreasure
+        ? [...new Set([...(value.discoveredTreasures || []), masteryTreasure.id])]
+        : value.discoveredTreasures,
     }));
     changeScreen("story");
+  }
+
+  function resumeRun() {
+    if (!savedRun) return;
+    const restoreCards = (items = []) => items.map((item) => {
+      if (typeof item === "string") return ALL_CARDS.find((card) => card.id === item);
+      return item?.id ? { ...item } : null;
+    }).filter(Boolean);
+    const resumedDeck = restoreCards(savedRun.deck);
+    setOrigin(savedRun.origin || "sword");
+    setSelectedChapter(savedRun.selectedChapter || 1);
+    setStage(savedRun.stage || 1);
+    setHp(Math.max(1, savedRun.hp || 72));
+    setQi(savedRun.qi ?? savedRun.maxQi ?? 3);
+    setShield(savedRun.shield || 0);
+    setEdge(savedRun.edge || 0);
+    setPlayerWeak(savedRun.playerWeak || 0);
+    setStones(savedRun.stones ?? 18);
+    setMaxQi(savedRun.maxQi || 3);
+    setConsumables(savedRun.consumables || { spirit: 2, skin: 1, clarity: 1, thunder: 1 });
+    setTreasures((savedRun.treasures || []).map((id) => TREASURES.find((treasure) => treasure.id === id)).filter(Boolean));
+    setStoryIndex(savedRun.storyIndex || 0);
+    setRouteProgress(savedRun.routeProgress || 0);
+    setRunChoices(savedRun.runChoices || []);
+    setRunChronicle(savedRun.runChronicle || []);
+    setNextEnemyShield(savedRun.nextEnemyShield || 0);
+    setRunStats({ ...freshRunStats(), ...(savedRun.runStats || {}) });
+    setRunDeck(resumedDeck.length ? resumedDeck : cards[savedRun.origin || "sword"]);
+    if (savedRun.screen === "combat" && savedRun.enemy) {
+      combatResolved.current = false;
+      setEnemy({ ...savedRun.enemy });
+      setEnemyBurn(savedRun.enemyBurn || 0);
+      setEnemyPoison(savedRun.enemyPoison || 0);
+      setEnemyWeak(savedRun.enemyWeak || 0);
+      setEnemyShield(savedRun.enemyShield || 0);
+      enemyShieldRef.current = savedRun.enemyShield || 0;
+      setCombatTurn(savedRun.combatTurn || 1);
+      setJobState({ ...freshJobState(), ...(savedRun.jobState || {}) });
+      setHand(restoreCards(savedRun.hand));
+      setDrawPile(restoreCards(savedRun.drawPile));
+      setDiscardPile(restoreCards(savedRun.discardPile));
+      setExhaustPile(restoreCards(savedRun.exhaustPile));
+      playedThisTurnRef.current = restoreCards(savedRun.playedThisTurn);
+      lastPlayedCardRef.current = restoreCards(savedRun.lastPlayedCard ? [savedRun.lastPlayedCard] : [])[0] || null;
+      firstAttackUsed.current = Boolean(savedRun.firstAttackUsed);
+      firstSkillUsed.current = Boolean(savedRun.firstSkillUsed);
+      setLog(savedRun.log || "从中断的回合继续。");
+      setCombatBusy(false);
+      setCombatFx(null);
+      setPlayerFx(null);
+      setTriggerFx(null);
+    }
+    changeScreen(savedRun.screen || "map");
+  }
+
+  function abandonRun() {
+    window.localStorage.removeItem("qinglan-run-v1");
+    setSavedRun(null);
+    setOverlay(null);
+    setCombatBusy(false);
+    combatResolved.current = false;
+    changeScreen("home");
   }
 
   function shuffle(items) {
@@ -177,16 +713,16 @@ function App() {
     return copy;
   }
 
-  function prepareDeck(deckCards, showDraw = true) {
+  function prepareDeck(deckCards, showDraw = true, extraDraw = 0, mastery = 0) {
     const pile = shuffle(deckCards);
-    const openingHand = pile.slice(0, 5);
+    const openingHand = pile.slice(0, 5 + extraDraw);
     setHand(openingHand);
-    setDrawPile(pile.slice(5));
+    setDrawPile(pile.slice(5 + extraDraw));
     setDiscardPile([]);
     setExhaustPile([]);
     setCombatTurn(1);
-    setEdge(0);
-    setJobState(freshJobState());
+    setEdge(origin === "sword" && mastery >= 75 ? 1 : 0);
+    setJobState(masteryOpeningState(origin, mastery));
     if (showDraw) {
       setDrawFx({ cards: openingHand, source: "开局手牌", nonce: Date.now() });
       later(() => setDrawFx(null), 1250);
@@ -195,7 +731,26 @@ function App() {
 
   function continueStory(choice) {
     if (choice) {
+      setRunChoices((value) => [...value, choice]);
+      setRunChronicle((value) => [...value.slice(-5), `抉择 · ${choice}`]);
       setProfile((value) => ({ ...value, choices: [...value.choices.slice(-7), choice] }));
+      const consequence = {
+        "相信守门人": () => setStones((value) => value + 6),
+        "隐瞒血书": () => setConsumables((value) => ({ ...value, clarity: value.clarity + 1 })),
+        "接受引灯": () => {
+          setHp((value) => Math.max(1, value - 6));
+          setRunDeck((value) => [...value, getProfession(origin).cards.find((card) => card.keyword === "净心") || getProfession(origin).cards[6]]);
+        },
+        "追查旧案": () => setStones((value) => value + 10),
+        "破阵": () => setMaxQi((value) => Math.min(5, value + 1)),
+        "寻人": () => setHp((value) => Math.min(maxHp, value + 14)),
+        "归还梦境": () => setConsumables((value) => ({ ...value, thunder: value.thunder + 1, clarity: value.clarity + 1 })),
+        "夺回影子": () => setStones((value) => value + 16),
+        "修复命册": () => setHp(maxHp),
+        "重写命册": () => setRunDeck((value) => value.map((card) => refinedVersion(card, getProfession(origin)) || card)),
+      }[choice];
+      consequence?.();
+      setLog(`你的选择「${choice}」已改变本次云游。`);
     }
     if (storyIndex < CHAPTER_STORIES[selectedChapter].length - 1) {
       setStoryIndex((value) => value + 1);
@@ -205,161 +760,490 @@ function App() {
   }
 
   function enterCombat(nextStage = stage) {
+    combatResolved.current = false;
     setStage(nextStage);
-    setEnemy({ ...enemyByChapter[selectedChapter][nextStage] });
-    setQi(3);
-    setShield(0);
+    setEnemy(makeEnemy(selectedChapter, nextStage));
+    setQi(maxQi + treasureValue(treasures, "firstTurnQi") + (nextStage === 1 ? (profile.talentLevels.edge || 0) : 0));
     setEnemyBurn(0);
     setEnemyPoison(0);
     setEnemyWeak(0);
-    setLog("雨幕骤紧，敌人拦住了去路。");
+    setEnemyShield(nextEnemyShield);
+    enemyShieldRef.current = nextEnemyShield;
+    if (nextEnemyShield > 0) {
+      setRunChronicle((value) => [...value.slice(-5), `代价兑现 · 敌人获得 ${nextEnemyShield} 点护体`]);
+      setNextEnemyShield(0);
+    }
+    setPlayerWeak(0);
+    firstAttackUsed.current = false;
+    firstSkillUsed.current = false;
+    playedThisTurnRef.current = [];
+    lastPlayedCardRef.current = null;
+    setLog(nextEnemyShield > 0 ? `此前的选择化作代价：敌人带着 ${nextEnemyShield} 点护体拦住去路。` : "雨幕骤紧，敌人拦住了去路。");
     setCombatFx(null);
-    prepareDeck(runDeck);
+    setTriggerFx(null);
+    setShield(treasureValue(treasures, "startShield"));
+    prepareDeck(runDeck, true, treasureValue(treasures, "firstTurnDraw"), profile.jobMastery[origin] || 0);
     changeScreen("combat");
   }
 
-  function resolveProfessionCard(card, baseDamage) {
-    let damage = baseDamage;
-    let note = "";
+  function finishCombat(source = "敌影溃散") {
+    if (combatResolved.current) return;
+    combatResolved.current = true;
+    setRunStats((value) => ({ ...value, combatsWon: value.combatsWon + 1 }));
+    setCombatBusy(true);
+    const afterHeal = treasureValue(treasures, "battleHeal");
+    const afterStones = treasureValue(treasures, "battleStones");
+    if (afterHeal) setHp((value) => Math.min(maxHp, value + afterHeal));
+    if (afterStones) setStones((value) => value + afterStones);
+    if (treasureValue(treasures, "battleConsumable")) {
+      const keys = ["spirit", "skin", "clarity", "thunder"];
+      const key = keys[Math.floor(Math.random() * keys.length)];
+      setConsumables((value) => ({ ...value, [key]: (value[key] || 0) + 1 }));
+    }
+    setLog(`${source}。战利灵光正在凝聚……`);
+    feedback("reward");
+    later(() => changeScreen("reward", 220), 520);
+  }
 
-    if (origin === "talisman") {
-      if (card.keyword === "符印") {
-        setJobState((value) => ({ ...value, seals: Math.min(9, value.seals + 2) }));
-        note = "附着 2 枚符印";
+  function damageEnemy(amount, source, ignoreShield = false) {
+    if (amount <= 0 || combatResolved.current) return;
+    const blocked = ignoreShield ? 0 : Math.min(enemyShieldRef.current, amount);
+    const dealt = amount - blocked;
+    const actualDamage = Math.min(enemyHpRef.current, dealt);
+    enemyHpRef.current = Math.max(0, enemyHpRef.current - actualDamage);
+    if (actualDamage > 0) setRunStats((value) => ({ ...value, damageDealt: value.damageDealt + actualDamage }));
+    if (blocked) {
+      enemyShieldRef.current = Math.max(0, enemyShieldRef.current - blocked);
+      setEnemyShield(enemyShieldRef.current);
+    }
+    setEnemy((value) => ({ ...value, hp: Math.max(0, value.hp - dealt) }));
+    setLog(`${source}，造成 ${dealt} 点伤害${blocked ? `，其中 ${blocked} 点被护体抵消` : ""}。`);
+  }
+
+  function useConsumable(kind) {
+    if (combatBusy || (consumables[kind] || 0) <= 0 || enemy.hp <= 0) return;
+    const effects = {
+      spirit: () => {
+        setQi((value) => Math.min(maxQi + 2, value + 2));
+        setLog("服下聚气散，灵气 +2。");
+      },
+      skin: () => {
+        setShield((value) => value + 10);
+        setLog("石肤符化作岩甲，获得 10 点护盾。");
+      },
+      clarity: () => {
+        setHp((value) => Math.min(maxHp, value + 8));
+        setPlayerWeak(0);
+        setLog("清神粉压下心神震荡，恢复 8 点生命并清除虚弱。");
+      },
+      thunder: () => {
+        damageEnemy(12, "阴雷子在敌人脚下炸开");
+        setCombatFx({ phase: "impact", kind: "fire", damage: 12 });
+        later(() => setCombatFx(null), 620);
+      },
+    };
+    effects[kind]();
+    feedback(kind === "thunder" ? "impact" : kind === "skin" ? "guard" : kind === "clarity" ? "heal" : "tap");
+    setConsumables((value) => ({ ...value, [kind]: value[kind] - 1 }));
+  }
+
+  function effectiveCardCost(card) {
+    let cost = card.cost;
+    if (origin === "talisman" && jobState.talismanDiscount > 0 && card.type === "术法") cost -= 1;
+    if (origin === "alchemy" && jobState.alchemyDiscount > 0 && ["法门", "术法"].includes(card.type)) cost -= 1;
+    if (origin === "beast" && jobState.beastDiscount > 0 && ["指令", "协同"].includes(card.keyword)) cost -= 1;
+    if (card.baseName === "机关城垒" && jobState.cunning >= 5) cost -= 2;
+    if (card.baseName === "百鬼夜行" && jobState.lamps >= 5) cost = 0;
+    if (card.baseName === "阴阳大还丹" && jobState.cold > 0 && jobState.cold === jobState.heat) cost = Math.min(cost, 1);
+    if (card.baseName === "万符归一") cost -= jobState.seals;
+    return Math.max(0, cost);
+  }
+
+  function cardSynergyState(card) {
+    const base = card.baseName || card.name.replace("·真解", "");
+    const checks = {
+      青竹剑诀: [playedThisTurnRef.current.some((item) => item.type === "攻击"), "本回合已打出攻击牌"],
+      回风剑: [hand.length <= 3, "施放后手牌少于 3 张"],
+      锋芒护身: [edge >= 4, `剑势 ${edge}/4`],
+      小五行剑阵: [edge >= 2, `可消耗 2 层剑势`],
+      逐月连斩: [edge > 0, `每层剑势强化三段伤害 · 当前 ${edge}`],
+      裂魂剑: [enemyWeak > 0, `敌人已有虚弱 ${enemyWeak}`],
+      引劫剑: [edge >= 5, `剑势 ${edge}/5，免除消耗`],
+      万剑归岚: [edge > 0, `可释放 ${edge} 层剑势`],
+      火弹符: [enemyWeak > 0, "敌人已有虚弱"],
+      镇魂符: [playerWeak > 0, `可驱散虚弱 ${playerWeak}`],
+      阴火符: [jobState.seals > 0, `可引爆 1 枚符印 · 当前 ${jobState.seals}`],
+      玄雷敕令: [jobState.seals > 0, `可引爆 ${jobState.seals} 枚符印`],
+      净坛真言: [!runDeck.some((item) => item.type === "心魔"), "无心魔时转化为灵气"],
+      雷火连符: [jobState.symbolCardsPlayed > 0, `本回合已打出 ${jobState.symbolCardsPlayed} 张符牌`],
+      借风燃纸: [enemyBurn >= 5, `燃烧 ${enemyBurn}/5，额外获得护盾`],
+      万符归一: [jobState.seals > 0 || enemyBurn > 0, `符印 ${jobState.seals} · 燃烧 ${enemyBurn}`],
+      回春散: [hp < maxHp / 2, "生命低于一半，治疗增强"],
+      赤芝养气丹: [jobState.heat > 0, "拥有热性，不再消耗"],
+      药炉温养: [jobState.cold > 0 && jobState.heat > 0, `寒 ${jobState.cold} · 热 ${jobState.heat}`],
+      腐脉毒雾: [enemyPoison > 0, `敌人已有丹毒 ${enemyPoison}`],
+      玉液护心: [playerWeak > 0, "成功驱散后获得热性"],
+      逆炼血丹: [jobState.heat > 0, `热性增伤 · 当前 ${jobState.heat}`],
+      阴阳大还丹: [jobState.cold > 0 || jobState.heat > 0, `调和寒 ${jobState.cold} / 热 ${jobState.heat}`],
+      玄狼奔袭: [jobState.lastWasInstruction, "上一张为指令牌"],
+      石猿撼地: [shield > 0, `拥有护盾 ${shield}`],
+      百兽同途: [jobState.contracts.length > 0, `已契约 ${jobState.contracts.length} 种灵兽`],
+      山君号令: [Boolean(jobState.activeBeast), `当前灵兽：${jobState.activeBeast}`],
+      山海盟誓: [jobState.contracts.length > 0, `召唤 ${Math.max(1, jobState.contracts.length)} 种灵兽`],
+      玄甲机括: [jobState.devices > 0, `已有机关 ${jobState.devices}`],
+      墨轮复位: [jobState.devices > 0, `可复位机关 ${jobState.devices}`],
+      千机连弩: [jobState.devices > 0, `机关追加攻击 · 当前 ${jobState.devices}`],
+      拆解回收: [jobState.devices > 0, `可拆解机关 ${jobState.devices}`],
+      偃师护心镜: [jobState.cunning > 0, `机巧 ${jobState.cunning}，反击增强`],
+      飞梭穿云: [enemyShield > 0, `可击破护体 ${enemyShield}`],
+      机关城垒: [jobState.cunning >= 5, `机巧 ${jobState.cunning}/5，费用降低`],
+      天工开物: [jobState.devices > 0, `立即触发 ${jobState.devices} 个机关`],
+      幽灯守魄: [hp < maxHp / 2, "生命低于一半，护盾增强"],
+      彼岸回响: [Boolean(lastPlayedCardRef.current), lastPlayedCardRef.current ? `召回「${lastPlayedCardRef.current.name}」` : "尚无上一张牌"],
+      无常索命: [hand.some((item) => item !== card && item.type === "心魔"), "可弃掉心魔并追加伤害"],
+      渡厄咒: [jobState.lamps > 0, `魂灯强化治疗 · 当前 ${jobState.lamps}`],
+      借命灯: [jobState.lamps > 0, "已有魂灯，免除自伤"],
+      黄泉引路: [discardPile.length > 0, `弃牌堆可召回 ${Math.min(2, discardPile.length)} 张`],
+      魂火焚身: [jobState.lamps > 0, `可熄灭 ${jobState.lamps} 盏魂灯`],
+      忘川照影: [playedThisTurnRef.current.length > 0, playedThisTurnRef.current[0] ? `复制「${playedThisTurnRef.current[0].name}」` : "本回合尚未出牌"],
+      百鬼夜行: [discardPile.length > 0, `弃牌堆有 ${new Set(discardPile.map((item) => item.baseName || item.name)).size} 种牌`],
+    };
+    const result = checks[base];
+    if (!result) return { conditional: false, active: false, reason: "基础效果稳定生效" };
+    return { conditional: true, active: Boolean(result[0]), reason: result[1] };
+  }
+
+  function resolveCardMechanics(card) {
+    const text = card.text;
+    const combo = card.combo || "";
+    const damageMatch = text.match(/造成\s*(\d+)\s*点伤害(?:\s*(\d+)\s*次)?/);
+    const blockMatch = text.match(/获得\s*(\d+)\s*点护盾/);
+    const healMatch = text.match(/恢复\s*(\d+)\s*点生命/);
+    const qiMatch = text.match(/获得\s*(\d+)\s*点灵气/);
+    const edgeMatch = text.match(/获得\s*(\d+)\s*层剑势/);
+    const burnMatch = text.match(/施加\s*(\d+)\s*层燃烧/);
+    const poisonMatch = text.match(/施加\s*(\d+)\s*层丹毒/);
+    const weakMatch = text.match(/施加\s*(\d+)\s*层虚弱/);
+    const drawMatch = text.match(/抽\s*(\d+)\s*张牌/);
+    const selfMatch = text.match(/失去\s*(\d+)\s*点生命/);
+    const sealMatch = text.match(/附着\s*(\d+)\s*枚符印/);
+    const hits = damageMatch?.[2] ? Number(damageMatch[2]) : 1;
+    const r = {
+      damage: damageMatch ? Number(damageMatch[1]) * hits : 0,
+      shield: blockMatch ? Number(blockMatch[1]) : 0,
+      heal: healMatch ? Number(healMatch[1]) : 0,
+      qi: qiMatch ? Number(qiMatch[1]) : 0,
+      edge: edgeMatch ? Number(edgeMatch[1]) : 0,
+      burn: burnMatch ? Number(burnMatch[1]) : 0,
+      poison: poisonMatch ? Number(poisonMatch[1]) : 0,
+      weak: weakMatch ? Number(weakMatch[1]) : 0,
+      draw: drawMatch ? Number(drawMatch[1]) : 0,
+      selfDamage: selfMatch ? Number(selfMatch[1]) : 0,
+      ignoreShield: false,
+      exhaust: /消耗|移出本场/.test(text),
+      note: [],
+      returnDiscard: 0,
+      returnLast: false,
+      copyFirst: false,
+      discardOther: 0,
+      removeCurse: /净除/.test(text),
+      recycleAlchemy: 0,
+    };
+    const base = card.baseName || card.name.replace("·真解", "");
+    const refined = card.refined;
+
+    if (origin === "sword") {
+      if (card.type === "攻击" && base !== "万剑归岚") r.edge += 1;
+      if (base === "青竹剑诀" && playedThisTurnRef.current.some((item) => item.type === "攻击")) r.edge += 1;
+      if (base === "藏锋诀") {
+        if (refined) r.edge += 1;
+        setJobState((value) => ({ ...value, attackBonus: value.attackBonus + 2 }));
       }
-      if (card.keyword === "引爆" || /引爆/.test(card.text)) {
-        const burst = jobState.seals * 6;
-        damage += burst;
-        note = `引爆 ${jobState.seals} 枚符印，追加 ${burst} 点伤害`;
-        setJobState((value) => ({ ...value, seals: 0 }));
+      if (base === "回风剑" && hand.length <= 3) r.draw += 1;
+      if (base === "锋芒护身" && edge >= 4) r.shield += 4;
+      if (base === "小五行剑阵" && edge >= 2) {
+        r.damage += 6;
+        r.edge -= 2;
+      }
+      if (base === "逐月连斩") r.damage += edge * 3;
+      if (base === "裂魂剑" && enemyWeak > 0) r.edge += 2;
+      if (base === "引劫剑" && edge >= 5) r.exhaust = false;
+      if (base === "玉月成璧") r.draw += 1;
+      if (base === "万剑归岚") {
+        r.damage = edge * (refined ? 8 : 6);
+        if (edge >= 4) r.qi += 1;
+        r.edge = -edge;
+      }
+      if (card.type === "攻击" && jobState.attackBonus > 0) {
+        r.damage += jobState.attackBonus;
+        setJobState((value) => ({ ...value, attackBonus: 0 }));
       }
     }
 
+    if (origin === "talisman") {
+      if (base === "火弹符" && enemyWeak > 0) r.damage += 4;
+      if (base === "镇魂符" && playerWeak > 0) r.draw += 1;
+      if (base === "缚影法印") {
+        const seals = sealMatch ? Number(sealMatch[1]) : refined ? 3 : 2;
+        setJobState((value) => ({ ...value, seals: Math.min(12, value.seals + seals) }));
+        r.note.push(`附着 ${seals} 枚符印`);
+      }
+      if (base === "赤篆连书") {
+        setJobState((value) => ({ ...value, talismanDiscount: 1 }));
+        if (drawPile[0]?.type === "术法") r.qi += 1;
+      }
+      if (base === "阴火符" && jobState.seals > 0) {
+        r.damage += enemyBurn + r.burn;
+        setJobState((value) => ({ ...value, seals: value.seals - 1 }));
+      }
+      if (base === "玄雷敕令") {
+        r.damage = jobState.seals * (refined ? 8 : 6);
+        if (jobState.seals >= 3) r.draw += 2;
+        r.note.push(`引爆 ${jobState.seals} 枚符印`);
+        setJobState((value) => ({ ...value, seals: 0 }));
+      }
+      if (base === "净坛真言" && !runDeck.some((item) => item.type === "心魔")) r.qi += 2;
+      if (base === "雷火连符") r.damage += (jobState.symbolCardsPlayed * (refined ? 7 : 5));
+      if (base === "借风燃纸") {
+        setJobState((value) => ({ ...value, burnMultiplier: 2 }));
+        if (enemyBurn >= 5) r.shield += 8;
+        if (refined) r.draw += 1;
+      }
+      if (base === "万符归一") {
+        r.damage += jobState.seals * 6 + enemyBurn * jobState.burnMultiplier;
+        r.note.push(`符印与燃烧一并结算`);
+        setJobState((value) => ({ ...value, seals: 0 }));
+      }
+      if (card.type === "术法") setJobState((value) => ({ ...value, symbolCardsPlayed: value.symbolCardsPlayed + 1, talismanDiscount: 0 }));
+    }
+
     if (origin === "alchemy") {
-      if (card.keyword === "温药") setJobState((value) => ({ ...value, heat: Math.min(6, value.heat + 1) }));
-      if (card.keyword === "寒药") setJobState((value) => ({ ...value, cold: Math.min(6, value.cold + 1) }));
-      const poisonMatch = card.text.match(/施加\s*(\d+)\s*层丹毒/);
-      if (poisonMatch) setEnemyPoison((value) => value + Number(poisonMatch[1]));
-      if (card.keyword === "调和" && jobState.cold > 0 && jobState.heat > 0) {
-        damage += 6;
-        setShield((value) => value + 6);
+      if (base === "回春散") {
+        r.heal += hp < maxHp / 2 ? 3 : 0;
+        setJobState((value) => ({ ...value, heat: Math.min(8, value.heat + 1) }));
+      }
+      if (base === "寒髓药引") {
+        setJobState((value) => ({ ...value, cold: Math.min(8, value.cold + (refined ? 2 : 1)), alchemyDiscount: 1 }));
+      }
+      if (base === "赤芝养气丹" && jobState.heat > 0) r.exhaust = false;
+      if (base === "药炉温养" && jobState.cold > 0 && jobState.heat > 0) {
+        r.shield += 6;
         setJobState((value) => ({ ...value, cold: value.cold - 1, heat: value.heat - 1 }));
-        note = "寒热调和，追加 6 点伤害与 6 点护盾";
+      }
+      if (base === "百草相生") {
+        r.recycleAlchemy = 2;
+        r.qi += 2;
+      }
+      if (base === "腐脉毒雾" && enemyPoison > 0) r.damage += 3;
+      if (base === "玉液护心" && playerWeak > 0) setJobState((value) => ({ ...value, heat: Math.min(8, value.heat + 1) }));
+      if (base === "逆炼血丹") r.damage += jobState.heat * 3;
+      if (base === "阴阳大还丹") {
+        const total = jobState.cold + jobState.heat;
+        r.damage += total * 3;
+        r.heal += total * 2;
+        setJobState((value) => ({ ...value, cold: 0, heat: 0, alchemyDiscount: 0 }));
+      } else if (["法门", "术法"].includes(card.type)) {
+        setJobState((value) => ({ ...value, alchemyDiscount: 0 }));
       }
     }
 
     if (origin === "beast") {
-      const beast = ["玄狼", "白鹿", "青鸾", "灵狐", "石猿"].find((name) => card.name.includes(name));
-      if (beast) {
-        setJobState((value) => ({ ...value, activeBeast: beast, contracts: [...new Set([...value.contracts, beast])] }));
-        note = `灵契切换为${beast}`;
+      const beast = ["玄狼", "白鹿", "青鸾", "灵狐", "石猿"].find((name) => base.includes(name));
+      if (beast) setJobState((value) => ({ ...value, activeBeast: beast, contracts: [...new Set([...value.contracts, beast])] }));
+      if (base === "玄狼奔袭") {
+        r.damage = refined ? 12 : 8;
+        if (jobState.lastWasInstruction) r.damage += 3;
       }
-      if (card.keyword === "协同") {
-        const bonus = jobState.contracts.length * 4;
-        damage += bonus;
-        note = `${jobState.contracts.length} 种灵兽协同，追加 ${bonus} 点伤害`;
+      if (base === "白鹿守望") setJobState((value) => ({ ...value, whiteDeerGuard: true }));
+      if (base === "青鸾回风") setJobState((value) => ({ ...value, beastDiscount: 1 }));
+      if (base === "灵狐探路") r.draw += 1;
+      if (base === "石猿撼地" && shield > 0) r.damage += 6;
+      if (base === "百兽同途") {
+        r.damage = Math.max(1, jobState.contracts.length) * (refined ? 6 : 4);
+        if (jobState.contracts.length >= 3) r.draw += 2;
       }
+      if (base === "山君号令") {
+        const actions = { 玄狼: 24, 石猿: 28, 白鹿: 0, 青鸾: 0, 灵狐: 0 };
+        r.damage += actions[jobState.activeBeast] || 0;
+        if (jobState.activeBeast === "白鹿") r.shield += 16;
+        if (["青鸾", "灵狐"].includes(jobState.activeBeast)) r.draw += 2;
+      }
+      if (base === "归巢") r.note.push("灵兽归巢，保留已建立的契约");
+      if (base === "血月兽潮") r.note.push("当前为霜月，未触发血月额外伤害");
+      if (base === "山海盟誓") {
+        const contracts = jobState.contracts.length ? jobState.contracts : [jobState.activeBeast];
+        r.damage += contracts.reduce((sum, name) => sum + ({ 玄狼: refined ? 10 : 8, 石猿: refined ? 16 : 14 }[name] || 0), 0);
+        r.shield += contracts.length * (refined ? 5 : 3) + (contracts.includes("白鹿") ? (refined ? 10 : 8) : 0);
+        r.draw += contracts.filter((name) => ["青鸾", "灵狐"].includes(name)).length;
+      }
+      const instruction = ["指令", "协同"].includes(card.keyword);
+      setJobState((value) => ({ ...value, lastWasInstruction: instruction, beastDiscount: instruction ? 0 : value.beastDiscount }));
     }
 
     if (origin === "artificer") {
-      if (["机关", "阵列"].includes(card.keyword) || /部署/.test(card.text)) {
-        setJobState((value) => ({ ...value, devices: Math.min(6, value.devices + 1), cunning: Math.min(9, value.cunning + 1) }));
-        note = "部署机关，机巧 +1";
+      if (base === "铜雀飞梭" || base === "雷枢阵列") setJobState((value) => ({ ...value, devices: Math.min(8, value.devices + 1), cunning: Math.min(10, value.cunning + 1) }));
+      if (base === "雷枢阵列") r.damage = 0;
+      if (base === "玄甲机括") {
+        if (jobState.devices > 0) r.shield += 3;
+        setJobState((value) => ({ ...value, cunning: Math.min(10, value.cunning + (refined ? 2 : 1)) }));
       }
-      if (/每个已部署机关|每个机关/.test(card.combo || "")) {
-        const bonus = jobState.devices * 4;
-        damage += bonus;
-        note = `${jobState.devices} 个机关协同，追加 ${bonus} 点伤害`;
+      if (base === "墨轮复位" && jobState.devices > 0) {
+        r.damage += 4 + Math.floor(jobState.cunning / 2);
+        setJobState((value) => ({ ...value, cunning: Math.min(10, value.cunning + 1) }));
       }
-      if (card.keyword === "复位" && jobState.devices > 0) {
-        damage += 4;
-        note = "复位机关，再次触发 4 点伤害";
+      if (base === "千机连弩") r.damage += jobState.devices * (refined ? 6 : 4);
+      if (base === "拆解回收" && jobState.devices > 0) {
+        r.shield += 3;
+        setJobState((value) => ({ ...value, devices: value.devices - 1 }));
+      }
+      if (base === "偃师护心镜") setJobState((value) => ({ ...value, mirrorDamage: (refined ? 14 : 10) + (value.cunning > 0 ? 5 : 0) }));
+      if (base === "飞梭穿云") {
+        r.ignoreShield = true;
+        if (enemyShieldRef.current > 0) r.draw += 1;
+      }
+      if (base === "机关城垒") setJobState((value) => ({ ...value, devices: Math.min(8, value.devices + 2), cunning: Math.min(10, value.cunning + 2) }));
+      if (base === "天工开物") {
+        const triggers = refined ? 2 : 1;
+        r.damage += jobState.devices * (6 + Math.floor(jobState.cunning / 2)) * triggers;
+        r.shield += jobState.devices * triggers;
+        setJobState((value) => ({ ...value, cunning: Math.min(10, value.cunning + value.devices) }));
       }
     }
 
     if (origin === "soul") {
-      if (card.keyword === "魂灯" || /点亮\s*1\s*盏魂灯/.test(card.combo || "")) {
-        setJobState((value) => ({ ...value, lamps: Math.min(7, value.lamps + 1) }));
-        note = "点亮 1 盏魂灯";
-      }
-      if (card.keyword === "燃魂" || /熄灭全部魂灯/.test(card.text)) {
-        const bonus = jobState.lamps * 7;
-        damage += bonus;
-        note = `熄灭 ${jobState.lamps} 盏魂灯，追加 ${bonus} 点伤害`;
+      if (["引魂契", "幽灯守魄"].includes(base)) setJobState((value) => ({ ...value, lamps: Math.min(8, value.lamps + 1) }));
+      if (base === "幽灯守魄" && hp < maxHp / 2) r.shield += 5;
+      if (base === "彼岸回响") r.returnLast = true;
+      if (base === "无常索命") r.discardOther = 1;
+      if (base === "渡厄咒") r.heal += jobState.lamps * 2;
+      if (base === "借命灯" && jobState.lamps > 0) r.selfDamage = 0;
+      if (base === "黄泉引路") r.returnDiscard = 2;
+      if (base === "魂火焚身") {
+        r.damage = jobState.lamps * (refined ? 9 : 7);
+        if (jobState.lamps >= 3) r.heal += 8;
         setJobState((value) => ({ ...value, lamps: 0 }));
       }
+      if (base === "忘川照影") r.copyFirst = true;
+      if (base === "百鬼夜行") r.damage = new Set(discardPile.map((item) => item.baseName || item.name)).size * (refined ? 5 : 3);
     }
 
-    return { damage, note };
+    return r;
   }
 
   function playCard(index) {
     const card = hand[index];
-    if (!card || qi < card.cost || enemy.hp <= 0 || combatBusy) return;
-    const damageMatch = card.text.match(/造成\s*(\d+)\s*点伤害(?:\s*(\d+)\s*次)?/);
-    const blockMatch = card.text.match(/获得\s*(\d+)\s*点护盾/);
-    const healMatch = card.text.match(/恢复\s*(\d+)\s*点生命/);
-    const qiMatch = card.text.match(/获得\s*(\d+)\s*点灵气/);
-    const edgeMatch = card.text.match(/获得\s*(\d+)\s*层剑势/);
-    const burnMatch = card.text.match(/施加\s*(\d+)\s*层燃烧/);
-    const weakMatch = card.text.match(/施加\s*(\d+)\s*层虚弱/);
-    const drawMatch = card.text.match(/抽\s*(\d+)\s*张牌/);
-    const selfMatch = card.text.match(/失去\s*(\d+)\s*点生命/);
-    const hits = damageMatch?.[2] ? Number(damageMatch[2]) : 1;
-    let damage = damageMatch ? Number(damageMatch[1]) * hits : 0;
+    const cost = card ? effectiveCardCost(card) : 0;
+    if (!card || qi < cost || enemy.hp <= 0 || combatBusy) return;
+    const synergy = cardSynergyState(card);
+    const resolution = resolveCardMechanics(card);
+    let damage = resolution.damage;
+    if (damage > 0 && playerWeak > 0) damage = Math.max(0, damage - playerWeak * 2);
+    if (card.type === "攻击" && !firstAttackUsed.current) {
+      damage += treasureValue(treasures, "firstAttackDamage");
+      firstAttackUsed.current = true;
+    }
+    const firstSkillBonus = card.type === "法门" && !firstSkillUsed.current
+      ? treasureValue(treasures, "firstSkillDraw")
+      : 0;
+    if (card.type === "法门") firstSkillUsed.current = true;
     if (origin === "sword" && edge >= 3 && card.type === "攻击") damage += 3;
-    const professionResult = resolveProfessionCard(card, damage);
-    damage = professionResult.damage;
-    const shieldGain = blockMatch ? Number(blockMatch[1]) : 0;
-    const heal = healMatch ? Number(healMatch[1]) : 0;
-    const qiGain = qiMatch ? Number(qiMatch[1]) : 0;
-    const edgeGain = edgeMatch ? Number(edgeMatch[1]) : card.type === "攻击" && origin === "sword" ? 1 : 0;
-    const burnGain = burnMatch ? Number(burnMatch[1]) : 0;
-    const weakGain = weakMatch ? Number(weakMatch[1]) : 0;
-    const drawGain = drawMatch ? Number(drawMatch[1]) : 0;
-    const selfDamage = selfMatch ? Number(selfMatch[1]) : 0;
-    const kind = damage > 0 ? (card.id === "fire" ? "fire" : "attack") : shieldGain > 0 ? "guard" : heal > 0 ? "heal" : "spirit";
+    const kind = damage > 0 ? (/燃|火/.test(card.name) ? "fire" : "attack") : resolution.shield > 0 ? "guard" : resolution.heal > 0 ? "heal" : "spirit";
+    const remainingHand = hand.filter((_, cardIndex) => cardIndex !== index);
+    const otherDiscarded = resolution.discardOther && remainingHand.length ? remainingHand[remainingHand.length - 1] : null;
+    if ((card.baseName || card.name) === "无常索命" && otherDiscarded?.type === "心魔") damage += 10;
     setCombatBusy(true);
-    setQi((value) => value - card.cost);
-    setHand((value) => value.filter((_, cardIndex) => cardIndex !== index));
-    setCombatFx({ card, index, kind, damage, shieldGain, heal, qiGain, phase: "cast" });
+    setRunStats((value) => ({ ...value, cardsPlayed: value.cardsPlayed + 1 }));
+    feedback("cast");
+    setQi((value) => value - cost);
+    setHand(otherDiscarded ? remainingHand.slice(0, -1) : remainingHand);
+    setCombatFx({ card, index, kind, damage, shieldGain: resolution.shield, heal: resolution.heal, qiGain: resolution.qi, phase: "cast" });
     setLog(`${card.name} · 引诀`);
     later(() => setCombatFx((value) => value ? { ...value, phase: "impact" } : value), 360);
     later(() => {
-      if (shieldGain) setShield((value) => value + shieldGain);
-      if (heal) setHp((value) => Math.min(72, value + heal));
-      if (qiGain) setQi((value) => Math.min(5, value + qiGain));
-      if (edgeGain) setEdge((value) => value + edgeGain);
-      if (burnGain) setEnemyBurn((value) => value + burnGain);
-      if (weakGain) setEnemyWeak((value) => value + weakGain);
-      if (selfDamage) setHp((value) => Math.max(1, value - selfDamage));
-      if (drawGain) drawCardsIntoHand(drawGain, card.name);
+      const triggered = [
+        damage > 0 ? `伤害 ${damage}` : "",
+        resolution.shield > 0 ? `护盾 ${resolution.shield}` : "",
+        resolution.heal > 0 ? `恢复 ${resolution.heal}` : "",
+        resolution.draw + firstSkillBonus > 0 ? `抽牌 ${resolution.draw + firstSkillBonus}` : "",
+        resolution.qi > 0 ? `灵气 +${resolution.qi}` : "",
+        resolution.edge > 0 ? `剑势 +${resolution.edge}` : "",
+        resolution.burn > 0 ? `燃烧 +${resolution.burn}` : "",
+        resolution.poison > 0 ? `丹毒 +${resolution.poison}` : "",
+        resolution.weak > 0 ? `虚弱 +${resolution.weak}` : "",
+        ...resolution.note,
+      ].filter(Boolean);
+      setTriggerFx({ card: card.name, combo: synergy.conditional && synergy.active ? synergy.reason : "", effects: triggered });
+      later(() => setTriggerFx(null), 1450);
+      if (resolution.shield) setShield((value) => value + resolution.shield);
+      if (resolution.heal) setHp((value) => Math.min(maxHp, value + resolution.heal));
+      if (resolution.qi) setQi((value) => Math.min(maxQi + 3, value + resolution.qi));
+      if (resolution.edge) setEdge((value) => Math.max(0, value + resolution.edge));
+      if (resolution.burn) setEnemyBurn((value) => value + resolution.burn);
+      if (resolution.poison) setEnemyPoison((value) => value + resolution.poison);
+      if (resolution.weak) setEnemyWeak((value) => value + resolution.weak);
+      if (resolution.selfDamage) setHp((value) => Math.max(0, value - resolution.selfDamage));
+      const cleanseMatch = card.text.match(/驱散\s*(\d+)\s*层虚弱/);
+      if (cleanseMatch) setPlayerWeak((value) => Math.max(0, value - Number(cleanseMatch[1])));
+      if (resolution.removeCurse) setRunDeck((value) => {
+        const curseIndex = value.findIndex((item) => item.type === "心魔");
+        return curseIndex < 0 ? value : value.filter((_, itemIndex) => itemIndex !== curseIndex);
+      });
+      if (resolution.draw + firstSkillBonus) drawCardsIntoHand(resolution.draw + firstSkillBonus, firstSkillBonus ? `${card.name} · 青竹残简` : card.name);
+      if (resolution.returnLast && lastPlayedCardRef.current) {
+        const echoed = { ...lastPlayedCardRef.current, id: `${lastPlayedCardRef.current.id}-echo-${Date.now()}` };
+        if (echoed.type === "术法") echoed.cost = 0;
+        setHand((value) => value.length < 7 ? [...value, echoed] : value);
+      }
+      if (resolution.copyFirst && playedThisTurnRef.current[0]) {
+        const copied = { ...playedThisTurnRef.current[0], id: `${playedThisTurnRef.current[0].id}-copy-${Date.now()}` };
+        if (!card.refined) copied.text = `${copied.text} 消耗。`;
+        setHand((value) => value.length < 7 ? [...value, copied] : value);
+      }
+      if (resolution.returnDiscard > 0) {
+        const returned = discardPile.slice(-resolution.returnDiscard);
+        setDiscardPile((value) => value.slice(0, Math.max(0, value.length - returned.length)));
+        setHand((value) => [...value, ...returned].slice(0, 7));
+        const spellCount = returned.filter((item) => item.type === "术法").length;
+        if (spellCount) setJobState((value) => ({ ...value, lamps: Math.min(8, value.lamps + spellCount) }));
+      }
+      if (resolution.recycleAlchemy > 0) {
+        const recycled = discardPile.filter((item) => item.job === "alchemy").slice(-resolution.recycleAlchemy);
+        if (recycled.length) {
+          setDiscardPile((value) => value.filter((item) => !recycled.includes(item)));
+          setDrawPile((value) => [...recycled, ...value]);
+        }
+      }
       if (damage > 0) {
-        const nextHp = Math.max(0, enemy.hp - damage);
-        setEnemy((value) => ({ ...value, hp: nextHp }));
-        setLog(`${card.name}命中，造成 ${damage} 点伤害。${professionResult.note ? professionResult.note + "。" : ""}${nextHp === 0 ? "敌影溃散。" : ""}`);
-        if (nextHp === 0) later(() => changeScreen("reward", 260), 680);
+        feedback("impact");
+        damageEnemy(damage, `${card.name}命中`, resolution.ignoreShield);
+        setLog(`${card.name}命中，预计造成 ${damage} 点伤害。${resolution.note.join("；")}`);
       } else {
-        const effect = shieldGain
-          ? `获得 ${shieldGain} 点护盾`
-          : heal
-            ? `恢复 ${heal} 点生命`
-            : burnGain
-              ? `施加 ${burnGain} 层燃烧`
-              : weakGain
-                ? `施加 ${weakGain} 层虚弱`
+        feedback(resolution.shield ? "guard" : resolution.heal ? "heal" : "tap");
+        const effect = resolution.shield
+          ? `获得 ${resolution.shield} 点护盾`
+          : resolution.heal
+            ? `恢复 ${resolution.heal} 点生命`
+            : resolution.burn
+              ? `施加 ${resolution.burn} 层燃烧`
+              : resolution.poison
+                ? `施加 ${resolution.poison} 层丹毒`
+                : resolution.weak
+                  ? `施加 ${resolution.weak} 层虚弱`
                 : /丹毒/.test(card.text)
                   ? card.text.replace(/。$/, "")
-                  : qiGain
-                    ? `获得 ${qiGain} 点灵气`
+                  : resolution.qi
+                    ? `获得 ${resolution.qi} 点灵气`
                     : `术法运转`;
-        setLog(`${card.name}生效，${effect}。${professionResult.note ? professionResult.note + "。" : ""}`);
+        setLog(`${card.name}生效，${effect}。${resolution.note.join("；")}`);
       }
     }, 470);
     later(() => setCombatFx((value) => value ? { ...value, phase: "fade" } : value), 880);
     later(() => {
-      if (/消耗|移出本场/.test(card.text)) setExhaustPile((value) => [...value, card]);
+      if (resolution.exhaust) setExhaustPile((value) => [...value, card]);
       else setDiscardPile((value) => [...value, card]);
+      if (otherDiscarded) setDiscardPile((value) => [...value, otherDiscarded]);
+      playedThisTurnRef.current = [...playedThisTurnRef.current, card];
+      lastPlayedCardRef.current = card;
       setCombatFx(null);
       setCombatBusy(false);
     }, 1120);
@@ -378,6 +1262,7 @@ function App() {
       setDrawPile(pool.slice(count));
       setDiscardPile(recycled);
       if (drawn.length) {
+        feedback("draw");
         setDrawFx({ cards: drawn, source: `${source} · 抽牌`, nonce: Date.now() });
         later(() => setDrawFx(null), 1050);
       }
@@ -387,47 +1272,100 @@ function App() {
 
   function endTurn() {
     if (enemy.hp <= 0 || combatBusy) return;
-    const baseIncoming = Number(enemy.intent.match(/\d+/)?.[0]) || (stage === 1 ? 7 : stage === 2 ? 9 : 12);
-    const incoming = Math.max(0, baseIncoming - enemyWeak * 2);
-    const lost = Math.max(0, incoming - shield);
+    const currentMove = enemy.moves?.[enemy.moveIndex || 0] || { name: enemy.intent, damage: Number(enemy.intent.match(/\d+/)?.[0]) || 7 };
+    const hitCount = currentMove.hits || 1;
+    const perHit = Math.max(0, (currentMove.damage || 0) - enemyWeak * 2);
+    let remainingShield = shield;
+    let lost = 0;
+    for (let hit = 0; hit < hitCount; hit += 1) {
+      const blocked = Math.min(remainingShield, perHit);
+      remainingShield -= blocked;
+      lost += perHit - blocked;
+    }
+    const incoming = perHit * hitCount;
     setCombatBusy(true);
+    setRunStats((value) => ({ ...value, turns: value.turns + 1 }));
+    feedback("enemy");
     setCombatFx({ phase: "enemy-turn", kind: "enemy", damage: lost });
-    setLog(`敌人正在发动「${enemy.intent}」……`);
+    setLog(`敌人正在发动「${currentMove.name}」……`);
     later(() => {
       setCombatFx({ phase: "enemy-impact", kind: "enemy", damage: lost });
       setPlayerFx({ kind: lost > 0 ? "hurt" : "blocked", damage: lost });
-      setHp((value) => Math.max(1, value - lost));
+      if (lost > 0) feedback("hurt");
+      else feedback("guard");
+      setHp((value) => Math.max(0, value - lost));
+      if (lost > 0) setRunStats((value) => ({ ...value, damageTaken: value.damageTaken + lost }));
       setShield(0);
+      if (lost > 0 && jobState.whiteDeerGuard) {
+        setHp((value) => Math.min(maxHp, value + 3));
+        setJobState((value) => ({ ...value, whiteDeerGuard: false }));
+      }
+      if (shield > 0 && incoming >= shield && jobState.mirrorDamage > 0) {
+        damageEnemy(jobState.mirrorDamage, "护心镜碎裂反击");
+        setJobState((value) => ({ ...value, mirrorDamage: 0 }));
+      }
+      if (currentMove.shield) setEnemyShield((value) => {
+        const next = value + currentMove.shield;
+        enemyShieldRef.current = next;
+        return next;
+      });
+      if (currentMove.heal) setEnemy((value) => ({ ...value, hp: Math.min(value.max, value.hp + currentMove.heal) }));
+      if (currentMove.shield && enemyPoison > 0) damageEnemy(2, "蚀骨丹阻断护体");
+      setPlayerWeak((value) => Math.max(0, value - 1) + (currentMove.weak || 0));
       if (enemyWeak > 0) setEnemyWeak((value) => Math.max(0, value - 1));
-      setLog(`敌人发动「${enemy.intent}」。护盾抵去 ${Math.min(shield, incoming)}，你受到 ${lost} 点伤害。`);
+      const extra = [
+        currentMove.shield ? `敌人获得 ${currentMove.shield} 点护体` : "",
+        currentMove.heal ? `敌人恢复 ${currentMove.heal} 点生命` : "",
+        currentMove.weak ? `你受到 ${currentMove.weak} 层虚弱` : "",
+        currentMove.drainQi ? `你下一回合灵气 -${currentMove.drainQi}` : "",
+        currentMove.drawPenalty ? `你下一回合少抽 ${currentMove.drawPenalty} 张牌` : "",
+        currentMove.curse ? "一张「命册缺页」被写入弃牌堆" : "",
+      ].filter(Boolean).join("，");
+      setLog(`敌人发动「${currentMove.name}」。护盾抵去 ${Math.min(shield, incoming)}，你受到 ${lost} 点伤害${extra ? `；${extra}` : ""}。`);
     }, 560);
     later(() => {
-      const burnTick = enemyBurn;
+      const burnTick = enemyBurn > 0 ? (enemyBurn + treasureValue(treasures, "burnDamage")) * jobState.burnMultiplier : 0;
       if (burnTick > 0) {
-        setEnemy((value) => {
-          const nextHp = Math.max(0, value.hp - burnTick);
-          if (nextHp === 0) later(() => changeScreen("reward", 220), 260);
-          return { ...value, hp: nextHp };
-        });
+        damageEnemy(burnTick, "燃烧吞没了敌影");
         setEnemyBurn((value) => Math.max(0, value - 1));
       }
       if (enemyPoison > 0) {
-        setEnemy((value) => ({ ...value, hp: Math.max(0, value.hp - enemyPoison) }));
+        damageEnemy(enemyPoison, "丹毒侵蚀了敌影");
         setEnemyPoison((value) => Math.max(0, value - 1));
       }
-      if (origin === "artificer" && jobState.devices > 0) {
-        setEnemy((value) => ({ ...value, hp: Math.max(0, value.hp - jobState.devices * 4) }));
+      if (origin === "talisman" && jobState.seals > 0) {
+        damageEnemy(jobState.seals * 2, "符印随敌人行动震荡");
       }
+      if (origin === "artificer" && jobState.devices > 0) {
+        damageEnemy(jobState.devices * (4 + Math.floor(jobState.cunning / 2)) + 2, "机关阵列齐射");
+      }
+      const nextHandSize = Math.max(3, 5 - (currentMove.drawPenalty || 0));
+      const turnDiscard = [...discardPile, ...hand, ...(currentMove.curse ? [{ ...FATE_CURSE, id: `${FATE_CURSE.id}-${Date.now()}` }] : [])];
       const carry = [...drawPile];
-      const reshuffled = shuffle([...discardPile, ...hand]);
-      const source = carry.length >= 5 ? carry : [...carry, ...reshuffled];
-      const nextHand = source.slice(0, 5);
+      const reshuffled = shuffle(turnDiscard);
+      const hasEnoughDraw = carry.length >= nextHandSize;
+      const source = hasEnoughDraw ? carry : [...carry, ...reshuffled];
+      const nextHand = source.slice(0, nextHandSize);
       setHand(nextHand);
-      setDrawPile(source.slice(5));
-      setDiscardPile([]);
+      setDrawPile(source.slice(nextHandSize));
+      setDiscardPile(hasEnoughDraw ? turnDiscard : []);
       setCombatTurn((value) => value + 1);
-      setQi(3);
-      setDrawFx({ cards: nextHand, source: carry.length >= 5 ? "抽牌" : "洗牌后抽取", nonce: Date.now() });
+      playedThisTurnRef.current = [];
+      setJobState((value) => ({
+        ...value,
+        attackBonus: 0,
+        burnMultiplier: 1,
+        symbolCardsPlayed: 0,
+        lastWasInstruction: false,
+        whiteDeerGuard: false,
+      }));
+      setEnemy((value) => {
+        const nextIndex = ((value.moveIndex || 0) + 1) % (value.moves?.length || 1);
+        return { ...value, moveIndex: nextIndex, intent: intentLabel(value.moves[nextIndex]) };
+      });
+      setQi(Math.max(0, maxQi - (currentMove.drainQi || 0)));
+      setDrawFx({ cards: nextHand, source: hasEnoughDraw ? "抽牌" : "洗牌后抽取", nonce: Date.now() });
+      feedback("draw");
       setCombatFx(null);
       setPlayerFx(null);
       setCombatBusy(false);
@@ -435,17 +1373,40 @@ function App() {
     }, 1280);
   }
 
-  function claimReward(card) {
-    setRunDeck((value) => [...value, card]);
-    setStones((value) => value + 8);
-    setProfile((value) => ({
+  function claimReward(card, treasure = null) {
+    feedback("reward");
+    setRunStats((value) => ({
       ...value,
-      xp: value.xp + 90,
-      spirit: value.spirit + 4,
-      jobMastery: { ...value.jobMastery, [origin]: (value.jobMastery[origin] || 0) + 5 },
+      rewardsTaken: value.rewardsTaken + 1,
+      xpGained: value.xpGained + 90,
+      spiritGained: value.spiritGained + 4,
+      jadeGained: value.jadeGained + (stage >= 3 ? 120 : 0),
     }));
+    if (card) setRunDeck((value) => [...value, card]);
+    if (treasure) {
+      setTreasures((value) => [...value, treasure]);
+      if (treasure.maxQi) setMaxQi((value) => Math.min(5, value + treasure.maxQi));
+    }
+    setStones((value) => value + 8);
+    setProfile((value) => {
+      const gained = addProfileXp(value, 90);
+      return {
+        ...gained,
+        spirit: gained.spirit + 4,
+        jobMastery: { ...gained.jobMastery, [origin]: (gained.jobMastery[origin] || 0) + (card || treasure ? 5 : 2) },
+        discoveredTreasures: treasure ? [...new Set([...(gained.discoveredTreasures || []), treasure.id])] : gained.discoveredTreasures,
+      };
+    });
     if (stage >= 3) {
-      setProfile((value) => ({ ...value, chapter: Math.max(Math.min(5, selectedChapter + 1), value.chapter), jade: value.jade + 120 }));
+      const endingId = selectedChapter === 5
+        ? (runChoices.includes("重写命册") ? "rewrite_fate" : "restore_fate")
+        : `chapter_${selectedChapter}_ending`;
+      setProfile((value) => ({
+        ...value,
+        chapter: Math.max(Math.min(5, selectedChapter + 1), value.chapter),
+        jade: value.jade + 120,
+        unlockedEndings: [...new Set([...(value.unlockedEndings || []), endingId])],
+      }));
       changeScreen("summary");
     }
     else {
@@ -453,6 +1414,11 @@ function App() {
       setRouteProgress((value) => value + 1);
       changeScreen("map");
     }
+  }
+
+  function skipReward() {
+    setHp((value) => Math.min(maxHp, value + 10));
+    claimReward(null);
   }
 
   return (
@@ -471,16 +1437,17 @@ function App() {
           profile={profile}
           setScreen={setScreen}
           setOverlay={setOverlay}
-          beginRun={() => changeScreen("chapters")}
+          beginRun={() => changeScreen("classes")}
+          savedRun={savedRun}
+          resumeRun={resumeRun}
         />
       )}
       {screen === "chapters" && (
         <ChapterScreen
           profile={profile}
-          onBack={() => changeScreen("home")}
+          onBack={() => changeScreen("classes")}
           onChoose={(chapterId) => {
-            setSelectedChapter(chapterId);
-            changeScreen("classes");
+            beginRun(chapterId);
           }}
         />
       )}
@@ -489,8 +1456,8 @@ function App() {
           origin={origin}
           setOrigin={setOrigin}
           profile={profile}
-          onBack={() => changeScreen("chapters")}
-          onStart={beginRun}
+          onBack={() => changeScreen("home")}
+          onStart={() => changeScreen("chapters")}
         />
       )}
       {screen === "story" && (
@@ -513,6 +1480,7 @@ function App() {
         <CollectionScreen
           origin={origin}
           setOrigin={setOrigin}
+          profile={profile}
           onBack={() => changeScreen("home")}
         />
       )}
@@ -528,24 +1496,77 @@ function App() {
       {screen === "map" && (
         <MapScreen
           stage={stage}
+          chapter={selectedChapter}
           hp={hp}
+          maxHp={maxHp}
           stones={stones}
           enterCombat={enterCombat}
           setScreen={setScreen}
-          setOverlay={setOverlay}
+          openMarket={() => changeScreen("market")}
+          openRest={() => changeScreen("rest")}
+          openTraining={() => changeScreen("training")}
           routeProgress={routeProgress}
-          setRouteProgress={setRouteProgress}
-          choices={profile.choices}
-          chapter={selectedChapter}
+          choices={runChoices}
+          chronicle={runChronicle}
+          treasures={treasures}
+          onChooseNode={(node) => setRunChronicle((value) => [...value.slice(-5), `路线 · ${node.name}`])}
         />
       )}
-      {screen === "event" && <EventScreen chapter={selectedChapter} origin={selectedOrigin} choices={profile.choices} setProfile={setProfile} setScreen={setScreen} setHp={setHp} setStones={setStones} setRunDeck={setRunDeck} setRouteProgress={setRouteProgress} />}
+      {screen === "market" && (
+        <MarketScreen
+          origin={selectedOrigin}
+          deck={runDeck}
+          setDeck={setRunDeck}
+          stones={stones}
+          setStones={setStones}
+          treasures={treasures}
+          setTreasures={setTreasures}
+          setMaxQi={setMaxQi}
+          setProfile={setProfile}
+          onLeave={() => {
+            setRouteProgress((value) => Math.min(3, value + 1));
+            changeScreen("map");
+          }}
+        />
+      )}
+      {screen === "rest" && (
+        <RestScreen
+          hp={hp}
+          maxHp={maxHp}
+          deck={runDeck}
+          origin={selectedOrigin}
+          setHp={setHp}
+          setDeck={setRunDeck}
+          setConsumables={setConsumables}
+          onComplete={() => {
+            setRouteProgress((value) => Math.min(3, value + 1));
+            changeScreen("map");
+          }}
+        />
+      )}
+      {screen === "training" && (
+        <TrainingScreen
+          deck={runDeck}
+          origin={selectedOrigin}
+          maxQi={maxQi}
+          setMaxQi={setMaxQi}
+          setDeck={setRunDeck}
+          onComplete={() => {
+            setRouteProgress((value) => Math.min(3, value + 1));
+            changeScreen("map");
+          }}
+        />
+      )}
+      {screen === "event" && <EventScreen chapter={selectedChapter} origin={selectedOrigin} choices={runChoices} setProfile={setProfile} setScreen={setScreen} setHp={setHp} maxHp={maxHp} setStones={setStones} setRunDeck={setRunDeck} setRouteProgress={setRouteProgress} setNextEnemyShield={setNextEnemyShield} addRunEcho={(text) => setRunChronicle((value) => [...value.slice(-5), text])} />}
       {screen === "combat" && (
         <CombatScreen
           origin={selectedOrigin}
           stage={stage}
+          chapter={selectedChapter}
           hp={hp}
+          maxHp={maxHp}
           qi={qi}
+          maxQi={maxQi}
           shield={shield}
           edge={edge}
           jobState={jobState}
@@ -554,6 +1575,8 @@ function App() {
           enemyBurn={enemyBurn}
           enemyPoison={enemyPoison}
           enemyWeak={enemyWeak}
+          enemyShield={enemyShield}
+          playerWeak={playerWeak}
           hand={hand}
           drawPile={drawPile}
           discardPile={discardPile}
@@ -564,14 +1587,32 @@ function App() {
           combatFx={combatFx}
           combatBusy={combatBusy}
           playerFx={playerFx}
+          triggerFx={triggerFx}
           playCard={playCard}
+          effectiveCardCost={effectiveCardCost}
+          cardSynergyState={cardSynergyState}
           endTurn={endTurn}
+          consumables={consumables}
+          treasures={treasures}
+          useConsumable={useConsumable}
           setOverlay={setOverlay}
+          showGuide={(debugTutorial || (!profile.tutorialFlags.combat && selectedChapter === 1 && stage === 1)) && !debugAutoplay && !debugAutoClick}
+          completeGuide={() => setProfile((value) => ({ ...value, tutorialFlags: { ...value.tutorialFlags, combat: true } }))}
         />
       )}
-      {screen === "reward" && <RewardScreen stage={stage} origin={origin} claimReward={claimReward} />}
-      {screen === "summary" && <SummaryScreen hp={hp} stones={stones} setScreen={setScreen} profile={profile} />}
-      {overlay && <Overlay type={overlay} close={() => setOverlay(null)} hand={hand} />}
+      {screen === "reward" && <RewardScreen stage={stage} origin={origin} deck={runDeck} treasures={treasures} stones={stones} setStones={setStones} claimReward={claimReward} skipReward={skipReward} />}
+      {screen === "summary" && <SummaryScreen chapter={selectedChapter} hp={hp} maxHp={maxHp} stones={stones} treasures={treasures} deck={runDeck} setScreen={setScreen} profile={profile} runChoices={runChoices} runChronicle={runChronicle} runStats={runStats} />}
+      {screen === "defeat" && (
+        <DefeatScreen
+          chapter={selectedChapter}
+          stage={stage}
+          deck={runDeck}
+          treasures={treasures}
+          onRetry={() => beginRun(selectedChapter)}
+          onHome={() => changeScreen("home")}
+        />
+      )}
+      {overlay && <Overlay type={overlay} close={() => setOverlay(null)} deck={runDeck} profile={profile} setProfile={setProfile} treasures={treasures} savedRun={savedRun} abandonRun={abandonRun} feedback={feedback} />}
     </main>
   );
 }
@@ -598,10 +1639,10 @@ function MobileTopBar({ title, subtitle, onBack, profile }) {
   );
 }
 
-function HomeScreen({ profile, setScreen, setOverlay, beginRun }) {
+function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resumeRun }) {
   return (
     <section className="mobile-shell home-screen screen-content">
-      <div className="home-hero">
+      <div className={`home-hero ${savedRun ? "has-save" : ""}`}>
         <img src="/ui/bg_title_shrine.png" alt="" />
         <div className="home-shade" />
         <MobileTopBar title="青岚夜行" subtitle="云游录 · 第七夜" profile={profile} />
@@ -611,10 +1652,11 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun }) {
           <p>师姐留下的血书正在褪色。第七盏灯亮起之前，你必须进入青岚谷。</p>
         </div>
         <button className="chapter-continue" onClick={beginRun}>
-          <small>主线 · 第一章</small>
-          <strong>雨入青岚</strong>
-          <span>继续调查 →</span>
+          <small>{savedRun ? `自动存档 · 第 ${savedRun.selectedChapter} 章` : "主线 · 新的云游"}</small>
+          <strong>{savedRun ? CHAPTERS[savedRun.selectedChapter - 1]?.name : "雨入青岚"}</strong>
+          <span>{savedRun ? "重新选择道途 →" : "开始调查 →"}</span>
         </button>
+        {savedRun && <button className="run-resume" onClick={resumeRun}><span>{savedRun.screen === "combat" ? "继续当前战斗" : "继续上次云游"}</span><small>{savedRun.screen === "combat" ? `第 ${savedRun.combatTurn || 1} 回合 · 敌人 ${savedRun.enemy?.hp ?? "?"}/${savedRun.enemy?.max ?? "?"}` : `路线 ${savedRun.routeProgress + 1}/4`} · {getProfession(savedRun.origin).short} · 生命 {savedRun.hp}</small></button>}
       </div>
       <div className="home-dashboard">
         <div className="resource-strip">
@@ -622,9 +1664,10 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun }) {
           <span><img src="/ui/icons/qi.png" alt="" /><b>{profile.spirit}</b><small>悟道</small></span>
           <span><img src="/ui/icons/treasure.png" alt="" /><b>6/6</b><small>道途</small></span>
         </div>
+        <div className="account-progress"><span>修行等级 Lv.{profile.level}</span><i><b style={{ width: `${profile.xp % 100}%` }} /></i><small>{profile.xp % 100}/100</small></div>
         <div className="home-actions">
           <button onClick={() => setScreen("classes")}><img src="/ui/breakthroughs/sword_heart.png" alt="" /><span><strong>道途</strong><small>{DECK_RECIPES.length} 套流派</small></span></button>
-          <button onClick={() => setScreen("collection")}><img src="/ui/treasures/bamboo_slip.png" alt="" /><span><strong>藏经阁</strong><small>{ALL_CARDS.length} 张术法</small></span></button>
+          <button onClick={() => setScreen("collection")}><img src="/ui/treasures/bamboo_slip.png" alt="" /><span><strong>藏经阁</strong><small>{profile.discoveredCards?.length || 0}/{ALL_CARDS.length} 已收录</small></span></button>
           <button onClick={() => setScreen("growth")}><img src="/ui/insights/open_meridians.png" alt="" /><span><strong>悟道树</strong><small>永久成长</small></span></button>
           <button onClick={() => setOverlay("codex")}><img src="/ui/treasures/spirit_lamp.png" alt="" /><span><strong>异闻录</strong><small>人物与线索</small></span></button>
         </div>
@@ -672,6 +1715,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
 function ClassScreen({ origin, setOrigin, profile, onBack, onStart }) {
   const current = getProfession(origin);
   const mastery = profile.jobMastery[origin] || 0;
+  const nextMilestone = MASTERY_MILESTONES.find((milestone) => mastery < milestone.level);
   return (
     <section className="mobile-shell class-screen screen-content">
       <MobileTopBar title="选择道途" subtitle="职业决定卡池与核心资源" onBack={onBack} profile={profile} />
@@ -689,10 +1733,16 @@ function ClassScreen({ origin, setOrigin, profile, onBack, onStart }) {
       <article className="mechanic-panel">
         <span className="section-index">核心机制</span>
         <p>{current.mechanic}</p>
-        <strong className="build-count">该职业拥有 20 张专属卡牌 · 18 套推荐构筑</strong>
-        <div className="starter-preview">{current.cards.slice(0, 4).map((card) => <MiniCard card={card} key={card.id} />)}</div>
+        <strong className="build-count">20 张专属技能 · 12 张起始牌库 · 18 套推荐构筑</strong>
+        <div className="mastery-rewards">
+          <div className="mastery-reward-heading"><span>道途传承</span><small>{nextMilestone ? `下一层 · ${nextMilestone.level - mastery} 熟练` : "全部传承已觉醒"}</small></div>
+          {MASTERY_MILESTONES.map((milestone) => <div className={`mastery-reward ${mastery >= milestone.level ? "unlocked" : ""}`} key={milestone.level}>
+            <b>{milestone.level}</b><span><strong>{milestone.name}</strong><small>{milestone.effect}</small></span>
+          </div>)}
+        </div>
+        <div className="starter-preview">{masteryStarterDeck(current, mastery).slice(0, 8).map((card) => <MiniCard card={card} key={card.id} />)}</div>
       </article>
-      <button className="primary-cta mobile-primary" onClick={onStart}>以此道途进入第一章</button>
+      <button className="primary-cta mobile-primary" onClick={onStart}>确认道途 · 选择章节</button>
     </section>
   );
 }
@@ -705,6 +1755,18 @@ function StoryScreen({ scene, index, total, chapter, onChoose }) {
     4: [["唤醒城中人的噩梦", "归还梦境"], ["夺取黑莲保存的影子", "夺回影子"]],
     5: [["让命册保留所有旧名", "修复命册"], ["在最后一页写下新的规则", "重写命册"]],
   }[chapter];
+  const choiceConsequences = {
+    "相信守门人": "获得 6 灵石；后续路线回应你的信任",
+    "隐瞒血书": "获得 1 份清神粉；独自保守师姐的秘密",
+    "接受引灯": "失去 6 生命；获得一张净心术法",
+    "追查旧案": "获得 10 灵石；优先调查师父旧路",
+    "破阵": "本局灵气上限 +1",
+    "寻人": "恢复 14 生命",
+    "归还梦境": "获得阴雷子与清神粉",
+    "夺回影子": "获得 16 灵石",
+    "修复命册": "生命完全恢复",
+    "重写命册": "将牌组中可精研术法全部化为真解",
+  };
   return (
     <section className="story-screen screen-content">
       <img className="story-art" src={scene.art} alt="" />
@@ -716,7 +1778,7 @@ function StoryScreen({ scene, index, total, chapter, onChoose }) {
         <p>“{scene.text}”</p>
         {index === 1 ? (
           <div className="story-choices">
-            {chapterChoices.map(([label, value]) => <button key={value} onClick={() => onChoose(value)}>{label}</button>)}
+            {chapterChoices.map(([label, value]) => <button key={value} onClick={() => onChoose(value)}><strong>{label}</strong><small>{choiceConsequences[value]}</small></button>)}
           </div>
         ) : <button className="story-next" onClick={() => onChoose()}>继续 <span>›</span></button>}
       </div>
@@ -749,17 +1811,24 @@ function GrowthScreen({ profile, setProfile, onBack }) {
   );
 }
 
-function CollectionScreen({ origin, setOrigin, onBack }) {
+function CollectionScreen({ origin, setOrigin, profile, onBack }) {
   const current = getProfession(origin);
   const [rarity, setRarity] = useState("全部");
   const shown = rarity === "全部" ? current.cards : current.cards.filter((card) => card.rarity === rarity);
+  const discovered = new Set(profile.discoveredCards || []);
+  const currentDiscovered = current.cards.filter((card) => discovered.has(card.id)).length;
+  const refinedDiscovered = current.cards.filter((card) => card.refined && discovered.has(card.id)).length;
   return (
     <section className="mobile-shell collection-screen screen-content">
-      <MobileTopBar title="藏经阁" subtitle={`${ALL_CARDS.length} 张职业卡牌`} onBack={onBack} />
-      <div className="collection-jobs">{PROFESSIONS.map((job) => <button className={job.id === origin ? "active" : ""} key={job.id} onClick={() => setOrigin(job.id)}><img src={job.icon} alt="" />{job.short}</button>)}</div>
+      <MobileTopBar title="藏经阁" subtitle={`${profile.discoveredCards?.length || 0}/${ALL_CARDS.length} 张术法已收录`} onBack={onBack} />
+      <div className="collection-jobs">{PROFESSIONS.map((job) => {
+        const count = job.cards.filter((card) => discovered.has(card.id)).length;
+        return <button className={job.id === origin ? "active" : ""} key={job.id} onClick={() => setOrigin(job.id)}><img src={job.icon} alt="" /><span>{job.short}<small>{count}/20</small></span></button>;
+      })}</div>
       <div className="rarity-filter">{["全部", "普通", "精良", "稀有", "传说"].map((item) => <button className={item === rarity ? "active" : ""} key={item} onClick={() => setRarity(item)}>{item}</button>)}</div>
-      <div className="collection-count"><span>{current.name}</span><strong>{shown.length} / 20</strong></div>
-      <div className="card-library">{shown.map((card) => <LibraryCard card={card} key={card.id} />)}</div>
+      <div className="collection-count"><span>{current.name} · 真解 {refinedDiscovered}/10</span><strong>{currentDiscovered} / 20</strong></div>
+      <div className="collection-progress"><i><b style={{ width: `${currentDiscovered * 5}%` }} /></i><small>{currentDiscovered === 20 ? "本门术法已全部收录" : `再发现 ${20 - currentDiscovered} 张，补全本门卷册`}</small></div>
+      <div className="card-library">{shown.map((card) => <LibraryCard card={card} discovered={discovered.has(card.id)} key={card.id} />)}</div>
     </section>
   );
 }
@@ -768,8 +1837,11 @@ function MiniCard({ card }) {
   return <div className="mini-card"><img src={card.art} alt="" /><span>{card.cost}</span><small>{card.name}</small></div>;
 }
 
-function LibraryCard({ card }) {
-  return <article className={`library-card rarity-${card.rarity}`}><img src={card.art} alt="" /><div><span>{card.cost}</span><small>{card.rarity} · {card.type}</small><h3>{card.name}</h3><p>{card.text}</p></div></article>;
+function LibraryCard({ card, discovered }) {
+  if (!discovered) {
+    return <article className="library-card undiscovered"><div className="unknown-card-art"><img src="/card_back_qinglan_trial.png" alt="" /><b>?</b></div><div><small>{card.rarity} · {card.type}</small><h3>未收录术法</h3><p>{card.refined ? `精研「${card.baseName}」后收录真解。` : `在战利、坊市或山中异闻中发现 · 关键词「${card.keyword}」`}</p></div></article>;
+  }
+  return <article className={`library-card rarity-${card.rarity} ${card.refined ? "refined-card" : ""}`}><img src={card.art} alt="" /><div><span>{card.cost}</span><small>{card.rarity} · {card.type}</small><h3>{card.name}</h3><p>{card.text}</p></div></article>;
 }
 
 function TitleScreen({ origin, setOrigin, selectedOrigin, beginRun, setOverlay }) {
@@ -822,19 +1894,25 @@ function TitleScreen({ origin, setOrigin, selectedOrigin, beginRun, setOverlay }
   );
 }
 
-function RunHeader({ stage, hp, stones }) {
+function RunHeader({ stage, chapter, hp, maxHp, stones }) {
+  const chapterData = CHAPTERS[chapter - 1];
   return (
     <header className="run-header">
-      <div className="run-brand"><span className="brand-mark small">青</span><div><strong>青岚夜行</strong><small>第 {stage} 幕 · {stage === 1 ? "青岚谷" : stage === 2 ? "玄阴山道" : "筑基雷云"}</small></div></div>
+      <div className="run-brand"><span className="brand-mark small">青</span><div><strong>青岚夜行</strong><small>第 {chapter} 章 · {chapterData?.region} · 路线 {stage}/3</small></div></div>
       <div className="run-progress"><span style={{ width: `${Math.min(100, stage * 33)}%` }} /></div>
-      <div className="header-resources"><span><img src="/ui/icons/hp.png" alt="" />{hp}/72</span><span><img src="/ui/icons/stones.png" alt="" />{stones}</span></div>
+      <div className="header-resources"><span><img src="/ui/icons/hp.png" alt="" />{hp}/{maxHp}</span><span><img src="/ui/icons/stones.png" alt="" />{stones}</span></div>
     </header>
   );
 }
 
-function MapScreen({ stage, hp, stones, enterCombat, setScreen, setOverlay, routeProgress, setRouteProgress, choices, chapter }) {
+function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openMarket, openRest, openTraining, routeProgress, choices, chronicle, treasures, onChooseNode }) {
   const chapterRoutes = CHAPTER_ROUTES[chapter] || ROUTE_ROWS;
-  const currentChoices = chapterRoutes[Math.min(routeProgress, chapterRoutes.length - 1)];
+  const baseChoices = chapterRoutes[Math.min(routeProgress, chapterRoutes.length - 1)];
+  const currentChoices = [
+    ...baseChoices,
+    ...(routeProgress === 1 ? [{ id: "rest", kind: "调息", name: "避雨灵泉", desc: "恢复血线、温养术法或整理应急小物。", art: "/bg_spirit_rift.png" }] : []),
+    ...(routeProgress === 2 ? [{ id: "training", kind: "修炼", name: "问心石阶", desc: "开拓灵气、精研核心牌或忘却冗余。", art: "/bg_soul_shrine.png" }] : []),
+  ];
   const chapterCopy = CHAPTER_ROUTE_COPY[chapter];
   const routeMeta = {
     story: { risk: "无战斗", reward: "剧情线索", consequence: choices.includes("相信守门人") ? "陆观愿意透露名册旧案" : "陆观仍在试探你的来意" },
@@ -842,19 +1920,21 @@ function MapScreen({ stage, hp, stones, enterCombat, setScreen, setOverlay, rout
     event: { risk: "危险 · 未知", reward: "恢复 / 悟道", consequence: "可能留下本局印记" },
     elite: { risk: "危险 · 高", reward: "稀有牌 / 法宝", consequence: "首领前最后试炼" },
     market: { risk: `持有 ${stones} 灵石`, reward: "购牌 / 删牌", consequence: "牺牲经济换稳定性" },
+    rest: { risk: "无战斗", reward: "恢复 / 精研 / 小物", consequence: "放弃战利，稳定血线" },
+    training: { risk: "无战斗", reward: "灵气 / 精研 / 压缩", consequence: "永久改变本局牌组节奏" },
     boss: { risk: "首领战", reward: "章节突破", consequence: "揭开第七盏灯真相" },
   };
   const chooseNode = (node) => {
+    onChooseNode(node);
     if (["battle", "elite", "boss"].includes(node.id)) enterCombat(Math.min(3, routeProgress || 1));
     else if (node.id === "event" || node.id === "story") setScreen("event");
-    else {
-      setOverlay("market");
-      setRouteProgress((value) => Math.min(3, value + 1));
-    }
+    else if (node.id === "rest") openRest();
+    else if (node.id === "training") openTraining();
+    else openMarket();
   };
   return (
     <section className="map-screen campaign-map screen-content">
-      <RunHeader stage={stage} hp={hp} stones={stones} />
+      <RunHeader stage={stage} chapter={chapter} hp={hp} maxHp={maxHp} stones={stones} />
       <div className="map-intro">
         <span className="section-index">第 {chapter} 章 · 路线 {routeProgress + 1}/4</span>
         <h1>{chapterCopy.title}</h1>
@@ -893,18 +1973,187 @@ function MapScreen({ stage, hp, stones, enterCombat, setScreen, setOverlay, rout
         </div>
       </div>
       <div className="map-side-note"><span>本章线索</span><p>{chapterCopy.clue}</p></div>
+      {chronicle.length > 0 && <aside className="run-chronicle">
+        <span>命途回响</span>
+        {chronicle.slice(-3).map((entry, index) => <p key={`${entry}-${index}`}>{entry}</p>)}
+      </aside>}
+      <TreasureStrip treasures={treasures} />
     </section>
   );
 }
 
-function EventScreen({ chapter, origin, choices, setProfile, setScreen, setHp, setStones, setRunDeck, setRouteProgress }) {
+function RestScreen({ hp, maxHp, deck, origin, setHp, setDeck, setConsumables, onComplete }) {
+  const upgradable = deck.map((card, index) => ({ card, index, next: refinedVersion(card, origin) })).filter((item) => item.next);
+  const resolve = (kind) => {
+    if (kind === "heal") setHp((value) => Math.min(maxHp, value + 18));
+    if (kind === "refine") {
+      setHp((value) => Math.min(maxHp, value + 8));
+      if (upgradable.length) {
+        const chosen = upgradable[Math.floor(Math.random() * upgradable.length)];
+        setDeck((value) => value.map((card, index) => index === chosen.index ? chosen.next : card));
+      }
+    }
+    if (kind === "supply") {
+      setHp((value) => Math.min(maxHp, value + 6));
+      const keys = ["spirit", "skin", "clarity", "thunder"];
+      const key = keys[Math.floor(Math.random() * keys.length)];
+      setConsumables((value) => ({ ...value, [key]: (value[key] || 0) + 1 }));
+    }
+    onComplete();
+  };
+  return (
+    <section className="sanctuary-screen screen-content">
+      <div className="sanctuary-copy"><span className="section-index">路线节点 · 调息</span><h1>灵泉避雨</h1><p>泉声盖过山中的低语。你只能选择一种方式整理身心，然后继续赶路。</p><strong>当前生命 {hp}/{maxHp} · 可精研 {upgradable.length} 张</strong></div>
+      <div className="sanctuary-options">
+        <button onClick={() => resolve("heal")}><small>静息回元</small><strong>恢复 18 点生命</strong><span>最稳定的选择，适合首领战前保住血线。</span></button>
+        <button disabled={!upgradable.length} onClick={() => resolve("refine")}><small>温养术法</small><strong>恢复 8 点并随机精研</strong><span>{upgradable.length ? `从 ${upgradable.length} 张候选中精研一张。` : "当前牌组已无可精研术法。"}</span></button>
+        <button onClick={() => resolve("supply")}><small>整理行囊</small><strong>恢复 6 点并补充小物</strong><span>随机获得聚气散、石肤符、清神粉或阴雷子。</span></button>
+      </div>
+    </section>
+  );
+}
+
+function TrainingScreen({ deck, origin, maxQi, setMaxQi, setDeck, onComplete }) {
+  const upgradable = deck.map((card, index) => ({ card, index, next: refinedVersion(card, origin) })).filter((item) => item.next);
+  const removable = deck
+    .map((card, index) => ({ card, index, score: card.cost * 3 + deck.filter((item) => item.name === card.name).length }))
+    .sort((a, b) => b.score - a.score);
+  const resolve = (kind) => {
+    if (kind === "qi") setMaxQi((value) => Math.min(5, value + 1));
+    if (kind === "refine" && upgradable.length) {
+      const chosen = upgradable[0];
+      setDeck((value) => value.map((card, index) => index === chosen.index ? chosen.next : card));
+    }
+    if (kind === "remove" && removable.length && deck.length > 8) {
+      setDeck((value) => value.filter((_, index) => index !== removable[0].index));
+    }
+    onComplete();
+  };
+  return (
+    <section className="sanctuary-screen training-screen screen-content">
+      <div className="sanctuary-copy"><span className="section-index">路线节点 · 修炼</span><h1>问心石阶</h1><p>石阶只允许带走一种领悟。增长上限、强化核心，或者承认某张牌已经不再适合你。</p><strong>灵气上限 {maxQi} · 牌组 {deck.length} 张</strong></div>
+      <div className="sanctuary-options">
+        <button disabled={maxQi >= 5} onClick={() => resolve("qi")}><small>吐纳周天</small><strong>灵气上限 +1</strong><span>{maxQi >= 5 ? "本局灵气上限已臻圆满。" : "提高每回合可使用术法的总量。"}</span></button>
+        <button disabled={!upgradable.length} onClick={() => resolve("refine")}><small>推演真解</small><strong>精研「{upgradable[0]?.card.name || "无候选"}」</strong><span>优先强化牌组中尚未精研的核心术法。</span></button>
+        <button disabled={deck.length <= 8} onClick={() => resolve("remove")}><small>斩却冗余</small><strong>忘却「{removable[0]?.card.name || "无候选"}」</strong><span>优先移除高费或重复牌，让抽牌循环更紧凑。</span></button>
+      </div>
+    </section>
+  );
+}
+
+function MarketScreen({ origin, deck, setDeck, stones, setStones, treasures, setTreasures, setMaxQi, setProfile, onLeave }) {
+  const [notice, setNotice] = useState("坊市可多次交易，离开后路线才会推进。");
+  const [sold, setSold] = useState([]);
+  const offers = useMemo(() => {
+    const pool = origin.cards.filter((card) => !card.refined);
+    return [...pool].sort(() => Math.random() - 0.5).slice(0, 3);
+  }, [origin.id]);
+  const discount = treasureValue(treasures, "marketDiscount");
+  const priceFor = (card) => Math.max(4, ({ 普通: 10, 精良: 13, 稀有: 17, 传说: 22 }[card.rarity] || 12) - discount);
+  const treasureOffer = useMemo(() => {
+    const pool = TREASURES.filter((treasure) => !treasures.some((owned) => owned.id === treasure.id));
+    return pool[Math.floor(Math.random() * pool.length)] || null;
+  }, []);
+  const buy = (card) => {
+    const price = priceFor(card);
+    if (stones < price || sold.includes(card.id)) return;
+    setStones((value) => value - price);
+    setDeck((value) => [...value, card]);
+    setSold((value) => [...value, card.id]);
+    setNotice(`购得「${card.name}」。牌组增至 ${deck.length + 1} 张。`);
+  };
+  const remove = (index) => {
+    if (stones < 8 || deck.length <= 8) return;
+    const card = deck[index];
+    setStones((value) => value - 8);
+    setDeck((value) => value.filter((_, cardIndex) => cardIndex !== index));
+    setNotice(`净心完成：已忘却「${card.name}」。`);
+  };
+  const refine = (index) => {
+    const next = refinedVersion(deck[index], origin);
+    if (!next || stones < 12) return;
+    setStones((value) => value - 12);
+    setDeck((value) => value.map((card, cardIndex) => cardIndex === index ? next : card));
+    setNotice(`精研完成：「${deck[index].name}」化为「${next.name}」。`);
+  };
+  const buyTreasure = () => {
+    const price = Math.max(12, 18 - discount);
+    if (!treasureOffer || stones < price || treasures.some((item) => item.id === treasureOffer.id)) return;
+    setStones((value) => value - price);
+    setTreasures((value) => [...value, treasureOffer]);
+    setProfile((value) => ({ ...value, discoveredTreasures: [...new Set([...(value.discoveredTreasures || []), treasureOffer.id])] }));
+    if (treasureOffer.maxQi) setMaxQi((value) => Math.min(5, value + treasureOffer.maxQi));
+    setNotice(`淘得法宝「${treasureOffer.name}」：${treasureOffer.effect}。`);
+  };
+  const analysis = analyzeDeck(deck);
+  return (
+    <section className="market-screen screen-content">
+      <header className="market-header">
+        <div><span className="section-index">路线节点 · 坊市</span><h1>灯下鬼市</h1><p>买得越多并不一定越强。真正的构筑，往往从删掉一张牌开始。</p></div>
+        <div className="market-wallet"><img src="/ui/icons/stones.png" alt="" /><span>灵石</span><strong>{stones}</strong></div>
+      </header>
+      <div className="market-notice">{notice}</div>
+      <div className="market-layout">
+        <section className="market-stall">
+          <div className="market-section-title"><span>摊前术法</span><small>本次入市固定三张</small></div>
+          <div className="market-offers">
+            {offers.map((card, index) => {
+              const price = priceFor(card);
+              const unavailable = stones < price || sold.includes(card.id);
+              return <div className={`market-offer ${sold.includes(card.id) ? "sold" : ""}`} key={card.id}>
+                <Card card={card} index={index} playable={!unavailable} onClick={() => buy(card)} />
+                <button disabled={unavailable} onClick={() => buy(card)}>{sold.includes(card.id) ? "已购得" : `${price} 灵石 · 购入`}</button>
+              </div>;
+            })}
+          </div>
+        </section>
+        <aside className="market-services">
+          <div className="market-section-title"><span>净心与精研</span><small>牌组 {deck.length} 张</small></div>
+          {treasureOffer && <article className="market-treasure">
+            <img src={treasureOffer.art} alt="" />
+            <div><small>本次法宝</small><strong>{treasureOffer.name}</strong><p>{treasureOffer.effect}</p></div>
+            <button disabled={stones < Math.max(12, 18 - discount) || treasures.some((item) => item.id === treasureOffer.id)} onClick={buyTreasure}>{treasures.some((item) => item.id === treasureOffer.id) ? "已拥有" : `${Math.max(12, 18 - discount)} 灵石`}</button>
+          </article>}
+          <div className="deck-mini-analysis">
+            <b>当前短板</b>
+            <p>{analysis.priorities.join(" · ") || "结构稳定，可围绕核心组件强化"}</p>
+          </div>
+          <div className="market-deck-list">
+            {deck.map((card, index) => {
+              const canRefine = Boolean(refinedVersion(card, origin));
+              return <article key={`${card.id}-${index}`}>
+                <img src={card.art} alt="" />
+                <div><strong>{card.name}</strong><small>{card.cost} 费 · {card.keyword} · {card.rarity}</small></div>
+                <button disabled={!canRefine || stones < 12} onClick={() => refine(index)}>{card.refined ? "已真解" : "精研 12"}</button>
+                <button disabled={stones < 8 || deck.length <= 8} onClick={() => remove(index)}>忘却 8</button>
+              </article>;
+            })}
+          </div>
+        </aside>
+      </div>
+      <button className="market-leave" onClick={onLeave}>收起行囊 · 返回命途</button>
+    </section>
+  );
+}
+
+function EventScreen({ chapter, origin, choices, setProfile, setScreen, setHp, maxHp, setStones, setRunDeck, setRouteProgress, setNextEnemyShield, addRunEcho }) {
   const choose = (kind) => {
-    if (kind === "rest") setHp((value) => Math.min(72, value + 12));
-    if (kind === "stones") setStones((value) => value + 18);
+    if (kind === "rest") setHp((value) => Math.min(maxHp, value + 12));
+    if (kind === "stones") {
+      setStones((value) => value + 18);
+      setNextEnemyShield((value) => value + 5);
+    }
     if (kind === "profession") {
       const classCard = origin.cards.find((card) => card.rarity === "精良" && !card.refined) || origin.cards[5];
       setRunDeck((value) => [...value, classCard]);
     }
+    const echoes = {
+      profession: `古龛 · 参悟${origin.resource}残痕`,
+      rest: "古龛 · 安坐调息",
+      stones: "古龛 · 取玉，下一战敌人护体 +5",
+      leave: "古龛 · 谨慎离去",
+    };
+    addRunEcho(echoes[kind]);
     setProfile((value) => ({ ...value, choices: [...value.choices.slice(-7), `古龛:${kind}`] }));
     setRouteProgress((value) => Math.min(3, value + 1));
     setScreen("map");
@@ -938,11 +2187,10 @@ function EventScreen({ chapter, origin, choices, setProfile, setScreen, setHp, s
   );
 }
 
-function CombatScreen({ origin, stage, hp, qi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, playCard, endTurn, setOverlay }) {
+function CombatScreen({ origin, stage, chapter, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, playCard, effectiveCardCost, cardSynergyState, endTurn, consumables, treasures, useConsumable, setOverlay, showGuide, completeGuide }) {
+  const [guideStep, setGuideStep] = useState(showGuide ? 0 : -1);
   const hpPercent = Math.max(0, (enemy.hp / enemy.max) * 100);
-  const [selectedCardIndex, setSelectedCardIndex] = useState(null);
-  const selectedCard = selectedCardIndex === null ? null : hand[selectedCardIndex];
-  useEffect(() => setSelectedCardIndex(null), [hand]);
+  const currentEnemyMove = enemy.moves[enemy.moveIndex || 0];
   const professionResource = {
     sword: { icon: "/ui/icons/edge.png", label: "剑势", value: edge },
     talisman: { icon: "/ui/icons/burn.png", label: "符印", value: jobState.seals },
@@ -951,27 +2199,44 @@ function CombatScreen({ origin, stage, hp, qi, shield, edge, jobState, stones, e
     artificer: { icon: "/ui/icons/shield.png", label: "机巧", value: `${jobState.cunning}/${jobState.devices}机` },
     soul: { icon: "/ui/icons/curse.png", label: "魂灯", value: jobState.lamps },
   }[origin.id];
+  useEffect(() => {
+    if (guideStep === 1 && combatFx?.card) setGuideStep(2);
+  }, [combatFx?.card, guideStep]);
+  useEffect(() => {
+    if (guideStep === 2 && combatTurn > 1) {
+      setGuideStep(-1);
+      completeGuide();
+    }
+  }, [combatTurn, completeGuide, guideStep]);
+  const guide = [
+    { label: "壹 · 先读敌意", title: "知道敌人下一步要做什么", text: `当前「${enemy.intent}」，下一式也会提前显示。先判断该进攻还是护体。`, action: "我看懂了" },
+    { label: "贰 · 单击出牌", title: "亮起的卡牌可以立即施放", text: "左上角是灵气费用。单击卡牌就会直接出牌，不需要再次确认。" },
+    { label: "叁 · 交出回合", title: "准备好后结束回合", text: "敌人会执行当前招式，随后弃置余牌、抽取新手牌并恢复灵气。" },
+  ][guideStep];
   return (
-    <section className={`combat-screen screen-content ${combatFx?.phase || ""} ${playerFx?.kind || ""}`}>
+    <section className={`combat-screen screen-content ${combatFx?.phase || ""} ${playerFx?.kind || ""} guide-step-${guideStep}`}>
       <aside className={`player-rail ${playerFx ? "player-impact" : ""}`}>
         <div className="portrait"><img src="/enemy_rogue_cultivator.png" alt="" /></div>
         <div className="player-name"><strong>{origin.name}</strong><small>炼气前期</small></div>
-        <Resource icon="/ui/icons/hp.png" name="生命" value={`${hp}/72`} />
-        <Resource icon="/ui/icons/qi.png" name="灵气" value={`${qi}/3`} />
+        <Resource icon="/ui/icons/hp.png" name="生命" value={`${hp}/${maxHp}`} />
+        <Resource icon="/ui/icons/qi.png" name="灵气" value={`${qi}/${maxQi}`} />
         <Resource icon="/ui/icons/shield.png" name="护盾" value={shield} />
+        {playerWeak > 0 && <Resource icon="/ui/icons/weak.png" name="虚弱" value={playerWeak} />}
         <Resource icon={professionResource.icon} name={professionResource.label} value={professionResource.value} />
         <Resource icon="/ui/icons/stones.png" name="灵石" value={stones} />
         <div className="quick-items">
-          <button aria-label="聚气诀，剩余 2"><img src="/ui/consumables/spirit_draught.png" alt="" /><span>2</span></button>
-          <button aria-label="护体灵气，剩余 1"><img src="/ui/consumables/stone_skin_talisman.png" alt="" /><span>1</span></button>
-          <button aria-label="清心散，剩余 1"><img src="/ui/consumables/clarity_powder.png" alt="" /><span>1</span></button>
+          <button disabled={!consumables.spirit || combatBusy} aria-label={`聚气散，剩余 ${consumables.spirit}`} onClick={() => useConsumable("spirit")}><img src="/ui/consumables/spirit_draught.png" alt="" /><span>{consumables.spirit}</span></button>
+          <button disabled={!consumables.skin || combatBusy} aria-label={`石肤符，剩余 ${consumables.skin}`} onClick={() => useConsumable("skin")}><img src="/ui/consumables/stone_skin_talisman.png" alt="" /><span>{consumables.skin}</span></button>
+          <button disabled={!consumables.clarity || combatBusy} aria-label={`清神粉，剩余 ${consumables.clarity}`} onClick={() => useConsumable("clarity")}><img src="/ui/consumables/clarity_powder.png" alt="" /><span>{consumables.clarity}</span></button>
+          <button disabled={!consumables.thunder || combatBusy} aria-label={`阴雷子，剩余 ${consumables.thunder}`} onClick={() => useConsumable("thunder")}><img src="/ui/consumables/thunder_seed.png" alt="" /><span>{consumables.thunder}</span></button>
         </div>
       </aside>
       <div className={`enemy-stage ${combatFx?.phase === "impact" && combatFx.damage > 0 ? "enemy-impact" : ""} ${combatFx?.phase === "enemy-turn" ? "enemy-lunge" : ""}`}>
-        <div className="enemy-title"><span>第 {stage} 幕 · 第 {combatTurn} 回合</span><h1>{enemy.name}</h1></div>
+        <div className="enemy-title"><span>第 {chapter} 章 · {stage === 1 ? "普通战" : stage === 2 ? "精英战" : "首领战"} · 第 {combatTurn} 回合</span><h1>{enemy.name}</h1></div>
         <div className="enemy-health"><span style={{ width: `${hpPercent}%` }} /><strong>{enemy.hp}/{enemy.max}</strong></div>
-        <div className="intent"><small>下次行动</small><strong>{enemy.intent}</strong></div>
-        {(enemyBurn > 0 || enemyPoison > 0 || enemyWeak > 0) && <div className="enemy-statuses">
+        <div className={`intent ${guideStep === 0 ? "guide-focus" : ""}`}><small>当前招式</small><strong>{enemy.intent}</strong><b>{currentEnemyMove.note}</b><em>下一式 · {intentLabel(enemy.moves[(enemy.moveIndex + 1) % enemy.moves.length])}</em></div>
+        {(enemyBurn > 0 || enemyPoison > 0 || enemyWeak > 0 || enemyShield > 0) && <div className="enemy-statuses">
+          {enemyShield > 0 && <span className="status-shield"><img src="/ui/icons/shield.png" alt="" />护体 {enemyShield}</span>}
           {enemyBurn > 0 && <span className="status-burn"><img src="/ui/icons/burn.png" alt="" />燃烧 {enemyBurn}</span>}
           {enemyPoison > 0 && <span className="status-poison"><img src="/ui/icons/curse.png" alt="" />丹毒 {enemyPoison}</span>}
           {enemyWeak > 0 && <span className="status-weak"><img src="/ui/icons/weak.png" alt="" />虚弱 {enemyWeak}</span>}
@@ -987,32 +2252,44 @@ function CombatScreen({ origin, stage, hp, qi, shield, edge, jobState, stones, e
       {combatFx?.phase === "enemy-impact" && <div className="enemy-strike-flash" />}
       {playerFx && <div className={`player-damage-number ${playerFx.kind}`}>{playerFx.damage > 0 ? `−${playerFx.damage}` : "格挡"}</div>}
       {combatFx?.phase === "enemy-turn" && <div className="turn-banner"><small>敌方回合</small><strong>{enemy.intent}</strong></div>}
+      {triggerFx && <div className="trigger-feedback">
+        <small>{triggerFx.combo ? "联动触发" : "术法结算"}</small>
+        <strong>{triggerFx.card}</strong>
+        {triggerFx.combo && <em>{triggerFx.combo}</em>}
+        <div>{triggerFx.effects.map((effect) => <span key={effect}>{effect}</span>)}</div>
+      </div>}
       {drawFx && <DrawSequence fx={drawFx} />}
       <aside className="progress-rail">
         <span>本轮进度</span>
-        {[1, 2, 3, 4, 5].map((step) => <i key={step} className={step <= stage ? "done" : ""}>{step}</i>)}
+        {[1, 2, 3].map((step) => <i key={step} className={step <= stage ? "done" : ""}>{step}</i>)}
         <nav>
           <button onClick={() => setOverlay("map")}>地图</button>
           <button onClick={() => setOverlay("codex")}>图鉴</button>
           <button onClick={() => setOverlay("settings")}>设置</button>
         </nav>
       </aside>
-      <div className="hand">
-        {hand.slice(0, 5).map((card, index) => <Card key={`${card.id}-${index}`} card={card} index={index} selected={selectedCardIndex === index} playable={!combatBusy && qi >= card.cost} casting={combatFx?.index === index} onClick={() => setSelectedCardIndex(index)} onDoubleClick={() => playCard(index)} />)}
+      <div className={`hand hand-${Math.min(7, hand.length)} ${guideStep === 1 ? "guide-focus" : ""}`}>
+        {hand.slice(0, 7).map((card, index) => {
+          const cost = effectiveCardCost(card);
+          const synergy = cardSynergyState(card);
+          return <Card key={`${card.id}-${index}`} card={card} index={index} displayCost={cost} comboReady={synergy.conditional && synergy.active} playable={!combatBusy && qi >= cost} casting={combatFx?.index === index} onClick={() => playCard(index)} />;
+        })}
       </div>
-      {selectedCard && <div className="card-inspector">
-        <div><span>{selectedCard.keyword}</span><strong>{selectedCard.name}</strong><small>{selectedCard.rarity} · {selectedCard.type} · {selectedCard.cost} 灵气</small></div>
-        <p>{selectedCard.text}</p>
-        <em>{selectedCard.combo}</em>
-        <button disabled={combatBusy || qi < selectedCard.cost} onClick={() => playCard(selectedCardIndex)}>施展</button>
-      </div>}
-      <button className="end-turn" disabled={combatBusy} onClick={endTurn}><span className="end-turn-ring" /><strong>结束<br />回合</strong><kbd>Space</kbd></button>
+      <button className={`end-turn ${guideStep === 2 ? "guide-focus" : ""}`} disabled={combatBusy} onClick={endTurn}><span className="end-turn-ring" /><strong>结束<br />回合</strong><kbd>Space</kbd></button>
       <div className="pile-status">
         <button className="deck-count" aria-label={`抽牌堆剩余 ${drawPile.length} 张`} onClick={() => setOverlay("deck")}><img src="/card_back_qinglan_trial.png" alt="" /><span>{drawPile.length}</span></button>
         <span className="discard-count">弃 {discardPile.length}</span>
         {exhaustPile.length > 0 && <span className="exhaust-count">耗 {exhaustPile.length}</span>}
       </div>
-      <div className="qi-orb"><strong>{qi}</strong><span>/3</span></div>
+      <div className="qi-orb"><strong>{qi}</strong><span>/{maxQi}</span></div>
+      <TreasureStrip treasures={treasures} compact />
+      {guide && <aside className={`combat-guide guide-${guideStep}`}>
+        <button className="guide-skip" onClick={() => { setGuideStep(-1); completeGuide(); }}>跳过</button>
+        <small>{guide.label}</small>
+        <strong>{guide.title}</strong>
+        <p>{guide.text}</p>
+        {guide.action && <button className="guide-next" onClick={() => setGuideStep(1)}>{guide.action}</button>}
+      </aside>}
     </section>
   );
 }
@@ -1054,25 +2331,27 @@ function Resource({ icon, name, value }) {
   return <div className="resource"><img src={icon} alt="" /><span>{name}</span><strong>{value}</strong></div>;
 }
 
-function Card({ card, index, playable, casting = false, selected = false, onClick, onDoubleClick }) {
+function Card({ card, index, playable, displayCost = card.cost, comboReady = false, casting = false, onClick }) {
   return (
-    <button className={`game-card rarity-${card.rarity} ${playable ? "playable" : "disabled"} ${selected ? "selected-card" : ""} ${casting ? "casting-card" : ""} type-${card.type}`} disabled={!playable} onClick={onClick} onDoubleClick={onDoubleClick}>
-      <span className="card-cost">{card.cost}</span>
+    <button className={`game-card rarity-${card.rarity} ${playable ? "playable" : "disabled"} ${comboReady ? "combo-ready" : ""} ${casting ? "casting-card" : ""} type-${card.type}`} disabled={!playable} aria-disabled={!playable} onClick={onClick}>
+      <span className={`card-cost ${displayCost < card.cost ? "discounted" : ""}`}>{displayCost}</span>
       <span className="card-key">{index + 1}</span>
       <h3>{card.name}</h3>
       <img src={card.art} alt="" />
       <div className="card-meta"><small>{card.type}</small><b>{card.rarity}</b></div>
       <strong className="card-keyword">{card.keyword}</strong>
+      {comboReady && <span className="combo-ready-seal">联</span>}
       <p>{card.text}</p>
       {card.combo && <em>{card.combo}</em>}
     </button>
   );
 }
 
-function RewardScreen({ stage, origin, claimReward }) {
+function RewardScreen({ stage, origin, deck, treasures, stones, setStones, claimReward, skipReward }) {
+  const [rerollCount, setRerollCount] = useState(0);
   const rewards = useMemo(() => {
     const profession = getProfession(origin);
-    const eligible = profession.cards.filter((card) => card.tier <= Math.min(4, stage + 1) && !profession.starterDeck.includes(card.id));
+    const eligible = profession.cards.filter((card) => card.tier <= Math.min(4, stage + 1));
     const weighted = eligible.flatMap((card) => {
       const weight = card.rarity === "普通" ? (stage === 1 ? 5 : 2) : card.rarity === "精良" ? 4 : card.rarity === "稀有" ? stage + 1 : 1;
       return Array.from({ length: weight }, () => card);
@@ -1082,42 +2361,196 @@ function RewardScreen({ stage, origin, claimReward }) {
       const candidate = weighted[Math.floor(Math.random() * weighted.length)];
       if (!selected.some((card) => card.id === candidate.id)) selected.push(candidate);
     }
+    if (selected.length < 3) {
+      for (const card of profession.cards) {
+        if (!selected.some((item) => item.id === card.id)) selected.push(card);
+        if (selected.length === 3) break;
+      }
+    }
     return selected;
-  }, [origin, stage]);
+  }, [origin, stage, rerollCount]);
+  const treasureReward = useMemo(() => {
+    if (stage < 2) return null;
+    const pool = TREASURES.filter((treasure) => !treasures.some((owned) => owned.id === treasure.id));
+    return pool[Math.floor(Math.random() * pool.length)] || null;
+  }, [origin, stage, rerollCount]);
+  const rerollPrice = Math.max(4, 6 - Math.min(2, treasureValue(treasures, "marketDiscount")));
+  const reroll = () => {
+    if (stones < rerollPrice) return;
+    setStones((value) => value - rerollPrice);
+    setRerollCount((value) => value + 1);
+  };
   return (
     <section className="reward-screen screen-content">
       <span className="section-index">战利 · 择一</span><h1>妖影散尽，灵光未灭</h1><p>奖励已按章节、稀有度和当前职业牌池生成。</p>
-      <div className="reward-cards">{rewards.map((card, index) => <div className="reward-card-wrap" style={{ "--delay": `${180 + index * 120}ms` }} key={card.id}><Card card={card} index={index} playable onClick={() => claimReward(card)} /></div>)}</div>
+      <div className="reward-cards">{rewards.map((card, index) => {
+        const fit = rewardFit(card, deck);
+        return <div className={`reward-card-wrap fit-${fit.rank}`} style={{ "--delay": `${180 + index * 120}ms` }} key={card.id}>
+          <div className="reward-fit"><b>推荐 {fit.rank}</b><span>{fit.reason}</span></div>
+          <Card card={card} index={index} playable onClick={() => claimReward(card)} />
+        </div>;
+      })}</div>
+      {treasureReward && <button className="reward-treasure" onClick={() => claimReward(null, treasureReward)}>
+        <img src={treasureReward.art} alt="" />
+        <span><small>{stage === 2 ? "精英战法宝" : "首领遗珍"}</small><strong>{treasureReward.name}</strong><em>{treasureReward.effect}</em></span>
+        <b>选择法宝</b>
+      </button>}
       <small className="reward-tip">第 {stage} 幕奖励 · 后续章节提高稀有牌和精研牌概率</small>
+      <div className="reward-actions">
+        <button className="reward-reroll" disabled={stones < rerollPrice} onClick={reroll}>重整奖励 · {rerollPrice} 灵石</button>
+        <button className="reward-skip" onClick={skipReward}>调息离开 · 恢复 10 生命</button>
+      </div>
     </section>
   );
 }
 
-function SummaryScreen({ hp, stones, setScreen }) {
+function TreasureStrip({ treasures, compact = false }) {
+  if (!treasures.length) return null;
+  return (
+    <div className={`treasure-strip ${compact ? "compact" : ""}`}>
+      <small>法宝</small>
+      {treasures.map((treasure) => <span key={treasure.id} title={`${treasure.name}：${treasure.effect}`}><img src={treasure.art} alt="" /><b>{treasure.name}</b></span>)}
+    </div>
+  );
+}
+
+function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen, profile, runChoices, runChronicle, runStats }) {
+  const evaluation = evaluateRun(runStats, hp, maxHp);
+  const baseEnding = {
+    1: ["雨停山门，灯灭其一。", "你带着第二十四人的线索走入内门，师姐的名字仍在血书上发亮。"],
+    2: ["鬼灯熄灭，旧名重现。", "师父留下的路引指向筑基雷池，而你的名字暂时从灯上消失。"],
+    3: ["雷阵已破，道心未定。", "你跨过筑基门槛，也看清青岚谷百年安稳背后的代价。"],
+    4: ["黑莲凋落，万梦归城。", "无灯城重新拥有噩梦，也重新拥有在命册之外选择明日的能力。"],
+    5: ["天门无月，诸命由己。", "命册最后一页留下新的规则，沈砚秋和所有无名者终于被世界记住。"],
+  }[chapter];
+  const endings = chapter === 5
+    ? runChoices.includes("重写命册")
+      ? ["末页新书，诸命由己。", "你没有修复旧日秩序，而是在命册末页写下新的规则：从今以后，名字只能记录选择，不能替任何人决定前路。"]
+      : ["旧册重明，无名归卷。", "你修复命册，却保留了所有被抹去的旧名。天地重新记住他们，也永远留下了篡改命数的罪证。"]
+    : baseEnding;
   return (
     <section className="summary-screen screen-content">
-      <div className="summary-seal"><span>甲上</span><small>试炼评阶</small></div>
-      <div className="summary-copy"><span className="section-index">筑基卷 · 已成</span><h1>雷云散去，<br />灵台澄明。</h1><p>你守住了这一夜的道心，也跨过了筑基门槛。</p></div>
-      <div className="summary-stats"><div><small>余命</small><strong>{hp}</strong></div><div><small>灵石</small><strong>{stones}</strong></div><div><small>战斗</small><strong>7</strong></div><div><small>修为</small><strong>+38</strong></div></div>
+      <div className="summary-seal"><span>{evaluation.grade}</span><small>{evaluation.score} 分 · {evaluation.title}</small></div>
+      <div className="summary-copy"><span className="section-index">第 {chapter} 章 · 已完成</span><h1>{endings[0]}</h1><p>{endings[1]}</p>{chapter === 5 && <small className="ending-unlocked">新结局已收入异闻录 · {runChoices.includes("重写命册") ? "诸命由己" : "旧名归卷"}</small>}</div>
+      <div className="summary-stats">
+        <div><small>余命</small><strong>{hp}/{maxHp}</strong></div>
+        <div><small>战斗 / 回合</small><strong>{runStats.combatsWon} / {runStats.turns}</strong></div>
+        <div><small>出牌 / 伤害</small><strong>{runStats.cardsPlayed} / {runStats.damageDealt}</strong></div>
+        <div><small>牌组 / 法宝</small><strong>{deck.length} / {treasures.length}</strong></div>
+      </div>
+      <div className="summary-rewards"><span>本章所得</span><b>修为 +{runStats.xpGained}</b><b>悟道 +{runStats.spiritGained}</b><b>灵玉 +{runStats.jadeGained}</b><b>灵石结余 {stones}</b></div>
+      {runChronicle.length > 0 && <div className="summary-chronicle"><span>本章命途</span>{runChronicle.slice(-4).map((entry, index) => <small key={`${entry}-${index}`}>{entry}</small>)}</div>}
       <button className="primary-cta summary-action" onClick={() => setScreen("home")}><span>返回山门</span></button>
     </section>
   );
 }
 
-function Overlay({ type, close, hand }) {
+function DefeatScreen({ chapter, stage, deck, treasures, onRetry, onHome }) {
+  const analysis = analyzeDeck(deck);
+  return (
+    <section className="defeat-screen screen-content">
+      <div className="defeat-moon" />
+      <div className="defeat-copy">
+        <span className="section-index">云游中断 · 第 {chapter} 章</span>
+        <h1>灯火未熄，<br />此路暂断。</h1>
+        <p>你倒在第 {stage} 场试炼前。失败会结束本次云游，但已经获得的道途熟练与剧情记录仍会保留。</p>
+        <div className="defeat-diagnosis">
+          <div><small>最终牌组</small><strong>{deck.length} 张</strong></div>
+          <div><small>随身法宝</small><strong>{treasures.length ? treasures.map((item) => item.name).join(" / ") : "尚未获得"}</strong></div>
+          <div><small>成型组件</small><strong>{analysis.keyComponents.map(([name]) => name).join(" / ") || "尚未成型"}</strong></div>
+          <div><small>下次优先</small><strong>{analysis.priorities.join(" / ") || "保持当前节奏"}</strong></div>
+        </div>
+        <div className="defeat-actions">
+          <button onClick={onRetry}>重启本章</button>
+          <button onClick={onHome}>返回山门</button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Overlay({ type, close, deck, profile, setProfile, treasures, savedRun, abandonRun, feedback }) {
+  const analysis = analyzeDeck(deck);
   const content = useMemo(() => ({
     guide: ["试炼札记", "先读敌人意图，再决定护体或进攻。每一幕至少经过一次坊市或修炼，避免牌组失衡。"],
     codex: ["青岚图鉴", "术法、敌情、法宝和山中异闻会在发现后记入此卷。"],
-    settings: ["设置", "音乐 80% · 环境音 65% · 动效：完整 · 决策提示：开启"],
-    market: ["山脚坊市", "摊主收起油纸伞：灵石够多时，再来谈一门真正的好术法。"],
+    settings: ["设置与存档", "本地自动存档会在出牌、回合推进、路线和奖励变化后即时更新。"],
     map: ["路线概览", "青岚谷 → 玄阴山道 → 筑基雷云"],
-    deck: ["当前牌组", `${hand.map((card) => card.name).join(" · ")} · 共 ${hand.length + 7} 张`],
-  })[type], [type, hand]);
+    deck: ["当前牌组", "读懂费用、组件与短板，比单看稀有度更重要。"],
+  })[type], [type]);
   return (
     <div className="overlay" onMouseDown={close}>
-      <article onMouseDown={(event) => event.stopPropagation()}>
+      <article className={type === "deck" ? "deck-overlay" : type === "codex" ? "codex-overlay" : ""} onMouseDown={(event) => event.stopPropagation()}>
         <button className="overlay-close" onClick={close}>收起</button>
         <span className="section-index">卷册</span><h2>{content[0]}</h2><p>{content[1]}</p>
+        {type === "deck" && <>
+          <div className="deck-analysis-grid">
+            <div><small>牌组</small><strong>{analysis.total}</strong></div>
+            <div><small>攻击</small><strong>{analysis.attack}</strong></div>
+            <div><small>防护 / 恢复</small><strong>{analysis.defense + analysis.heal}</strong></div>
+            <div><small>过牌</small><strong>{analysis.draw}</strong></div>
+          </div>
+          <div className="deck-curve">
+            {analysis.costs.map((count, cost) => <div key={cost}><i style={{ height: `${18 + count * 10}px` }} /><b>{count}</b><small>{cost === 3 ? "3+" : cost} 费</small></div>)}
+          </div>
+          <div className="deck-diagnosis"><b>补强优先级</b><span>{analysis.priorities.join(" · ") || "结构健康，继续强化核心组件"}</span></div>
+          <div className="deck-diagnosis"><b>成型组件</b><span>{analysis.keyComponents.map(([name, count]) => `${name} ${count}`).join(" · ") || "尚未形成双卡组件"}</span></div>
+          <div className="deck-scroll-list">{deck.map((card, index) => <span key={`${card.id}-${index}`}><img src={card.art} alt="" /><b>{card.name}</b><small>{card.cost} 费 · {card.keyword}</small></span>)}</div>
+        </>}
+        {type === "codex" && <>
+          <div className="codex-summary">
+            <div><small>已收录术法</small><strong>{profile.discoveredCards?.length || 0}/{ALL_CARDS.length}</strong></div>
+            <div><small>已见法宝</small><strong>{profile.discoveredTreasures?.length || 0}/{TREASURES.length}</strong></div>
+            <div><small>剧情印记</small><strong>{profile.choices?.length || 0}</strong></div>
+            <div><small>结局卷</small><strong>{profile.unlockedEndings?.length || 0}/6</strong></div>
+          </div>
+          <h3 className="codex-heading">法宝录</h3>
+          <div className="codex-treasures">
+            {TREASURES.map((treasure) => {
+              const discovered = profile.discoveredTreasures?.includes(treasure.id) || treasures.some((owned) => owned.id === treasure.id);
+              return <article className={discovered ? "" : "unknown"} key={treasure.id}><img src={treasure.art} alt="" /><div><strong>{discovered ? treasure.name : "未识法器"}</strong><p>{discovered ? treasure.effect : "在精英战、坊市或山中异闻里发现。"}</p></div></article>;
+            })}
+          </div>
+          <h3 className="codex-heading">命途印记</h3>
+          <div className="codex-marks">{profile.choices?.length ? profile.choices.map((choice, index) => <span key={`${choice}-${index}`}>{choice}</span>) : <p>尚未留下剧情选择。进入章节后，你的决定会被记录在这里。</p>}</div>
+          <h3 className="codex-heading">结局卷轴</h3>
+          <div className="codex-marks">{profile.unlockedEndings?.length ? profile.unlockedEndings.map((ending) => <span key={ending}>{{
+            chapter_1_ending: "雨停山门",
+            chapter_2_ending: "旧名重现",
+            chapter_3_ending: "雷阵已破",
+            chapter_4_ending: "万梦归城",
+            restore_fate: "旧名归卷",
+            rewrite_fate: "诸命由己",
+          }[ending] || ending}</span>) : <p>完成章节后，结局会被永久收入此卷。</p>}</div>
+        </>}
+        {type === "settings" && <div className="save-management">
+          <div className="feedback-settings">
+            <div className="setting-heading"><span>战斗反馈</span><small>设置会保存在本机</small></div>
+            <button className={profile.feedback.sound ? "active" : ""} onClick={() => {
+              const sound = !profile.feedback.sound;
+              setProfile((value) => ({ ...value, feedback: { ...value.feedback, sound } }));
+              if (sound) feedback("reward");
+            }}><strong>音效</strong><small>{profile.feedback.sound ? "已开启" : "已关闭"}</small></button>
+            <button className={profile.feedback.haptics ? "active" : ""} onClick={() => {
+              const haptics = !profile.feedback.haptics;
+              setProfile((value) => ({ ...value, feedback: { ...value.feedback, haptics } }));
+              if (haptics) feedback("impact");
+            }}><strong>触觉</strong><small>{profile.feedback.haptics ? "已开启" : "已关闭"}</small></button>
+            <label><span>音量</span><input type="range" min="0.1" max="1" step="0.05" value={profile.feedback.volume} onChange={(event) => setProfile((value) => ({ ...value, feedback: { ...value.feedback, volume: Number(event.target.value) } }))} /><b>{Math.round(profile.feedback.volume * 100)}%</b></label>
+          </div>
+          {savedRun ? <>
+            <div className="save-summary-grid">
+              <div><small>当前位置</small><strong>{savedRun.screen === "combat" ? `战斗 · 第 ${savedRun.combatTurn || 1} 回合` : savedRun.screen}</strong></div>
+              <div><small>章节 / 路线</small><strong>{savedRun.selectedChapter} / {savedRun.routeProgress + 1}</strong></div>
+              <div><small>生命 / 灵气</small><strong>{savedRun.hp} / {savedRun.qi ?? savedRun.maxQi}</strong></div>
+              <div><small>牌组 / 法宝</small><strong>{savedRun.deck?.length || 0} / {savedRun.treasures?.length || 0}</strong></div>
+            </div>
+            {savedRun.screen === "combat" && <p className="save-combat-detail">敌人 {savedRun.enemy?.name} · {savedRun.enemy?.hp}/{savedRun.enemy?.max} 生命 · 手牌 {savedRun.hand?.length || 0} · 抽牌堆 {savedRun.drawPile?.length || 0} · 弃牌堆 {savedRun.discardPile?.length || 0}</p>}
+            <small className="save-time">最近保存：{new Date(savedRun.savedAt).toLocaleString("zh-CN")}</small>
+            <button className="abandon-run" onClick={abandonRun}>放弃当前云游</button>
+            <p className="abandon-note">只清除未完成的局内存档，不影响等级、悟道、法宝图鉴、剧情印记和结局收藏。</p>
+          </> : <p>当前没有未完成的云游存档。</p>}
+        </div>}
       </article>
     </div>
   );

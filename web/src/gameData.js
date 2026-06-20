@@ -183,6 +183,16 @@ const CARD_PATTERNS = {
 
 function makeCards(job) {
   const patterns = CARD_PATTERNS[job.id];
+  const upgradedText = (base) => {
+    const changes = [...base.upgrade.matchAll(/(\d+)\s*→\s*(\d+)/g)];
+    if (!changes.length) return base.text;
+    let text = base.text;
+    for (const [, from, to] of changes) {
+      const pattern = new RegExp(`(?<!\\d)${from}(?!\\d)`, "g");
+      text = text.replace(pattern, to);
+    }
+    return text;
+  };
   return Array.from({ length: 20 }, (_, index) => {
     const base = patterns[index % patterns.length];
     const refined = index >= patterns.length;
@@ -190,14 +200,15 @@ function makeCards(job) {
     return {
       id: `${job.id}-${index + 1}`,
       job: job.id,
+      baseName: base.name,
       name: refined ? `${base.name}·真解` : base.name,
-      cost: refined && base.cost > 0 ? base.cost - 1 : base.cost,
+      cost: refined && /费用/.test(base.upgrade) && base.cost > 0 ? base.cost - 1 : base.cost,
       type: base.type,
       rarity: refined ? (base.rarity === "普通" ? "精良" : base.rarity === "精良" ? "稀有" : "传说") : base.rarity,
       tier,
       art: arts[base.art],
       keyword: base.keyword,
-      text: refined ? `${base.text.replace(/(\d+)/, (value) => String(Number(value) + 3))}` : base.text,
+      text: refined ? upgradedText(base) : base.text,
       combo: base.combo,
       upgrade: refined ? "已精研至真解" : base.upgrade,
       tags: [job.resource, base.keyword],
@@ -209,10 +220,77 @@ function makeCards(job) {
 export const PROFESSIONS = classBlueprints.map((job) => ({
   ...job,
   cards: makeCards(job),
-  starterDeck: makeCards(job).slice(0, 8).map((card) => card.id),
+  starterDeck: makeCards(job).slice(0, 12).map((card) => card.id),
 }));
 
 export const ALL_CARDS = PROFESSIONS.flatMap((job) => job.cards);
+
+export const TREASURES = [
+  { id: "moon_jade", name: "月华玉佩", art: "/ui/treasures/moon_jade.png", effect: "每场战斗首回合灵气 +1", firstTurnQi: 1 },
+  { id: "wolf_tooth", name: "狼牙剑坠", art: "/ui/treasures/wolf_tooth.png", effect: "每场战斗第一张攻击牌伤害 +3", firstAttackDamage: 3 },
+  { id: "bamboo_slip", name: "青竹残简", art: "/ui/treasures/bamboo_slip.png", effect: "每场战斗第一张法门牌额外抽 1 张", firstSkillDraw: 1 },
+  { id: "spirit_lamp", name: "聚灵灯", art: "/ui/treasures/spirit_lamp.png", effect: "战斗胜利后恢复 4 点生命", battleHeal: 4 },
+  { id: "market_token", name: "坊市木牌", art: "/ui/treasures/market_token.png", effect: "坊市交易价格减少 3 灵石", marketDiscount: 3 },
+  { id: "paper_umbrella", name: "纸伞护符", art: "/ui/treasures/paper_umbrella.png", effect: "每场战斗开局获得 5 点护盾", startShield: 5 },
+  { id: "medicine_satchel", name: "药囊", art: "/ui/treasures/medicine_satchel.png", effect: "战斗胜利后随机补充 1 件小物", battleConsumable: 1 },
+  { id: "ember_bead", name: "余烬珠", art: "/ui/treasures/ember_bead.png", effect: "燃烧结算额外造成 1 点伤害", burnDamage: 1 },
+  { id: "jade_abacus", name: "灵玉算盘", art: "/ui/treasures/jade_abacus.png", effect: "战斗胜利后额外获得 4 灵石", battleStones: 4 },
+  { id: "cloud_seal", name: "行云印", art: "/ui/treasures/cloud_seal.png", effect: "获得时灵气上限 +1", maxQi: 1 },
+  { id: "wind_chime", name: "听风铃", art: "/ui/treasures/wind_chime.png", effect: "每场战斗起手额外抽 1 张牌", firstTurnDraw: 1 },
+];
+
+export const MASTERY_MILESTONES = [
+  { level: 25, name: "行囊传承", effect: "新局初始灵石 +4" },
+  { level: 50, name: "真传术式", effect: "起始牌组的一张核心牌直接真解" },
+  { level: 75, name: "本源初醒", effect: "每场战斗以 1 点职业资源开局" },
+  { level: 100, name: "本命法宝", effect: "新局携带职业专属法宝" },
+];
+
+export const MASTERY_SIGNATURE_BY_JOB = {
+  sword: "小五行剑阵",
+  talisman: "阴火符",
+  alchemy: "药炉温养",
+  beast: "山君号令",
+  artificer: "拆解回收",
+  soul: "彼岸回响",
+};
+
+export const MASTERY_TREASURE_BY_JOB = {
+  sword: "wolf_tooth",
+  talisman: "ember_bead",
+  alchemy: "medicine_satchel",
+  beast: "wind_chime",
+  artificer: "paper_umbrella",
+  soul: "spirit_lamp",
+};
+
+export const BOSS_MOVE_PATTERNS = {
+  1: [
+    { name: "灯影试心", damage: 9, note: "序 · 以灯火试探你的防线" },
+    { name: "第七灯障", damage: 5, shield: 12, note: "破 · 攻击并点亮护体灯障" },
+    { name: "灯火噬命", damage: 16, weak: 1, note: "急 · 重击并施加 1 层虚弱" },
+  ],
+  2: [
+    { name: "借名引路", damage: 10, drainQi: 1, note: "序 · 下一回合灵气 -1" },
+    { name: "旧名镇魂", damage: 6, shield: 14, note: "破 · 攻击并以旧名护体" },
+    { name: "替命燃烧", damage: 8, hits: 2, weak: 1, note: "急 · 两段攻击并施加虚弱" },
+  ],
+  3: [
+    { name: "雷纹验骨", damage: 11, weak: 1, note: "序 · 震脉并施加虚弱" },
+    { name: "三劫并落", damage: 6, hits: 3, note: "破 · 三段落雷，逐层击穿护盾" },
+    { name: "阵雷齐鸣", damage: 21, shield: 8, note: "急 · 雷阵重击并重启阵壁" },
+  ],
+  4: [
+    { name: "窃取清梦", damage: 11, drawPenalty: 1, note: "序 · 下一回合少抽 1 张牌" },
+    { name: "黑莲合瓣", damage: 0, shield: 16, heal: 8, note: "破 · 获得护体并恢复生命" },
+    { name: "万梦归莲", damage: 19, weak: 2, note: "急 · 梦魇重击并施加 2 层虚弱" },
+  ],
+  5: [
+    { name: "天门问名", damage: 13, drainQi: 1, note: "序 · 下一回合灵气 -1" },
+    { name: "删去一页", damage: 8, curse: true, shield: 10, note: "破 · 将心魔写入牌堆并获得护体" },
+    { name: "天门定命", damage: 24, weak: 2, note: "急 · 最终裁定并施加 2 层虚弱" },
+  ],
+};
 
 export const DECK_RECIPES = PROFESSIONS.flatMap((job) =>
   Array.from({ length: 18 }, (_, index) => {
@@ -424,7 +502,7 @@ export const CHAPTER_ROUTES = {
 
 export const META_TALENTS = [
   { id: "meridian", name: "开脉", level: 2, max: 10, effect: "初始生命 +4", art: "/ui/insights/open_meridians.png" },
-  { id: "mind", name: "守心", level: 1, max: 10, effect: "事件成功率 +3%", art: "/ui/insights/guarded_mind.png" },
+  { id: "mind", name: "守心", level: 1, max: 10, effect: "初始灵石 +2", art: "/ui/insights/guarded_mind.png" },
   { id: "edge", name: "藏锋", level: 0, max: 10, effect: "首场战斗初始资源 +1", art: "/ui/insights/hidden_edge_breath.png" },
 ];
 

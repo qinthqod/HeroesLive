@@ -7,7 +7,9 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "check:game": "node scripts/check-game-design.mjs"
+    "check:game": "node scripts/check-game-design.mjs && node scripts/check-card-runtime.mjs && node scripts/check-run-continuity.mjs",
+    "smoke:combat": "node scripts/smoke-card-combos.mjs",
+    "smoke:boss": "node scripts/smoke-boss-patterns.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.4.1",
