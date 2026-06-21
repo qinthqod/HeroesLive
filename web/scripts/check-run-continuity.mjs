@@ -12,8 +12,12 @@ expect(source.includes("const [runChoices, setRunChoices]"), "本局剧情选择
 expect(source.includes("runChoices.includes(\"重写命册\")"), "第五章结局必须读取本局选择");
 expect(!source.includes("profile.choices.includes(\"重写命册\")"), "第五章结局不得读取跨局历史选择");
 expect(source.includes("runChoices,") && source.includes("runChronicle,") && source.includes("nextEnemyShield,"), "自动存档必须覆盖本局选择、命途回响和待兑现代价");
+expect(source.includes("runClues,") && source.includes("setRunClues(savedRun.runClues || [])"), "章节调查线索必须进入自动存档并可恢复");
+expect(source.includes("pendingClue,") && source.includes("setPendingClue(savedRun.pendingClue || null)"), "待查证线索必须进入自动存档并可恢复");
+expect(source.includes("completePendingClue()") && source.includes("证据已带回"), "路线证据必须在节点完成后结算");
+expect(!source.includes("if (clue) setRunClues"), "进入路线节点时不得提前发放调查线索");
 expect(source.includes("setRunChoices(savedRun.runChoices || [])"), "继续云游必须恢复本局剧情选择");
-expect(source.includes("setNextEnemyShield((value) => value + 5)"), "古龛取玉的下一战护体代价必须真实写入状态");
+expect(source.includes("setNextEnemyShield((value) => value + effect.enemyShield)"), "奇遇的下一战护体代价必须真实写入状态");
 expect(source.includes("setEnemyShield(nextEnemyShield)"), "进入战斗时必须兑现待处理的敌方护体");
 expect(source.includes("className=\"run-chronicle\""), "路线页必须展示本局命途回响");
 expect(source.includes("onClick={() => playCard(index)}"), "战斗卡牌必须单击立即出牌");
@@ -40,6 +44,23 @@ expect(source.includes("runDeck.forEach((card)") && source.includes("discovered.
 expect(source.includes("未收录术法") && source.includes("collection-progress"), "藏经阁必须区分未知卡牌并展示职业收集进度");
 expect(source.includes("流派图谱") && source.includes("BuildRecipeCard"), "藏经阁必须提供可浏览的流派图谱");
 expect(source.includes("未收录组件") && source.includes("recipe.cards.every"), "流派图谱必须显示缺失组件并计算真实完成度");
+expect(source.includes("generateRewardChoices") && source.includes("reward-build-direction"), "战利选择必须接入流派图谱并展示当前构筑方向");
+expect(source.includes("combat-build-tracker") && source.includes("route-build-goal") && source.includes("deck-build-state"), "局内流派目标必须贯穿战斗、路线和牌组卷册");
+expect(source.includes("investigation-strip") && source.includes("summary-investigation"), "章节调查必须贯穿路线进度与章末结论");
+expect(source.includes("中断调查") && source.includes("pendingClue?.text"), "失败复盘必须指出未能带回的待查证线索");
+expect(source.includes("investigationArchive") && source.includes("investigationRewards"), "五章调查宗卷必须跨局保存完成度与奖励状态");
+expect(source.includes("investigation-archive") && source.includes("五章调查宗卷"), "异闻录必须展示永久调查宗卷");
+expect(source.includes("rewardClaimedRef.current") && source.includes("if (rewardClaimedRef.current) return"), "战利与宗卷奖励必须防止快速连点重复领取");
+expect(source.includes("CHAPTER_EVENTS[chapter]") && source.includes("event.options.map"), "五章奇遇必须由独立数据驱动而非复用古龛模板");
+for (const effect of ["cardRarity", "refine", "removeCurse", "maxQi", "enemyShield", "consumables"]) {
+  expect(source.includes(`effect.${effect}`), `奇遇运行时缺少 ${effect} 后果处理`);
+}
+expect(source.includes("if (option.revealsClue) completeInvestigation()") && source.includes("else abandonInvestigation()"), "奇遇离开选项必须放弃待查证线索");
+expect(source.includes("CHAPTER_MARKETS[chapter]") && source.includes("market.special.id"), "五章坊市必须由章节数据和专属交易驱动");
+expect(source.includes("rewardFit(card, deck, origin.id)") && source.includes("market-fit"), "坊市卡牌必须展示当前构筑契合理由");
+for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite"]) {
+  expect(source.includes(`market.special.id === "${trade}"`), `坊市缺少 ${trade} 专属交易运行时`);
+}
 expect(source.includes("completedNodes") && source.includes("chapter-1-scene-"), "章节剧情节点必须形成跨局完成进度");
 expect(source.includes("shen-handbook-1") && source.includes("unlockHandbook ? 8 : 0"), "第一章三段剧情完成后必须一次性解锁手札并奖励悟道");
 expect(source.includes("lore-scrolls") && source.includes("人物手札"), "异闻录必须展示已解锁与未解锁人物手札");

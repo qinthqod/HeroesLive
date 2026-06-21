@@ -220,7 +220,7 @@ function makeCards(job) {
 export const PROFESSIONS = classBlueprints.map((job) => ({
   ...job,
   cards: makeCards(job),
-  starterDeck: makeCards(job).slice(0, 12).map((card) => card.id),
+  starterDeck: [0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 5, 6].map((index) => `${job.id}-${index + 1}`),
 }));
 
 export const ALL_CARDS = PROFESSIONS.flatMap((job) => job.cards);
@@ -290,6 +290,97 @@ export const BOSS_MOVE_PATTERNS = {
     { name: "删去一页", damage: 8, curse: true, shield: 10, note: "破 · 将心魔写入牌堆并获得护体" },
     { name: "天门定命", damage: 24, weak: 2, note: "急 · 最终裁定并施加 2 层虚弱" },
   ],
+};
+
+export const ENCOUNTER_ENEMIES = {
+  1: {
+    1: { name: "野狼妖影", hp: 34, max: 34, art: "/enemy_wolf_shadow.png", archetype: "伏击者", trait: "闻血追猎", counter: "它会先试探、再蓄势扑杀；趁蓄势回合进攻，或为扑杀预留护盾。" },
+    2: { name: "雾竹巡山妖", hp: 48, max: 48, art: "/enemy_rogue_cultivator.png", archetype: "破盾者", trait: "竹刃连环", counter: "连击擅长拆散薄盾。集中护盾抵挡连斩，并在其藏身时扩大输出。" },
+    3: { name: "第七盏灯", hp: 72, max: 72, art: "/enemy_black_cult_deacon.png", archetype: "守灯人", trait: "灯火试心", counter: "灯障回合会累积护体；提前铺设持续伤害，重击前保留防御。" },
+  },
+  2: {
+    1: { name: "玄阴灯侍", hp: 42, max: 42, art: "/enemy_xuanyin_guide.png", archetype: "夺气者", trait: "借名引路", counter: "它会削减下一回合灵气。优先用低费牌运转，夺气前不要留下昂贵手牌。" },
+    2: { name: "断碑护灯长老", hp: 60, max: 60, art: "/enemy_black_cult_deacon.png", archetype: "镇魂者", trait: "旧名成碑", counter: "长老以护体拖延，再用旧名压制灵气。护体形成前爆发，或准备破盾与持续伤害。" },
+    3: { name: "写名鬼灯", hp: 84, max: 84, art: "/enemy_xuanyin_guide.png", archetype: "替命灯", trait: "名字即燃料", counter: "灵气压制与双段攻击交替出现。保留低费防御，避免被虚弱后的连击击穿。" },
+  },
+  3: {
+    1: { name: "雷云劫影", hp: 50, max: 50, art: "/enemy_thunder_pool_guardian.png", archetype: "连击者", trait: "雷痕导引", counter: "先以雷痕施加虚弱，再落下双雷。虚弱回合优先护体，完整护盾比零散防御更可靠。" },
+    2: { name: "问心劫使", hp: 70, max: 70, art: "/enemy_black_cult_deacon.png", archetype: "节奏考官", trait: "三问雷罚", counter: "三段雷罚专破护盾，阵壁回合则是输出窗口。用减伤或恢复跨过连续落雷。" },
+    3: { name: "雷池守阵者", hp: 100, max: 100, art: "/enemy_thunder_pool_guardian.png", archetype: "阵眼", trait: "三劫并落", counter: "虚弱、三段雷击与阵壁构成固定循环。读清下一式，在阵雷齐鸣前建立完整防线。" },
+  },
+  4: {
+    1: { name: "失梦游魂", hp: 56, max: 56, art: "/enemy_xuanyin_guide.png", archetype: "窃牌者", trait: "吞食清梦", counter: "窃梦会让下回合少抽一张。当前回合尽量完成联动，不要把关键组件寄望于下一次抽牌。" },
+    2: { name: "黑莲织梦师", hp: 78, max: 78, art: "/enemy_black_cult_deacon.png", archetype: "回复者", trait: "梦茧回生", counter: "梦茧同时护体与恢复。用燃烧、丹毒或高额爆发阻止它反复拉长战斗。" },
+    3: { name: "无影城主", hp: 112, max: 112, art: "/enemy_black_cult_deacon.png", archetype: "梦境领主", trait: "万梦归莲", counter: "少抽牌会打乱组合，黑莲合瓣又会恢复。保留抽牌与持续伤害手段，避免陷入消耗战。" },
+  },
+  5: {
+    1: { name: "旧命残影", hp: 64, max: 64, art: "/enemy_rogue_cultivator.png", archetype: "改写者", trait: "未行之路", counter: "残影会把命册缺页写入牌堆。尽快结束战斗，或准备净心与额外抽牌降低污染。" },
+    2: { name: "执笔者遗念", hp: 88, max: 88, art: "/enemy_xuanyin_guide.png", archetype: "封锁者", trait: "删名断章", counter: "它交替削减灵气、污染牌堆并施加虚弱。低费循环和净心是稳定突破口。" },
+    3: { name: "守门真君", hp: 128, max: 128, art: "/enemy_thunder_pool_guardian.png", archetype: "命册执笔", trait: "天门定命", counter: "最终考验同时覆盖灵气、牌堆与生命。不要只依赖单一爆发回合，准备可持续的完整构筑。" },
+  },
+};
+
+export const ENCOUNTER_MOVE_PATTERNS = {
+  1: {
+    1: [
+      { name: "嗅雨寻隙", damage: 7, note: "试探 · 直接攻击，观察你的防线" },
+      { name: "伏身蓄爪", damage: 0, shield: 6, note: "蓄势 · 获得 6 点护体，下一式将扑杀" },
+      { name: "裂喉扑杀", damage: 12, note: "爆发 · 蓄势后的强力攻击" },
+    ],
+    2: [
+      { name: "竹刃点穴", damage: 6, weak: 1, note: "起手 · 攻击并施加 1 层虚弱" },
+      { name: "雾中连斩", damage: 5, hits: 2, note: "连击 · 两段攻击，逐段消耗护盾" },
+      { name: "借竹藏形", damage: 3, shield: 9, note: "转守 · 轻击并获得 9 点护体" },
+    ],
+  },
+  2: {
+    1: [
+      { name: "灯绳缚气", damage: 6, drainQi: 1, note: "夺气 · 下一回合灵气 -1" },
+      { name: "引魂灯障", damage: 0, shield: 8, note: "守势 · 获得 8 点护体" },
+      { name: "照名灼魂", damage: 11, note: "追击 · 灯火锁定名字后发动重击" },
+    ],
+    2: [
+      { name: "断碑压名", damage: 8, drainQi: 1, note: "压制 · 下一回合灵气 -1" },
+      { name: "旧讳成墙", damage: 4, shield: 12, note: "固守 · 攻击并获得 12 点护体" },
+      { name: "百名镇魂", damage: 14, weak: 1, note: "裁定 · 重击并施加 1 层虚弱" },
+    ],
+  },
+  3: {
+    1: [
+      { name: "雷痕蚀脉", damage: 7, weak: 1, note: "导雷 · 攻击并施加 1 层虚弱" },
+      { name: "双雷循痕", damage: 6, hits: 2, note: "落雷 · 两段攻击追随雷痕" },
+      { name: "云隙回电", damage: 5, shield: 8, note: "回流 · 攻击并获得 8 点护体" },
+    ],
+    2: [
+      { name: "一问守心", damage: 8, weak: 1, note: "初问 · 攻击并施加虚弱" },
+      { name: "二问承雷", damage: 5, hits: 3, note: "再问 · 三段雷罚，逐层击穿护盾" },
+      { name: "三问破妄", damage: 8, shield: 13, note: "终问 · 攻击并重启 13 点阵壁" },
+    ],
+  },
+  4: {
+    1: [
+      { name: "舔食梦边", damage: 8, drawPenalty: 1, note: "窃梦 · 下一回合少抽 1 张牌" },
+      { name: "空梦游荡", damage: 4, shield: 8, note: "游荡 · 轻击并获得 8 点护体" },
+      { name: "惊醒撕魂", damage: 14, note: "惊醒 · 趁手牌不足发动重击" },
+    ],
+    2: [
+      { name: "影线缝心", damage: 9, drawPenalty: 1, note: "缝梦 · 下一回合少抽 1 张牌" },
+      { name: "黑莲结茧", damage: 0, shield: 14, heal: 6, note: "回生 · 获得 14 点护体并恢复 6 点生命" },
+      { name: "百梦穿针", damage: 7, hits: 2, weak: 1, note: "收线 · 两段攻击并施加虚弱" },
+    ],
+  },
+  5: {
+    1: [
+      { name: "照见旧路", damage: 9, note: "映照 · 以你未选择的道路发动攻击" },
+      { name: "补写缺页", damage: 5, curse: true, note: "污染 · 将一张命册缺页写入弃牌堆" },
+      { name: "万路归一", damage: 16, weak: 1, note: "收束 · 重击并施加 1 层虚弱" },
+    ],
+    2: [
+      { name: "墨锁灵台", damage: 9, drainQi: 1, note: "封锁 · 下一回合灵气 -1" },
+      { name: "删去一行", damage: 6, curse: true, shield: 10, note: "改写 · 写入命册缺页并获得 10 点护体" },
+      { name: "断章落款", damage: 17, weak: 2, note: "落款 · 重击并施加 2 层虚弱" },
+    ],
+  },
 };
 
 function fiveCardCombinations() {
@@ -468,6 +559,64 @@ export const CHAPTER_ROUTE_COPY = {
   },
 };
 
+export const CHAPTER_INVESTIGATIONS = {
+  1: {
+    objective: "查明名册为何多出第二十四人",
+    opening: "血书警告：不可点亮山门前的第七盏灯。",
+    routes: [
+      { story: "雨亭石缝里留着沈砚秋新近刻下的归谷暗号。" },
+      { battle: "妖影骨中嵌着山门名牌，它曾是试炼弟子。", event: "药圃药签写着第二十四人的脉象，与你完全相同。" },
+      { elite: "断碑上的末名被反复凿去，又被鲜血重新写回。", market: "鬼市旧册证明今年名额原本只有二十三席。" },
+      { boss: "第七盏灯以你的命火为芯，野狼妖影只是守灯人。" },
+    ],
+    conclusion: "多出的名字不是误记，而是命册提前写下的替灯人。",
+  },
+  2: {
+    objective: "追查师父与替灯人的旧案",
+    opening: "写名鬼灯会让后来者替前一盏灯走完余生。",
+    routes: [
+      { story: "旧亭梁上刻着师父二十四年前留下的熄灯次序。" },
+      { battle: "无名山魂都曾是未能走完余生的替灯人。", event: "镇魂残符背面藏着师父交给陆观的路引。" },
+      { elite: "试剑碑保留了师父被改写前的本名。", market: "被撕去姓名的旧册仍残留青岚谷掌门印。" },
+      { boss: "鬼灯中的名字由山门主动写入，并非天命自然生成。" },
+    ],
+    conclusion: "师父曾试图熄灯，沈砚秋正在完成他失败的旧路。",
+  },
+  3: {
+    objective: "证明筑基雷劫是一座改命阵",
+    opening: "雷池会挑选能够承受命册改写的人。",
+    routes: [
+      { story: "雷纹只对历代替灯人的血脉产生回应。" },
+      { battle: "劫影体内没有魂魄，只有被阵法复制的失败选择。", event: "洗雷池倒映出沈砚秋藏在阵眼中的破阵手势。" },
+      { elite: "问心石阶以悔意为阵材，逼迫修士接受既定道路。", market: "散市法器都刻有同一枚太虚天门阵印。" },
+      { boss: "守阵者承认青岚百年安稳来自不断改写弟子命数。" },
+    ],
+    conclusion: "筑基雷劫既是境界考验，也是筛选新执笔者的锁。",
+  },
+  4: {
+    objective: "查明黑莲为何收走全城梦境",
+    opening: "黑莲契约让居民不再恐惧，也不再拥有命册外的选择。",
+    routes: [
+      { story: "城门守卫交出的影子仍在反复梦见逃离无灯城。" },
+      { battle: "街上梦魇由被强行割除的恐惧凝成。", event: "茶汤中的童年属于城主，他也曾被迫签下契约。" },
+      { elite: "梦坊用居民影子缝补黑莲，维持契约不被察觉。", market: "鬼市交易的往事都来自不愿继续沉睡的人。" },
+      { boss: "黑莲并未消灭痛苦，只把所有选择权集中到城主手中。" },
+    ],
+    conclusion: "失去噩梦的代价不是安宁，而是再也无法想象另一种明日。",
+  },
+  5: {
+    objective: "决定命册应当记录还是支配众生",
+    opening: "命册最初用于记住无名者，后来才被改造成既定前路。",
+    routes: [
+      { story: "天门承认你的血脉来自第一位反抗命册的执笔者。" },
+      { battle: "旧命回廊里的敌影都是你未选择的人生。", event: "缺页书库证明被删去的人仍会在他人记忆中留下空洞。" },
+      { elite: "旧执笔者害怕自由带来混乱，却从未让众生参与选择。", market: "无名者的遗物证明记录可以存在，而不必成为命令。" },
+      { boss: "守门真君承认命册能够被重写，只是不愿交出执笔权。" },
+    ],
+    conclusion: "命册可以保存来路，但不应替任何人决定去处。",
+  },
+};
+
 export const ROUTE_ROWS = [
   [
     { id: "story", kind: "剧情", name: "雨亭来信", desc: "追查师姐留下的血书。", art: "/bg_soul_shrine.png" },
@@ -535,6 +684,137 @@ export const CHAPTER_ROUTES = {
     ],
     [{ id: "boss", kind: "首领", name: "命册末页", desc: "守门真君等待你决定天下人的前路。", art: "/bg_secret_realm.png" }],
   ],
+};
+
+export const CHAPTER_EVENTS = {
+  1: {
+    eyebrow: "山中机缘",
+    name: "月隐古龛",
+    description: "残香在雨里燃着。神龛下压着一枚裂开的青玉，黑雾不敢靠近半步。",
+    art: "/bg_soul_shrine.png",
+    options: [
+      { id: "trace", label: "触摸龛后剑痕", title: "精良职业牌 · 生命 -4", detail: "以血辨认沈砚秋留下的术式，带回一门与你道途相合的术法。", tone: "冒险构筑", effect: { cardRarity: "精良", hpLoss: 4 }, revealsClue: true },
+      { id: "rest", label: "借残香静息", title: "恢复 12 点生命", detail: "放慢脚步梳理血书与名册的矛盾，不承担后续战斗代价。", tone: "稳健生存", effect: { heal: 12 }, revealsClue: true },
+      { id: "jade", label: "揭符取走青玉", title: "灵石 +18 · 敌方护体 +5", detail: "立即获得资粮，但镇龛黑雾会依附下一名敌人。", tone: "高收益代价", effect: { stones: 18, enemyShield: 5 }, revealsClue: true },
+      { id: "leave", label: "不惊动残香", title: "无收益 · 无风险", detail: "保住当前状态，但无法查证药圃与血书留下的证据。", tone: "谨慎离开", effect: {}, revealsClue: false },
+    ],
+  },
+  2: {
+    eyebrow: "玄阴异闻",
+    name: "镇魂古龛",
+    description: "每张残符都写着一个被鬼灯替换过的名字，师父的名字也在其中。",
+    art: "/ui/bg_act2_mountain.png",
+    options: [
+      { id: "burn-name", label: "焚去自己的纸名", title: "净除心魔或恢复 6 · 清神粉 +1 · 生命 -4", detail: "有心魔时烧去一张；无心魔时，镇魂余火会转为恢复。", tone: "净心换血", effect: { removeCurse: 1, curseFallbackHeal: 6, consumables: { clarity: 1 }, hpLoss: 4 }, revealsClue: true },
+      { id: "old-route", label: "沿师父路引前行", title: "稀有职业牌 · 生命 -6", detail: "循着二十四年前的险路参悟旧术，代价会立刻落在身上。", tone: "冒险构筑", effect: { cardRarity: "稀有", hpLoss: 6 }, revealsClue: true },
+      { id: "lamp-oil", label: "取走鬼灯余油", title: "灵石 +20 · 敌方护体 +8", detail: "鬼市愿为灯油付出高价，失去镇压的阴魂会追到下一战。", tone: "高收益代价", effect: { stones: 20, enemyShield: 8 }, revealsClue: true },
+      { id: "leave", label: "替残符重新压石", title: "无收益 · 无风险", detail: "不触碰旧案，也无法确认师父当年的路引。", tone: "谨慎离开", effect: {}, revealsClue: false },
+    ],
+  },
+  3: {
+    eyebrow: "雷云异闻",
+    name: "洗雷池",
+    description: "池中雷水倒映的不是现在，而是每一次你本可做出不同选择的时刻。",
+    art: "/bg_thunder_pool.png",
+    options: [
+      { id: "draw-thunder", label: "引雷贯通经脉", title: "灵气上限 +1 · 生命 -10", detail: "灵气上限已满时改为聚气散 +2，确保雷洗不会落空。", tone: "长期爆发", effect: { maxQi: 1, maxQiFallbackConsumables: { spirit: 2 }, hpLoss: 10 }, revealsClue: true },
+      { id: "temper", label: "在雷水中推演真解", title: "精研一张基础牌 · 恢复 6", detail: "无可精研术法时改为获得 12 灵石，不增加牌组厚度。", tone: "核心强化", effect: { refine: 1, refineFallbackStones: 12, heal: 6 }, revealsClue: true },
+      { id: "calm-remnant", label: "镇压池底余念", title: "净除心魔或恢复 6 · 聚气散 +1", detail: "无心魔时将镇压之力转为恢复，稳定下一段路线。", tone: "循环净化", effect: { removeCurse: 1, curseFallbackHeal: 6, consumables: { spirit: 1 } }, revealsClue: true },
+      { id: "leave", label: "绕开翻涌雷水", title: "无收益 · 无风险", detail: "保存血线，但看不到沈砚秋藏在阵眼中的手势。", tone: "谨慎离开", effect: {}, revealsClue: false },
+    ],
+  },
+  4: {
+    eyebrow: "无灯异闻",
+    name: "失梦茶楼",
+    description: "茶汤里漂着一段陌生童年。店主说，那是城主抵押在这里的梦。",
+    art: "/bg_dark_forge.png",
+    options: [
+      { id: "drink-dream", label: "饮下城主的童年", title: "稀有职业牌 · 生命 -8", detail: "从陌生记忆中学会一门秘术，也承受那段恐惧留下的伤口。", tone: "记忆换术", effect: { cardRarity: "稀有", hpLoss: 8 }, revealsClue: true },
+      { id: "return-dream", label: "把梦送回原主", title: "恢复 6 · 清神粉与阴雷子各 +1", detail: "不夺取记忆的力量，但得到居民留下的两件应急小物。", tone: "救助回报", effect: { heal: 6, consumables: { clarity: 1, thunder: 1 } }, revealsClue: true },
+      { id: "sell-shadow", label: "抵押自己的一段影子", title: "灵石 +24 · 敌方护体 +10", detail: "影子鬼市立即付款，黑莲却会用它加固下一名追兵。", tone: "高收益代价", effect: { stones: 24, enemyShield: 10 }, revealsClue: true },
+      { id: "leave", label: "不饮无主之梦", title: "无收益 · 无风险", detail: "保持清醒，也错过城主签下契约的真正原因。", tone: "谨慎离开", effect: {}, revealsClue: false },
+    ],
+  },
+  5: {
+    eyebrow: "天门异闻",
+    name: "缺页书库",
+    description: "书架上每个空位都在低声念诵一个无人记得的名字。",
+    art: "/bg_secret_realm.png",
+    options: [
+      { id: "read-page", label: "读完属于自己的缺页", title: "精研一张基础牌 · 生命 -8", detail: "无可精研术法时改为获得 16 灵石，阅读不会毫无所得。", tone: "真相换力", effect: { refine: 1, refineFallbackStones: 16, hpLoss: 8 }, revealsClue: true },
+      { id: "copy-rule", label: "抄录最初的记名法", title: "灵气上限 +1 · 敌方护体 +8", detail: "灵气上限已满时改为聚气散 +2，旧日规则仍会追来。", tone: "权能代价", effect: { maxQi: 1, maxQiFallbackConsumables: { spirit: 2 }, enemyShield: 8 }, revealsClue: true },
+      { id: "take-relic", label: "取走无名者遗物", title: "传说职业牌 · 生命 -12", detail: "遗物承载一门完整传承，却要求你分担无名者被遗忘的痛苦。", tone: "终局豪赌", effect: { cardRarity: "传说", hpLoss: 12 }, revealsClue: true },
+      { id: "leave", label: "合上仍在低语的书", title: "无收益 · 无风险", detail: "不惊动守门真君，也无法证明记录与支配并非同一件事。", tone: "谨慎离开", effect: {}, revealsClue: false },
+    ],
+  },
+};
+
+export const CHAPTER_MARKETS = {
+  1: {
+    eyebrow: "青岚坊市",
+    name: "灯下鬼市",
+    description: "外门弟子在雨棚下交换便宜术法与来路不明的旧物。",
+    stall: "外门散卷",
+    stockNote: "偏向低费与基础运转",
+    bias: "low-cost",
+    cardPrice: 0,
+    removeCost: 7,
+    refineCost: 13,
+    treasureCost: 18,
+    special: { id: "duplicate", label: "旧卷回收", title: "寄卖一张重复牌", detail: "移除牌组中第一张重复术法并获得 6 灵石。", cost: "重复牌 → 6 灵石" },
+  },
+  2: {
+    eyebrow: "玄阴鬼市",
+    name: "山道鬼市",
+    description: "摊主不问活人姓名，只收镇魂符、旧路引和未散的执念。",
+    stall: "镇魂残卷",
+    stockNote: "偏向防护、恢复与净心",
+    bias: "defense",
+    cardPrice: 1,
+    removeCost: 4,
+    refineCost: 12,
+    treasureCost: 17,
+    special: { id: "purge", label: "无名火盆", title: "免费净除一张心魔", detail: "若牌组中没有心魔，则改为获得 1 份清神粉。", cost: "本次免费" },
+  },
+  3: {
+    eyebrow: "雷云散市",
+    name: "云端散市",
+    description: "渡劫前的修士出售最后一件法器，也高价收购能承受雷洗的术法。",
+    stall: "渡劫秘卷",
+    stockNote: "偏向高费爆发与真解",
+    bias: "power",
+    cardPrice: 2,
+    removeCost: 9,
+    refineCost: 8,
+    treasureCost: 20,
+    special: { id: "thunder-refine", label: "借炉引雷", title: "生命 -6 · 免费精研一张", detail: "若已无可精研术法，则改为获得 12 灵石。", cost: "6 生命" },
+  },
+  4: {
+    eyebrow: "无灯暗市",
+    name: "影子鬼市",
+    description: "这里出售不属于自己的往事，价格取决于你还剩多少影子。",
+    stall: "失梦术卷",
+    stockNote: "偏向过牌、复制与稀有术法",
+    bias: "cycle",
+    cardPrice: 1,
+    removeCost: 6,
+    refineCost: 11,
+    treasureCost: 19,
+    special: { id: "shadow", label: "典当一段影子", title: "生命 -8 · 灵石 +14", detail: "只可交易一次；不会降低生命上限。", cost: "8 生命 → 14 灵石" },
+  },
+  5: {
+    eyebrow: "天门遗市",
+    name: "无名人市集",
+    description: "不在命册中的人交换最后遗物，只留下能够改变结局的传承。",
+    stall: "无名传承",
+    stockNote: "偏向稀有、传说与真解",
+    bias: "legacy",
+    cardPrice: 3,
+    removeCost: 5,
+    refineCost: 7,
+    treasureCost: 22,
+    special: { id: "rewrite", label: "交换一页命数", title: "8 灵石 · 精研一张基础牌", detail: "若已无可精研术法，则返还费用并获得 1 份聚气散。", cost: "8 灵石" },
+  },
 };
 
 export const META_TALENTS = [

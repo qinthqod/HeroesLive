@@ -19,6 +19,24 @@
   - `/tmp/qinglan-summary-mobile.png`
   - `/tmp/qinglan-collection-mobile.png`
   - `/tmp/qinglan-home-lore-mobile.png`
+  - `/tmp/qinglan-reward-build-direction-final.png`
+  - `/tmp/qinglan-combat-build-tracker.png`
+  - `/tmp/qinglan-deck-build-state.png`
+  - `/tmp/qinglan-route-build-goal.png`
+  - `/tmp/qinglan-investigation-route.png`
+  - `/tmp/qinglan-investigation-summary-complete.png`
+  - `/tmp/qinglan-investigation-summary-partial.png`
+  - `/tmp/qinglan-defeat-pending-clue.png`
+  - `/tmp/qinglan-casebook-sorted.png`
+  - `/tmp/qinglan-summary-archive.png`
+  - `/tmp/qinglan-event-chapter2.png`
+  - `/tmp/qinglan-event-chapter3.png`
+  - `/tmp/qinglan-event-chapter5.png`
+  - `/tmp/qinglan-market-chapter2-v2.png`
+  - `/tmp/qinglan-market-chapter3-v2.png`
+  - `/tmp/qinglan-market-chapter5-v2.png`
+  - `/tmp/qinglan-enemy-chapter1-mobile.png`
+  - `/tmp/qinglan-enemy-chapter5-elite-mobile.png`
   - `/tmp/qinglan-build-atlas-500.png`
 - Combined comparison: `/tmp/qinglan-web-comparison.png`
 - Viewports: 1280×720, 960×720, 599×772 and 430×932
@@ -74,6 +92,15 @@ No actionable P0, P1 or P2 findings remain in the tested states.
 - Converted the card archive into a persistent discovery collection with per-profession progress, refined-form counts and styled unknown-card clues.
 - Replaced the duplicated recipe counter with 108 genuinely unique five-card builds and added a mobile flow atlas showing rank, keywords, known/unknown components, completion progress and an unlocked play pattern.
 - Replaced the static home-side story counter with real scene progress, a one-time cultivation reward and a persistent character manuscript in the codex.
+- Rebuilt each 12-card starter deck from seven foundational cards with functional duplicates, leaving real discovery space instead of preloading every base skill and two refined forms.
+- Connected battle rewards to the 108-build atlas: the page now names the closest attainable recipe, shows its component progress, guarantees one advancing card and prioritizes unseen cards before duplicates.
+- Extended the active build goal through the route page, a compact combat tracker and the deck overlay; the detailed view names the next core card while refined versions continue satisfying their base-card family.
+- Added five chapter-specific investigation chains with route-dependent evidence, persistent clue progress, combat-log callbacks and distinct “truth revealed” versus “mystery remains” chapter conclusions.
+- Corrected investigation causality: entering a node now creates a pending clue, while victory or node completion settles it; failed runs explicitly identify the evidence that was not brought back.
+- Added five persistent seven-clue casebooks, sorted active investigations first, with one-time dossier completion rewards and a single-claim lock guarding all reward choices.
+- Replaced the repeated shrine event template with five chapter-specific four-way dilemmas whose card, health, qi, consumable, currency, curse and next-battle costs are disclosed before selection; cautious exits explicitly forfeit evidence.
+- Replaced the repeated market template with five chapter-specific economies, stock biases, service prices and one-off trades; unaffordable cards remain readable and now state the exact missing currency instead of disappearing into a disabled treatment.
+- Replaced the two shared non-boss move templates with ten encounter-specific three-move cycles. Mobile combat now exposes each enemy's archetype, signature trait and counterplay while preserving the intent, enemy art and five-card hand hierarchy.
 - Added a 599×772 responsive pass and locked the battle viewport against focus-induced scrolling.
 - Removed the React development-root duplication warning during hot updates.
 - Added a mobile home hub, five-chapter campaign archive, six distinct professions, 120-card library, 108 recommended deck recipes, permanent talent growth and local profile persistence.

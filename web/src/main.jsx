@@ -4,10 +4,15 @@ import "./styles.css";
 import {
   ALL_CARDS,
   BOSS_MOVE_PATTERNS,
+  ENCOUNTER_ENEMIES,
+  ENCOUNTER_MOVE_PATTERNS,
   CHAPTERS,
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
   CHAPTER_STORIES,
+  CHAPTER_INVESTIGATIONS,
+  CHAPTER_EVENTS,
+  CHAPTER_MARKETS,
   DECK_RECIPES,
   META_TALENTS,
   MASTERY_MILESTONES,
@@ -18,10 +23,29 @@ import {
   TREASURES,
   getProfession,
 } from "./gameData";
+import { analyzeDeck, currentBuildState, generateRewardChoices, rewardFit, rewardRecipeTarget } from "./deckStrategy";
+import { createPendingClue, settlePendingClue } from "./investigationState";
+import { INVESTIGATION_COMPLETION_REWARD, investigationEvidence, mergeInvestigationArchive } from "./investigationArchive";
 
 const origins = PROFESSIONS.map((job) => ({ ...job, line: job.style }));
 
-const cards = Object.fromEntries(PROFESSIONS.map((job) => [job.id, job.cards.slice(0, 12)]));
+const cards = Object.fromEntries(PROFESSIONS.map((job) => [
+  job.id,
+  job.starterDeck.map((cardId) => job.cards.find((card) => card.id === cardId)).filter(Boolean),
+]));
+
+function subtractCardInstances(pool, removed) {
+  const counts = removed.reduce((map, card) => {
+    if (card?.id) map.set(card.id, (map.get(card.id) || 0) + 1);
+    return map;
+  }, new Map());
+  return pool.filter((card) => {
+    const count = counts.get(card.id) || 0;
+    if (!count) return true;
+    counts.set(card.id, count - 1);
+    return false;
+  });
+}
 
 function treasureValue(treasures, key) {
   return treasures.reduce((sum, treasure) => sum + (treasure[key] || 0), 0);
@@ -32,80 +56,6 @@ function addProfileXp(profile, amount) {
   return { ...profile, xp, level: Math.max(profile.level || 1, 3 + Math.floor(xp / 100)) };
 }
 
-function analyzeDeck(deck) {
-  const profile = {
-    total: deck.length,
-    attack: 0,
-    defense: 0,
-    draw: 0,
-    heal: 0,
-    highCost: 0,
-    refined: 0,
-    costs: [0, 0, 0, 0],
-    keywords: {},
-  };
-  deck.forEach((card) => {
-    if (["攻击", "术法"].includes(card.type) && /造成|伤害|毒|燃烧/.test(`${card.text}${card.combo || ""}`)) profile.attack += 1;
-    if (/护盾|驱散|净除/.test(`${card.text}${card.combo || ""}`)) profile.defense += 1;
-    if (/抽\s*\d*\s*张牌|返回手牌|发现/.test(`${card.text}${card.combo || ""}`)) profile.draw += 1;
-    if (/恢复/.test(card.text)) profile.heal += 1;
-    if (card.cost >= 2) profile.highCost += 1;
-    if (card.refined) profile.refined += 1;
-    profile.costs[Math.min(3, card.cost)] += 1;
-    profile.keywords[card.keyword] = (profile.keywords[card.keyword] || 0) + 1;
-  });
-  const priorities = [];
-  if (profile.attack <= Math.max(3, Math.floor(profile.total * 0.28))) priorities.push("稳定伤害");
-  if (profile.defense + profile.heal <= 3) priorities.push("护盾 / 恢复");
-  if (profile.draw <= 2 && profile.total >= 12) priorities.push("过牌 / 压缩");
-  if (profile.highCost >= Math.ceil(profile.total * 0.38)) priorities.push("低费运转");
-  if (profile.total >= 16) priorities.push("删去冗余");
-  const keyComponents = Object.entries(profile.keywords)
-    .filter(([, count]) => count >= 2)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 4);
-  return { ...profile, priorities: priorities.slice(0, 4), keyComponents };
-}
-
-function rewardFit(card, deck) {
-  const profile = analyzeDeck(deck);
-  let score = 1;
-  const reasons = [];
-  const keywordCount = profile.keywords[card.keyword] || 0;
-  if (keywordCount >= 2) {
-    score += 3;
-    reasons.push(`衔接 ${keywordCount} 张「${card.keyword}」`);
-  } else if (keywordCount === 1) {
-    score += 1;
-    reasons.push(`延伸「${card.keyword}」组件`);
-  }
-  if (profile.attack <= 3 && /造成|伤害|毒|燃烧/.test(`${card.text}${card.combo || ""}`)) {
-    score += 2;
-    reasons.push("补足伤害");
-  }
-  if (profile.defense + profile.heal <= 3 && /护盾|恢复|驱散/.test(`${card.text}${card.combo || ""}`)) {
-    score += 2;
-    reasons.push("稳住血线");
-  }
-  if (profile.draw <= 2 && /抽|返回手牌|发现/.test(`${card.text}${card.combo || ""}`)) {
-    score += 2;
-    reasons.push("改善循环");
-  }
-  if (card.cost >= 2 && profile.highCost >= 5) {
-    score -= 2;
-    reasons.push("当前高费偏多");
-  }
-  const duplicateCount = deck.filter((item) => item.name === card.name).length;
-  if (duplicateCount >= 2) {
-    score -= 1;
-    reasons.push("已有多张同名牌");
-  }
-  return {
-    rank: score >= 5 ? "高" : score >= 3 ? "中" : "低",
-    reason: reasons.slice(0, 2).join(" · ") || "独立强度稳定",
-  };
-}
-
 function refinedVersion(card, profession) {
   if (card.refined) return null;
   const index = profession.cards.findIndex((item) => item.id === card.id);
@@ -113,7 +63,7 @@ function refinedVersion(card, profession) {
 }
 
 function masteryStarterDeck(profession, mastery) {
-  const starter = profession.cards.slice(0, 12);
+  const starter = profession.starterDeck.map((cardId) => profession.cards.find((card) => card.id === cardId)).filter(Boolean);
   if (mastery < 50) return starter;
   const signature = MASTERY_SIGNATURE_BY_JOB[profession.id];
   const baseIndex = starter.findIndex((card) => card.baseName === signature && !card.refined);
@@ -141,7 +91,7 @@ function masteryOpeningState(job, mastery) {
 }
 
 function defaultDiscoveredCards() {
-  return PROFESSIONS.flatMap((profession) => profession.cards.slice(0, 12).map((card) => card.id));
+  return [...new Set(PROFESSIONS.flatMap((profession) => profession.starterDeck))];
 }
 
 function createFeedbackEngine() {
@@ -190,55 +140,10 @@ function createFeedbackEngine() {
   };
 }
 
-const enemyByChapter = {
-  1: {
-    1: { name: "野狼妖影", hp: 34, max: 34, intent: "撕咬 7", art: "/enemy_wolf_shadow.png" },
-    2: { name: "雾竹巡山妖", hp: 48, max: 48, intent: "竹影扑杀 9", art: "/enemy_rogue_cultivator.png" },
-    3: { name: "第七盏灯", hp: 72, max: 72, intent: "灯火噬命 12", art: "/enemy_black_cult_deacon.png" },
-  },
-  2: {
-    1: { name: "玄阴灯侍", hp: 42, max: 42, intent: "引灯入雾 8", art: "/enemy_xuanyin_guide.png" },
-    2: { name: "断碑护灯长老", hp: 60, max: 60, intent: "旧名镇魂 11", art: "/enemy_black_cult_deacon.png" },
-    3: { name: "写名鬼灯", hp: 84, max: 84, intent: "替命燃烧 14", art: "/enemy_xuanyin_guide.png" },
-  },
-  3: {
-    1: { name: "雷云劫影", hp: 50, max: 50, intent: "落雷 10", art: "/enemy_thunder_pool_guardian.png" },
-    2: { name: "问心劫使", hp: 70, max: 70, intent: "震脉雷罚 13", art: "/enemy_black_cult_deacon.png" },
-    3: { name: "雷池守阵者", hp: 100, max: 100, intent: "阵雷齐鸣 16", art: "/enemy_thunder_pool_guardian.png" },
-  },
-  4: {
-    1: { name: "失梦游魂", hp: 56, max: 56, intent: "窃梦 11", art: "/enemy_xuanyin_guide.png" },
-    2: { name: "黑莲织梦师", hp: 78, max: 78, intent: "影缝 14", art: "/enemy_black_cult_deacon.png" },
-    3: { name: "无影城主", hp: 112, max: 112, intent: "万梦归莲 18", art: "/enemy_black_cult_deacon.png" },
-  },
-  5: {
-    1: { name: "旧命残影", hp: 64, max: 64, intent: "未行之路 12", art: "/enemy_rogue_cultivator.png" },
-    2: { name: "执笔者遗念", hp: 88, max: 88, intent: "删名 16", art: "/enemy_xuanyin_guide.png" },
-    3: { name: "守门真君", hp: 128, max: 128, intent: "天门定命 20", art: "/enemy_thunder_pool_guardian.png" },
-  },
-};
-
 function buildEnemyMoves(chapter, encounterStage, enemyName) {
-  const pressure = 5 + chapter * 2 + encounterStage * 2;
-  if (encounterStage === 3) {
-    return BOSS_MOVE_PATTERNS[chapter] || [
-      { name: `${enemyName}·试探`, damage: pressure, note: "稳健攻击" },
-      { name: "镇命护体", damage: Math.max(4, pressure - 4), shield: 8 + chapter * 2, note: `攻击并获得 ${8 + chapter * 2} 点护体` },
-      { name: "命数倾覆", damage: pressure + 7, weak: 2, note: "重击并施加 2 层虚弱" },
-    ];
-  }
-  if (encounterStage === 2) {
-    return [
-      { name: "煞影连袭", damage: pressure + 1, hits: 2, note: "两段攻击，护盾需分段承受" },
-      { name: "聚煞护身", damage: 0, shield: 7 + chapter, note: `获得 ${7 + chapter} 点护体` },
-      { name: "破气重击", damage: pressure + 5, weak: 1, note: "重击并施加 1 层虚弱" },
-    ];
-  }
-  return [
-    { name: "窥隙", damage: pressure, note: "直接攻击" },
-    { name: "蓄势", damage: 0, shield: 5 + chapter, note: `获得 ${5 + chapter} 点护体` },
-    { name: "扑杀", damage: pressure + 4, note: "蓄势后的强力攻击" },
-  ];
+  return encounterStage === 3
+    ? BOSS_MOVE_PATTERNS[chapter]
+    : ENCOUNTER_MOVE_PATTERNS[chapter][encounterStage];
 }
 
 function intentLabel(move) {
@@ -345,8 +250,14 @@ function App() {
   const debugAutoStory = import.meta.env.DEV && query.get("autostory") === "1";
   const debugMastery = import.meta.env.DEV ? debugNumber("mastery") : 0;
   const debugMoveIndex = import.meta.env.DEV ? debugNumber("move") : 0;
+  const debugClueCount = import.meta.env.DEV ? Math.min(5, debugNumber("clues")) : 0;
+  const debugPendingRoute = import.meta.env.DEV ? Math.min(3, debugNumber("pendingRoute")) : 0;
+  const debugPendingNode = import.meta.env.DEV ? query.get("pendingNode") : null;
+  const debugArchiveChapter = import.meta.env.DEV ? Math.min(5, Math.max(1, debugNumber("archiveChapter", initialChapter))) : 0;
+  const debugArchiveCount = import.meta.env.DEV ? Math.min(7, debugNumber("archiveCount")) : 0;
+  const debugEventChoice = import.meta.env.DEV && query.has("eventChoice") ? Math.min(3, debugNumber("eventChoice")) : null;
   const makeEnemy = (chapter, encounterStage) => {
-    const enemyData = { ...enemyByChapter[chapter][encounterStage] };
+    const enemyData = { ...ENCOUNTER_ENEMIES[chapter][encounterStage] };
     const moves = buildEnemyMoves(chapter, encounterStage, enemyData.name);
     enemyData.moves = moves;
     enemyData.moveIndex = Math.min(moves.length - 1, debugMoveIndex);
@@ -369,6 +280,16 @@ function App() {
   const [routeProgress, setRouteProgress] = useState(0);
   const [runChoices, setRunChoices] = useState([]);
   const [runChronicle, setRunChronicle] = useState([]);
+  const [runClues, setRunClues] = useState(() => {
+    if (!debugClueCount) return [];
+    const investigation = CHAPTER_INVESTIGATIONS[initialChapter];
+    const routeClues = (investigation?.routes || []).flatMap((route) => Object.values(route));
+    return [investigation?.opening, ...routeClues].filter(Boolean).slice(0, debugClueCount);
+  });
+  const [pendingClue, setPendingClue] = useState(() => {
+    const text = debugPendingNode ? CHAPTER_INVESTIGATIONS[initialChapter]?.routes?.[debugPendingRoute]?.[debugPendingNode] : "";
+    return text ? createPendingClue(text, { id: debugPendingNode, name: debugPendingNode }, debugPendingRoute) : null;
+  });
   const [nextEnemyShield, setNextEnemyShield] = useState(0);
   const [runStats, setRunStats] = useState(() => ({
     ...freshRunStats(),
@@ -399,6 +320,8 @@ function App() {
       discoveredTreasures: [],
       discoveredCards: defaultDiscoveredCards(),
       unlockedEndings: [],
+      investigationArchive: {},
+      investigationRewards: [],
       tutorialFlags: {},
       feedback: { sound: true, haptics: true, volume: 0.55 },
     };
@@ -416,8 +339,16 @@ function App() {
       discoveredTreasures: base.discoveredTreasures || [],
       discoveredCards: base.discoveredCards || defaultDiscoveredCards(),
       unlockedEndings: base.unlockedEndings || [],
+      investigationArchive: base.investigationArchive || {},
+      investigationRewards: base.investigationRewards || [],
       tutorialFlags: base.tutorialFlags || {},
       feedback: { sound: true, haptics: true, volume: 0.55, ...(base.feedback || {}) },
+      ...(debugArchiveCount ? {
+        investigationArchive: {
+          ...(base.investigationArchive || {}),
+          [String(debugArchiveChapter)]: investigationEvidence(debugArchiveChapter).slice(0, debugArchiveCount),
+        },
+      } : {}),
     };
   });
   const [hp, setHp] = useState(() => 72 + (profile.talentLevels.meridian || 0) * 4);
@@ -447,9 +378,12 @@ function App() {
   const [runDeck, setRunDeck] = useState(cards[initialOrigin]);
   const initialHandSize = Math.min(7, debugNumber("hand", 5 + treasureValue(debugTreasures, "firstTurnDraw")));
   const initialHand = debugCard ? [debugCard, ...cards[initialOrigin].filter((card) => card.id !== debugCard.id).slice(0, initialHandSize - 1)] : cards[initialOrigin].slice(0, initialHandSize);
-  const initialDiscard = import.meta.env.DEV ? cards[initialOrigin].filter((card) => !initialHand.includes(card)).slice(0, debugNumber("discard")) : [];
+  const debugDiscardCount = debugNumber("discard");
+  const initialDiscard = import.meta.env.DEV && debugDiscardCount > 0
+    ? getProfession(initialOrigin).cards.filter((card) => !initialHand.some((held) => held.id === card.id)).slice(0, debugDiscardCount)
+    : [];
   const [hand, setHand] = useState(initialHand);
-  const [drawPile, setDrawPile] = useState(cards[initialOrigin].filter((card) => !initialHand.includes(card) && !initialDiscard.includes(card)));
+  const [drawPile, setDrawPile] = useState(subtractCardInstances(cards[initialOrigin], initialHand));
   const [discardPile, setDiscardPile] = useState(initialDiscard);
   const [exhaustPile, setExhaustPile] = useState([]);
   const [drawFx, setDrawFx] = useState(null);
@@ -470,6 +404,7 @@ function App() {
   const enemyHpRef = useRef(enemy.hp);
   const playedThisTurnRef = useRef([]);
   const lastPlayedCardRef = useRef(null);
+  const rewardClaimedRef = useRef(false);
   const maxHp = 72 + (profile.talentLevels.meridian || 0) * 4;
   const startingStones = 18 + (profile.talentLevels.mind || 0) * 2;
   const feedback = (kind) => {
@@ -534,6 +469,8 @@ function App() {
       routeProgress,
       runChoices,
       runChronicle,
+      runClues,
+      pendingClue,
       nextEnemyShield,
       runStats,
       screen,
@@ -558,7 +495,7 @@ function App() {
     };
     window.localStorage.setItem("qinglan-run-v1", JSON.stringify(snapshot));
     setSavedRun(snapshot);
-  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, runChoices, runChronicle, nextEnemyShield, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log]);
+  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, runChoices, runChronicle, runClues, pendingClue, nextEnemyShield, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log]);
   useEffect(() => {
     if (screen === "combat" && enemy.hp <= 0 && !combatResolved.current) {
       finishCombat("敌影溃散");
@@ -598,6 +535,9 @@ function App() {
       setSavedRun(null);
     }
   }, [screen]);
+  useEffect(() => {
+    if (screen === "reward") rewardClaimedRef.current = false;
+  }, [screen]);
 
   const selectedOrigin = origins.find((item) => item.id === origin);
 
@@ -634,6 +574,8 @@ function App() {
     setStoryIndex(0);
     setRouteProgress(0);
     setRunChoices([]);
+    setRunClues([]);
+    setPendingClue(null);
     setRunStats(freshRunStats());
     const inherited = MASTERY_MILESTONES.filter((milestone) => mastery >= milestone.level).map((milestone) => milestone.name);
     setRunChronicle([
@@ -674,6 +616,8 @@ function App() {
     setRouteProgress(savedRun.routeProgress || 0);
     setRunChoices(savedRun.runChoices || []);
     setRunChronicle(savedRun.runChronicle || []);
+    setRunClues(savedRun.runClues || []);
+    setPendingClue(savedRun.pendingClue || null);
     setNextEnemyShield(savedRun.nextEnemyShield || 0);
     setRunStats({ ...freshRunStats(), ...(savedRun.runStats || {}) });
     setRunDeck(resumedDeck.length ? resumedDeck : cards[savedRun.origin || "sword"]);
@@ -776,6 +720,8 @@ function App() {
     if (storyIndex < CHAPTER_STORIES[selectedChapter].length - 1) {
       setStoryIndex((value) => value + 1);
     } else {
+      const openingClue = CHAPTER_INVESTIGATIONS[selectedChapter]?.opening;
+      if (openingClue) setRunClues((value) => [...new Set([...value, openingClue])]);
       changeScreen("map");
     }
   }
@@ -783,7 +729,8 @@ function App() {
   function enterCombat(nextStage = stage) {
     combatResolved.current = false;
     setStage(nextStage);
-    setEnemy(makeEnemy(selectedChapter, nextStage));
+    const nextEnemy = makeEnemy(selectedChapter, nextStage);
+    setEnemy(nextEnemy);
     setQi(maxQi + treasureValue(treasures, "firstTurnQi") + (nextStage === 1 ? (profile.talentLevels.edge || 0) : 0));
     setEnemyBurn(0);
     setEnemyPoison(0);
@@ -799,7 +746,9 @@ function App() {
     firstSkillUsed.current = false;
     playedThisTurnRef.current = [];
     lastPlayedCardRef.current = null;
-    setLog(nextEnemyShield > 0 ? `此前的选择化作代价：敌人带着 ${nextEnemyShield} 点护体拦住去路。` : "雨幕骤紧，敌人拦住了去路。");
+    const latestClue = pendingClue?.text || runClues.at(-1);
+    const encounterRead = `敌情「${nextEnemy.trait}」：${nextEnemy.counter}`;
+    setLog(nextEnemyShield > 0 ? `此前的选择化作代价：敌人带着 ${nextEnemyShield} 点护体拦住去路。${encounterRead}` : pendingClue ? `若能胜出，便可查证：${pendingClue.text} ${encounterRead}` : latestClue ? `线索仍在耳边：${latestClue} ${encounterRead}` : encounterRead);
     setCombatFx(null);
     setTriggerFx(null);
     setShield(treasureValue(treasures, "startShield"));
@@ -821,9 +770,19 @@ function App() {
       const key = keys[Math.floor(Math.random() * keys.length)];
       setConsumables((value) => ({ ...value, [key]: (value[key] || 0) + 1 }));
     }
-    setLog(`${source}。战利灵光正在凝聚……`);
+    const recoveredClue = completePendingClue();
+    setLog(recoveredClue ? `${source}。证据已带回：${recoveredClue}` : `${source}。战利灵光正在凝聚……`);
     feedback("reward");
     later(() => changeScreen("reward", 220), 520);
+  }
+
+  function completePendingClue() {
+    const settled = settlePendingClue([], pendingClue);
+    if (!settled.recovered) return "";
+    setRunClues((value) => settlePendingClue(value, pendingClue).clues);
+    setRunChronicle((value) => [...value.slice(-5), `查证 · ${pendingClue.nodeName}`]);
+    setPendingClue(settled.pendingClue);
+    return settled.recovered;
   }
 
   function damageEnemy(amount, source, ignoreShield = false) {
@@ -1395,13 +1354,16 @@ function App() {
   }
 
   function claimReward(card, treasure = null) {
+    if (rewardClaimedRef.current) return;
+    rewardClaimedRef.current = true;
+    const archiveResult = stage >= 3 ? mergeInvestigationArchive(profile, selectedChapter, runClues) : null;
     feedback("reward");
     setRunStats((value) => ({
       ...value,
       rewardsTaken: value.rewardsTaken + 1,
       xpGained: value.xpGained + 90,
-      spiritGained: value.spiritGained + 4,
-      jadeGained: value.jadeGained + (stage >= 3 ? 120 : 0),
+      spiritGained: value.spiritGained + 4 + (archiveResult?.newlyCompleted ? INVESTIGATION_COMPLETION_REWARD.spirit : 0),
+      jadeGained: value.jadeGained + (stage >= 3 ? 120 : 0) + (archiveResult?.newlyCompleted ? INVESTIGATION_COMPLETION_REWARD.jade : 0),
     }));
     if (card) setRunDeck((value) => [...value, card]);
     if (treasure) {
@@ -1422,12 +1384,15 @@ function App() {
       const endingId = selectedChapter === 5
         ? (runChoices.includes("重写命册") ? "rewrite_fate" : "restore_fate")
         : `chapter_${selectedChapter}_ending`;
-      setProfile((value) => ({
-        ...value,
-        chapter: Math.max(Math.min(5, selectedChapter + 1), value.chapter),
-        jade: value.jade + 120,
-        unlockedEndings: [...new Set([...(value.unlockedEndings || []), endingId])],
-      }));
+      setProfile((value) => {
+        const archived = mergeInvestigationArchive(value, selectedChapter, runClues).profile;
+        return {
+          ...archived,
+          chapter: Math.max(Math.min(5, selectedChapter + 1), value.chapter),
+          jade: archived.jade + 120,
+          unlockedEndings: [...new Set([...(value.unlockedEndings || []), endingId])],
+        };
+      });
       changeScreen("summary");
     }
     else {
@@ -1529,22 +1494,35 @@ function App() {
           routeProgress={routeProgress}
           choices={runChoices}
           chronicle={runChronicle}
+          clues={runClues}
           treasures={treasures}
-          onChooseNode={(node) => setRunChronicle((value) => [...value.slice(-5), `路线 · ${node.name}`])}
+          deck={runDeck}
+          origin={origin}
+          onChooseNode={(node, clue) => {
+            setRunChronicle((value) => [...value.slice(-5), `路线 · ${node.name}`]);
+            setPendingClue(createPendingClue(clue, node, routeProgress));
+          }}
         />
       )}
       {screen === "market" && (
         <MarketScreen
+          chapter={selectedChapter}
           origin={selectedOrigin}
           deck={runDeck}
           setDeck={setRunDeck}
+          hp={hp}
+          maxHp={maxHp}
+          setHp={setHp}
           stones={stones}
           setStones={setStones}
+          consumables={consumables}
+          setConsumables={setConsumables}
           treasures={treasures}
           setTreasures={setTreasures}
           setMaxQi={setMaxQi}
           setProfile={setProfile}
           onLeave={() => {
+            completePendingClue();
             setRouteProgress((value) => Math.min(3, value + 1));
             changeScreen("map");
           }}
@@ -1560,6 +1538,7 @@ function App() {
           setDeck={setRunDeck}
           setConsumables={setConsumables}
           onComplete={() => {
+            completePendingClue();
             setRouteProgress((value) => Math.min(3, value + 1));
             changeScreen("map");
           }}
@@ -1573,12 +1552,13 @@ function App() {
           setMaxQi={setMaxQi}
           setDeck={setRunDeck}
           onComplete={() => {
+            completePendingClue();
             setRouteProgress((value) => Math.min(3, value + 1));
             changeScreen("map");
           }}
         />
       )}
-      {screen === "event" && <EventScreen chapter={selectedChapter} origin={selectedOrigin} choices={runChoices} setProfile={setProfile} setScreen={setScreen} setHp={setHp} maxHp={maxHp} setStones={setStones} setRunDeck={setRunDeck} setRouteProgress={setRouteProgress} setNextEnemyShield={setNextEnemyShield} addRunEcho={(text) => setRunChronicle((value) => [...value.slice(-5), text])} />}
+      {screen === "event" && <EventScreen chapter={selectedChapter} origin={selectedOrigin} deck={runDeck} maxQi={maxQi} autoChoice={debugEventChoice} setProfile={setProfile} setScreen={setScreen} setHp={setHp} maxHp={maxHp} setStones={setStones} setRunDeck={setRunDeck} setRouteProgress={setRouteProgress} setNextEnemyShield={setNextEnemyShield} setMaxQi={setMaxQi} setConsumables={setConsumables} completeInvestigation={completePendingClue} abandonInvestigation={() => setPendingClue(null)} addRunEcho={(text) => setRunChronicle((value) => [...value.slice(-5), text])} />}
       {screen === "combat" && (
         <CombatScreen
           origin={selectedOrigin}
@@ -1615,6 +1595,7 @@ function App() {
           endTurn={endTurn}
           consumables={consumables}
           treasures={treasures}
+          deck={runDeck}
           useConsumable={useConsumable}
           setOverlay={setOverlay}
           showGuide={(debugTutorial || (!profile.tutorialFlags.combat && selectedChapter === 1 && stage === 1)) && !debugAutoplay && !debugAutoClick}
@@ -1622,18 +1603,20 @@ function App() {
         />
       )}
       {screen === "reward" && <RewardScreen stage={stage} origin={origin} deck={runDeck} treasures={treasures} stones={stones} setStones={setStones} claimReward={claimReward} skipReward={skipReward} />}
-      {screen === "summary" && <SummaryScreen chapter={selectedChapter} hp={hp} maxHp={maxHp} stones={stones} treasures={treasures} deck={runDeck} setScreen={setScreen} profile={profile} runChoices={runChoices} runChronicle={runChronicle} runStats={runStats} />}
+      {screen === "summary" && <SummaryScreen chapter={selectedChapter} hp={hp} maxHp={maxHp} stones={stones} treasures={treasures} deck={runDeck} setScreen={setScreen} profile={profile} runChoices={runChoices} runChronicle={runChronicle} runClues={runClues} runStats={runStats} />}
       {screen === "defeat" && (
         <DefeatScreen
           chapter={selectedChapter}
           stage={stage}
           deck={runDeck}
           treasures={treasures}
+          clues={runClues}
+          pendingClue={pendingClue}
           onRetry={() => beginRun(selectedChapter)}
           onHome={() => changeScreen("home")}
         />
       )}
-      {overlay && <Overlay type={overlay} close={() => setOverlay(null)} deck={runDeck} profile={profile} setProfile={setProfile} treasures={treasures} savedRun={savedRun} abandonRun={abandonRun} feedback={feedback} />}
+      {overlay && <Overlay type={overlay} close={() => setOverlay(null)} deck={runDeck} origin={origin} profile={profile} setProfile={setProfile} treasures={treasures} savedRun={savedRun} abandonRun={abandonRun} feedback={feedback} />}
     </main>
   );
 }
@@ -1763,7 +1746,7 @@ function ClassScreen({ origin, setOrigin, profile, onBack, onStart }) {
             <b>{milestone.level}</b><span><strong>{milestone.name}</strong><small>{milestone.effect}</small></span>
           </div>)}
         </div>
-        <div className="starter-preview">{masteryStarterDeck(current, mastery).slice(0, 8).map((card) => <MiniCard card={card} key={card.id} />)}</div>
+        <div className="starter-preview">{masteryStarterDeck(current, mastery).slice(0, 8).map((card, index) => <MiniCard card={card} key={`${card.id}-${index}`} />)}</div>
       </article>
       <button className="primary-cta mobile-primary" onClick={onStart}>确认道途 · 选择章节</button>
     </section>
@@ -1979,7 +1962,7 @@ function RunHeader({ stage, chapter, hp, maxHp, stones }) {
   );
 }
 
-function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openMarket, openRest, openTraining, routeProgress, choices, chronicle, treasures, onChooseNode }) {
+function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, treasures, deck, origin, onChooseNode }) {
   const chapterRoutes = CHAPTER_ROUTES[chapter] || ROUTE_ROWS;
   const baseChoices = chapterRoutes[Math.min(routeProgress, chapterRoutes.length - 1)];
   const currentChoices = [
@@ -1988,6 +1971,8 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
     ...(routeProgress === 2 ? [{ id: "training", kind: "修炼", name: "问心石阶", desc: "开拓灵气、精研核心牌或忘却冗余。", art: "/bg_soul_shrine.png" }] : []),
   ];
   const chapterCopy = CHAPTER_ROUTE_COPY[chapter];
+  const investigation = CHAPTER_INVESTIGATIONS[chapter];
+  const build = currentBuildState(deck, origin);
   const routeMeta = {
     story: { risk: "无战斗", reward: "剧情线索", consequence: choices.includes("相信守门人") ? "陆观愿意透露名册旧案" : "陆观仍在试探你的来意" },
     battle: { risk: "危险 · 低", reward: "职业卡牌", consequence: "稳定补强牌组" },
@@ -1999,7 +1984,8 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
     boss: { risk: "首领战", reward: "章节突破", consequence: "揭开第七盏灯真相" },
   };
   const chooseNode = (node) => {
-    onChooseNode(node);
+    const clue = investigation?.routes?.[routeProgress]?.[node.id];
+    onChooseNode(node, clue);
     if (["battle", "elite", "boss"].includes(node.id)) enterCombat(Math.min(3, routeProgress || 1));
     else if (node.id === "event" || node.id === "story") setScreen("event");
     else if (node.id === "rest") openRest();
@@ -2014,6 +2000,12 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
         <h1>{chapterCopy.title}</h1>
         <p>选择会改变资源、人物关系与后续剧情。首领在山门尽头等你。</p>
       </div>
+      {investigation && <div className="investigation-strip">
+        <div><small>本章调查</small><strong>{investigation.objective}</strong></div>
+        <span>{clues.length}/5</span>
+        <i><b style={{ width: `${Math.min(100, clues.length * 20)}%` }} /></i>
+        <p>{clues.at(-1) || "完成开场剧情后获得第一条线索。"}</p>
+      </div>}
       <div className="route-journey">
         <div className="route-progress-scroll">
           {chapterRoutes.map((row, index) => <i key={index} className={index < routeProgress ? "done" : index === routeProgress ? "current" : ""}><span>{index + 1}</span></i>)}
@@ -2021,6 +2013,7 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
         <div className="route-now">
           <span className="section-index">命途所至</span>
           <strong>{chapterCopy.beats[routeProgress]}</strong>
+          {build && <div className="route-build-goal"><small>{build.label} · {build.recipe.rank}</small><b>{build.recipe.name}</b><em>{build.progress}/5</em></div>}
         </div>
         <div className={`route-choice-grid choices-${currentChoices.length}`}>
           {currentChoices.map((node, index) => {
@@ -2115,15 +2108,25 @@ function TrainingScreen({ deck, origin, maxQi, setMaxQi, setDeck, onComplete }) 
   );
 }
 
-function MarketScreen({ origin, deck, setDeck, stones, setStones, treasures, setTreasures, setMaxQi, setProfile, onLeave }) {
-  const [notice, setNotice] = useState("坊市可多次交易，离开后路线才会推进。");
+function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones, setStones, consumables, setConsumables, treasures, setTreasures, setMaxQi, setProfile, onLeave }) {
+  const market = CHAPTER_MARKETS[chapter];
+  const [notice, setNotice] = useState(`${market.name}可多次交易，离开后路线才会推进。`);
   const [sold, setSold] = useState([]);
+  const [specialUsed, setSpecialUsed] = useState(false);
   const offers = useMemo(() => {
-    const pool = origin.cards.filter((card) => !card.refined);
-    return [...pool].sort(() => Math.random() - 0.5).slice(0, 3);
-  }, [origin.id]);
+    const score = (card) => {
+      const text = `${card.text}${card.combo || ""}`;
+      if (market.bias === "low-cost") return (3 - card.cost) * 4 + Number(!card.refined) * 3;
+      if (market.bias === "defense") return Number(/护盾|恢复|驱散|净除/.test(text)) * 9 + (3 - card.cost);
+      if (market.bias === "power") return card.cost * 3 + Number(card.refined) * 7 + Number(["稀有", "传说"].includes(card.rarity)) * 5;
+      if (market.bias === "cycle") return Number(/抽|返回手牌|复制|发现|回收/.test(text)) * 9 + Number(card.rarity === "稀有") * 4;
+      return Number(["稀有", "传说"].includes(card.rarity)) * 7 + Number(card.refined) * 8 + card.tier;
+    };
+    const pool = origin.cards.filter((card) => chapter >= 3 || !card.refined);
+    return [...pool].map((card) => ({ card, order: score(card) + Math.random() * 3 })).sort((a, b) => b.order - a.order).slice(0, 3).map((item) => item.card);
+  }, [chapter, market.bias, origin.id]);
   const discount = treasureValue(treasures, "marketDiscount");
-  const priceFor = (card) => Math.max(4, ({ 普通: 10, 精良: 13, 稀有: 17, 传说: 22 }[card.rarity] || 12) - discount);
+  const priceFor = (card) => Math.max(4, ({ 普通: 10, 精良: 13, 稀有: 17, 传说: 22 }[card.rarity] || 12) + market.cardPrice + (card.refined ? 4 : 0) - discount);
   const treasureOffer = useMemo(() => {
     const pool = TREASURES.filter((treasure) => !treasures.some((owned) => owned.id === treasure.id));
     return pool[Math.floor(Math.random() * pool.length)] || null;
@@ -2137,21 +2140,21 @@ function MarketScreen({ origin, deck, setDeck, stones, setStones, treasures, set
     setNotice(`购得「${card.name}」。牌组增至 ${deck.length + 1} 张。`);
   };
   const remove = (index) => {
-    if (stones < 8 || deck.length <= 8) return;
+    if (stones < market.removeCost || deck.length <= 8) return;
     const card = deck[index];
-    setStones((value) => value - 8);
+    setStones((value) => value - market.removeCost);
     setDeck((value) => value.filter((_, cardIndex) => cardIndex !== index));
     setNotice(`净心完成：已忘却「${card.name}」。`);
   };
   const refine = (index) => {
     const next = refinedVersion(deck[index], origin);
-    if (!next || stones < 12) return;
-    setStones((value) => value - 12);
+    if (!next || stones < market.refineCost) return;
+    setStones((value) => value - market.refineCost);
     setDeck((value) => value.map((card, cardIndex) => cardIndex === index ? next : card));
     setNotice(`精研完成：「${deck[index].name}」化为「${next.name}」。`);
   };
   const buyTreasure = () => {
-    const price = Math.max(12, 18 - discount);
+    const price = Math.max(12, market.treasureCost - discount);
     if (!treasureOffer || stones < price || treasures.some((item) => item.id === treasureOffer.id)) return;
     setStones((value) => value - price);
     setTreasures((value) => [...value, treasureOffer]);
@@ -2159,34 +2162,93 @@ function MarketScreen({ origin, deck, setDeck, stones, setStones, treasures, set
     if (treasureOffer.maxQi) setMaxQi((value) => Math.min(5, value + treasureOffer.maxQi));
     setNotice(`淘得法宝「${treasureOffer.name}」：${treasureOffer.effect}。`);
   };
+  const specialTrade = () => {
+    if (specialUsed) return;
+    if (market.special.id === "duplicate") {
+      const duplicateIndex = deck.findIndex((card, index) => deck.findIndex((item) => item.id === card.id) !== index);
+      if (duplicateIndex < 0 || deck.length <= 8) return setNotice("当前没有可寄卖的重复术法。");
+      const card = deck[duplicateIndex];
+      setDeck((value) => value.filter((_, index) => index !== duplicateIndex));
+      setStones((value) => value + 6);
+      setNotice(`旧卷回收：「${card.name}」换得 6 灵石。`);
+    }
+    if (market.special.id === "purge") {
+      const curseIndex = deck.findIndex((card) => card.job === "curse" || card.type === "心魔");
+      if (curseIndex >= 0) {
+        setDeck((value) => value.filter((_, index) => index !== curseIndex));
+        setNotice("无名火焚去一张心魔。");
+      } else {
+        setConsumables((value) => ({ ...value, clarity: value.clarity + 1 }));
+        setNotice("无心魔可净除，摊主赠予 1 份清神粉。");
+      }
+    }
+    if (market.special.id === "thunder-refine") {
+      const index = deck.findIndex((card) => refinedVersion(card, origin));
+      setHp((value) => Math.max(1, value - 6));
+      if (index >= 0) {
+        const next = refinedVersion(deck[index], origin);
+        setDeck((value) => value.map((card, cardIndex) => cardIndex === index ? next : card));
+        setNotice(`借炉引雷：「${deck[index].name}」化为真解。`);
+      } else {
+        setStones((value) => value + 12);
+        setNotice("无术可精研，雷炉残金换得 12 灵石。");
+      }
+    }
+    if (market.special.id === "shadow") {
+      setHp((value) => Math.max(1, value - 8));
+      setStones((value) => value + 14);
+      setNotice("影子被典当一角，获得 14 灵石。");
+    }
+    if (market.special.id === "rewrite") {
+      if (stones < 8) return setNotice("交换命页至少需要 8 灵石。");
+      const index = deck.findIndex((card) => refinedVersion(card, origin));
+      if (index >= 0) {
+        const next = refinedVersion(deck[index], origin);
+        setStones((value) => value - 8);
+        setDeck((value) => value.map((card, cardIndex) => cardIndex === index ? next : card));
+        setNotice(`命页重写：「${deck[index].name}」化为真解。`);
+      } else {
+        setConsumables((value) => ({ ...value, spirit: value.spirit + 1 }));
+        setNotice("无术可重写，命页化作 1 份聚气散。");
+      }
+    }
+    setSpecialUsed(true);
+  };
   const analysis = analyzeDeck(deck);
   return (
-    <section className="market-screen screen-content">
+    <section className={`market-screen market-chapter-${chapter} screen-content`}>
       <header className="market-header">
-        <div><span className="section-index">路线节点 · 坊市</span><h1>灯下鬼市</h1><p>买得越多并不一定越强。真正的构筑，往往从删掉一张牌开始。</p></div>
+        <div><span className="section-index">{market.eyebrow}</span><h1>{market.name}</h1><p>{market.description}</p></div>
         <div className="market-wallet"><img src="/ui/icons/stones.png" alt="" /><span>灵石</span><strong>{stones}</strong></div>
       </header>
       <div className="market-notice">{notice}</div>
       <div className="market-layout">
         <section className="market-stall">
-          <div className="market-section-title"><span>摊前术法</span><small>本次入市固定三张</small></div>
+          <div className="market-section-title"><span>{market.stall}</span><small>{market.stockNote}</small></div>
           <div className="market-offers">
             {offers.map((card, index) => {
               const price = priceFor(card);
               const unavailable = stones < price || sold.includes(card.id);
-              return <div className={`market-offer ${sold.includes(card.id) ? "sold" : ""}`} key={card.id}>
+              const fit = rewardFit(card, deck, origin.id);
+              return <div className={`market-offer ${sold.includes(card.id) ? "sold" : unavailable ? "unaffordable" : ""}`} key={card.id}>
+                <small className={`market-fit fit-${fit.rank}`}>{fit.reason}</small>
                 <Card card={card} index={index} playable={!unavailable} onClick={() => buy(card)} />
-                <button disabled={unavailable} onClick={() => buy(card)}>{sold.includes(card.id) ? "已购得" : `${price} 灵石 · 购入`}</button>
+                <button disabled={unavailable} onClick={() => buy(card)}>
+                  {sold.includes(card.id) ? "已购得" : stones < price ? `${price} 灵石 · 尚缺 ${price - stones}` : `${price} 灵石 · 购入`}
+                </button>
               </div>;
             })}
           </div>
         </section>
         <aside className="market-services">
           <div className="market-section-title"><span>净心与精研</span><small>牌组 {deck.length} 张</small></div>
+          <button className="market-special" disabled={specialUsed} onClick={specialTrade}>
+            <span><small>{market.special.label}</small><strong>{market.special.title}</strong><p>{market.special.detail}</p></span><b>{specialUsed ? "已交易" : market.special.cost}</b>
+          </button>
           {treasureOffer && <article className="market-treasure">
             <img src={treasureOffer.art} alt="" />
             <div><small>本次法宝</small><strong>{treasureOffer.name}</strong><p>{treasureOffer.effect}</p></div>
-            <button disabled={stones < Math.max(12, 18 - discount) || treasures.some((item) => item.id === treasureOffer.id)} onClick={buyTreasure}>{treasures.some((item) => item.id === treasureOffer.id) ? "已拥有" : `${Math.max(12, 18 - discount)} 灵石`}</button>
+            <button disabled={stones < Math.max(12, market.treasureCost - discount) || treasures.some((item) => item.id === treasureOffer.id)} onClick={buyTreasure}>{treasures.some((item) => item.id === treasureOffer.id) ? "已拥有" : `${Math.max(12, market.treasureCost - discount)} 灵石`}</button>
           </article>}
           <div className="deck-mini-analysis">
             <b>当前短板</b>
@@ -2198,8 +2260,8 @@ function MarketScreen({ origin, deck, setDeck, stones, setStones, treasures, set
               return <article key={`${card.id}-${index}`}>
                 <img src={card.art} alt="" />
                 <div><strong>{card.name}</strong><small>{card.cost} 费 · {card.keyword} · {card.rarity}</small></div>
-                <button disabled={!canRefine || stones < 12} onClick={() => refine(index)}>{card.refined ? "已真解" : "精研 12"}</button>
-                <button disabled={stones < 8 || deck.length <= 8} onClick={() => remove(index)}>忘却 8</button>
+                <button disabled={!canRefine || stones < market.refineCost} onClick={() => refine(index)}>{card.refined ? "已真解" : `精研 ${market.refineCost}`}</button>
+                <button disabled={stones < market.removeCost || deck.length <= 8} onClick={() => remove(index)}>忘却 {market.removeCost}</button>
               </article>;
             })}
           </div>
@@ -2210,58 +2272,74 @@ function MarketScreen({ origin, deck, setDeck, stones, setStones, treasures, set
   );
 }
 
-function EventScreen({ chapter, origin, choices, setProfile, setScreen, setHp, maxHp, setStones, setRunDeck, setRouteProgress, setNextEnemyShield, addRunEcho }) {
-  const choose = (kind) => {
-    if (kind === "rest") setHp((value) => Math.min(maxHp, value + 12));
-    if (kind === "stones") {
-      setStones((value) => value + 18);
-      setNextEnemyShield((value) => value + 5);
+function EventScreen({ chapter, origin, deck, maxQi, autoChoice, setProfile, setScreen, setHp, maxHp, setStones, setRunDeck, setRouteProgress, setNextEnemyShield, setMaxQi, setConsumables, completeInvestigation, abandonInvestigation, addRunEcho }) {
+  const event = CHAPTER_EVENTS[chapter];
+  const choose = (option) => {
+    const effect = option.effect || {};
+    if (effect.heal) setHp((value) => Math.min(maxHp, value + effect.heal));
+    if (effect.hpLoss) setHp((value) => Math.max(1, value - effect.hpLoss));
+    if (effect.stones) setStones((value) => value + effect.stones);
+    if (effect.enemyShield) setNextEnemyShield((value) => value + effect.enemyShield);
+    if (effect.maxQi) {
+      if (maxQi < 5) setMaxQi((value) => Math.min(5, value + effect.maxQi));
+      else if (effect.maxQiFallbackConsumables) {
+        setConsumables((value) => Object.fromEntries(Object.entries(value).map(([key, amount]) => [key, amount + (effect.maxQiFallbackConsumables[key] || 0)])));
+      }
     }
-    if (kind === "profession") {
-      const classCard = origin.cards.find((card) => card.rarity === "精良" && !card.refined) || origin.cards[5];
-      setRunDeck((value) => [...value, classCard]);
+    if (effect.consumables) {
+      setConsumables((value) => Object.fromEntries(Object.entries(value).map(([key, amount]) => [key, amount + (effect.consumables[key] || 0)])));
     }
-    const echoes = {
-      profession: `古龛 · 参悟${origin.resource}残痕`,
-      rest: "古龛 · 安坐调息",
-      stones: "古龛 · 取玉，下一战敌人护体 +5",
-      leave: "古龛 · 谨慎离去",
-    };
-    addRunEcho(echoes[kind]);
-    setProfile((value) => ({ ...value, choices: [...value.choices.slice(-7), `古龛:${kind}`] }));
+    if (effect.cardRarity) {
+      setRunDeck((deck) => {
+        const owned = new Set(deck.map((card) => card.id));
+        const card = origin.cards.find((item) => item.rarity === effect.cardRarity && !item.refined && !owned.has(item.id))
+          || origin.cards.find((item) => item.rarity === effect.cardRarity && !item.refined)
+          || origin.cards.find((item) => !item.refined);
+        return card ? [...deck, card] : deck;
+      });
+    }
+    if (effect.refine) {
+      const index = deck.findIndex((card) => refinedVersion(card, origin));
+      if (index < 0) {
+        if (effect.refineFallbackStones) setStones((value) => value + effect.refineFallbackStones);
+      } else {
+        setRunDeck((value) => value.map((card, cardIndex) => cardIndex === index ? refinedVersion(card, origin) : card));
+      }
+    }
+    if (effect.removeCurse) {
+      const index = deck.findIndex((card) => card.job === "curse" || card.type === "心魔");
+      if (index < 0) {
+        if (effect.curseFallbackHeal) setHp((value) => Math.min(maxHp, value + effect.curseFallbackHeal));
+      } else {
+        setRunDeck((value) => value.filter((_, cardIndex) => cardIndex !== index));
+      }
+    }
+    addRunEcho(`${event.name} · ${option.label}`);
+    if (option.revealsClue) completeInvestigation();
+    else abandonInvestigation();
+    setProfile((value) => ({ ...value, choices: [...value.choices.slice(-7), `${event.name}:${option.id}`] }));
     setRouteProgress((value) => Math.min(3, value + 1));
     setScreen("map");
   };
-  const professionOffer = {
-    sword: ["参悟残留剑痕", "获得一张精良剑修牌", "剑痕与血书上的笔锋出自同一人。"],
-    talisman: ["临摹镇魂残符", "获得一张精良符师牌", "符脚藏着沈砚秋惯用的落款。"],
-    alchemy: ["辨认龛下药灰", "获得一张精良丹师牌", "药灰中混有内门才有的寒髓草。"],
-    beast: ["安抚龛后灵狐", "获得一张精良御灵牌", "灵狐认得血书上的气息。"],
-    artificer: ["拆解供台机括", "获得一张精良偃师牌", "机关里刻着被抹去的第二十四号。"],
-    soul: ["点亮无主魂灯", "获得一张精良契师牌", "魂灯中传出师姐尚未消散的回声。"],
-  }[origin.id];
-  const eventCopy = {
-    1: ["山中机缘", "月隐古龛", "残香在雨里燃着。神龛下压着一枚裂开的青玉，黑雾不敢靠近半步。", "/bg_soul_shrine.png"],
-    2: ["玄阴异闻", "镇魂古龛", "每张残符都写着一个被鬼灯替换过的名字，师父的名字也在其中。", "/ui/bg_act2_mountain.png"],
-    3: ["雷云异闻", "洗雷池", "池中雷水倒映的不是现在，而是每一次你本可做出不同选择的时刻。", "/bg_thunder_pool.png"],
-    4: ["无灯异闻", "失梦茶楼", "茶汤里漂着一段陌生童年。店主说，那是城主抵押在这里的梦。", "/bg_dark_forge.png"],
-    5: ["天门异闻", "缺页书库", "书架上每个空位都在低声念诵一个无人记得的名字。", "/bg_secret_realm.png"],
-  }[chapter];
+  useEffect(() => {
+    if (autoChoice === null) return;
+    const id = window.setTimeout(() => choose(event.options[autoChoice]), 120);
+    return () => window.clearTimeout(id);
+  }, []);
   return (
     <section className="event-screen screen-content">
-      <div className="event-art"><img src={eventCopy[3]} alt="" /></div>
-      <div className="event-copy"><span className="section-index">{eventCopy[0]}</span><h1>{eventCopy[1]}</h1><p>{eventCopy[2]}</p></div>
+      <div className="event-art"><img src={event.art} alt="" /></div>
+      <div className="event-copy"><span className="section-index">{event.eyebrow}</span><h1>{event.name}</h1><p>{event.description}</p></div>
       <div className="event-choices">
-        <button style={{ "--delay": "140ms" }} onClick={() => choose("profession")}><small>{professionOffer[0]}</small><strong>{professionOffer[1]}</strong><span>{professionOffer[2]}</span></button>
-        <button style={{ "--delay": "220ms" }} onClick={() => choose("rest")}><small>安坐调息</small><strong>恢复 12 点生命</strong><span>{choices.includes("相信守门人") ? "陆观教过你的吐纳法压住了黑雾。" : "你独自抵御神龛中的执念。"}</span></button>
-        <button style={{ "--delay": "270ms" }} onClick={() => choose("stones")}><small>揭符取玉</small><strong>获得 18 灵石</strong><span>下一战敌人获得 5 点护体。</span></button>
-        <button style={{ "--delay": "340ms" }} onClick={() => choose("leave")}><small>拱手离去</small><strong>保持谨慎</strong><span>不获得任何收益，也不承担风险。</span></button>
+        {event.options.map((option, index) => <button className={option.revealsClue ? "" : "safe-exit"} style={{ "--delay": `${140 + index * 70}ms` }} key={option.id} onClick={() => choose(option)}>
+          <small>{option.label}<em>{option.tone}</em></small><strong>{option.title}</strong><span>{option.detail}</span>
+        </button>)}
       </div>
     </section>
   );
 }
 
-function CombatScreen({ origin, stage, chapter, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, playCard, effectiveCardCost, cardSynergyState, endTurn, consumables, treasures, useConsumable, setOverlay, showGuide, completeGuide }) {
+function CombatScreen({ origin, stage, chapter, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, playCard, effectiveCardCost, cardSynergyState, endTurn, consumables, treasures, deck, useConsumable, setOverlay, showGuide, completeGuide }) {
   const [guideStep, setGuideStep] = useState(showGuide ? 0 : -1);
   const hpPercent = Math.max(0, (enemy.hp / enemy.max) * 100);
   const currentEnemyMove = enemy.moves[enemy.moveIndex || 0];
@@ -2273,6 +2351,7 @@ function CombatScreen({ origin, stage, chapter, hp, maxHp, qi, maxQi, shield, ed
     artificer: { icon: "/ui/icons/shield.png", label: "机巧", value: `${jobState.cunning}/${jobState.devices}机` },
     soul: { icon: "/ui/icons/curse.png", label: "魂灯", value: jobState.lamps },
   }[origin.id];
+  const build = currentBuildState(deck, origin.id);
   useEffect(() => {
     if (guideStep === 1 && combatFx?.card) setGuideStep(2);
   }, [combatFx?.card, guideStep]);
@@ -2309,6 +2388,11 @@ function CombatScreen({ origin, stage, chapter, hp, maxHp, qi, maxQi, shield, ed
         <div className="enemy-title"><span>第 {chapter} 章 · {stage === 1 ? "普通战" : stage === 2 ? "精英战" : "首领战"} · 第 {combatTurn} 回合</span><h1>{enemy.name}</h1></div>
         <div className="enemy-health"><span style={{ width: `${hpPercent}%` }} /><strong>{enemy.hp}/{enemy.max}</strong></div>
         <div className={`intent ${guideStep === 0 ? "guide-focus" : ""}`}><small>当前招式</small><strong>{enemy.intent}</strong><b>{currentEnemyMove.note}</b><em>下一式 · {intentLabel(enemy.moves[(enemy.moveIndex + 1) % enemy.moves.length])}</em></div>
+        <div className="enemy-readout">
+          <small>{enemy.archetype}</small>
+          <strong>{enemy.trait}</strong>
+          <p>{enemy.counter}</p>
+        </div>
         {(enemyBurn > 0 || enemyPoison > 0 || enemyWeak > 0 || enemyShield > 0) && <div className="enemy-statuses">
           {enemyShield > 0 && <span className="status-shield"><img src="/ui/icons/shield.png" alt="" />护体 {enemyShield}</span>}
           {enemyBurn > 0 && <span className="status-burn"><img src="/ui/icons/burn.png" alt="" />燃烧 {enemyBurn}</span>}
@@ -2355,6 +2439,7 @@ function CombatScreen({ origin, stage, chapter, hp, maxHp, qi, maxQi, shield, ed
         <span className="discard-count">弃 {discardPile.length}</span>
         {exhaustPile.length > 0 && <span className="exhaust-count">耗 {exhaustPile.length}</span>}
       </div>
+      {build && <button className={`combat-build-tracker progress-${build.progress}`} onClick={() => setOverlay("deck")}><small>{build.label}</small><strong>{build.recipe.name}</strong><span>{build.progress}/5</span></button>}
       <div className="qi-orb"><strong>{qi}</strong><span>/{maxQi}</span></div>
       <TreasureStrip treasures={treasures} compact />
       {guide && <aside className={`combat-guide guide-${guideStep}`}>
@@ -2423,26 +2508,11 @@ function Card({ card, index, playable, displayCost = card.cost, comboReady = fal
 
 function RewardScreen({ stage, origin, deck, treasures, stones, setStones, claimReward, skipReward }) {
   const [rerollCount, setRerollCount] = useState(0);
+  const profession = getProfession(origin);
+  const buildDirection = useMemo(() => rewardRecipeTarget(profession, stage, deck), [profession, stage, deck]);
   const rewards = useMemo(() => {
-    const profession = getProfession(origin);
-    const eligible = profession.cards.filter((card) => card.tier <= Math.min(4, stage + 1));
-    const weighted = eligible.flatMap((card) => {
-      const weight = card.rarity === "普通" ? (stage === 1 ? 5 : 2) : card.rarity === "精良" ? 4 : card.rarity === "稀有" ? stage + 1 : 1;
-      return Array.from({ length: weight }, () => card);
-    });
-    const selected = [];
-    while (selected.length < 3 && weighted.length) {
-      const candidate = weighted[Math.floor(Math.random() * weighted.length)];
-      if (!selected.some((card) => card.id === candidate.id)) selected.push(candidate);
-    }
-    if (selected.length < 3) {
-      for (const card of profession.cards) {
-        if (!selected.some((item) => item.id === card.id)) selected.push(card);
-        if (selected.length === 3) break;
-      }
-    }
-    return selected;
-  }, [origin, stage, rerollCount]);
+    return generateRewardChoices(profession, stage, deck);
+  }, [profession, stage, deck, rerollCount]);
   const treasureReward = useMemo(() => {
     if (stage < 2) return null;
     const pool = TREASURES.filter((treasure) => !treasures.some((owned) => owned.id === treasure.id));
@@ -2456,9 +2526,15 @@ function RewardScreen({ stage, origin, deck, treasures, stones, setStones, claim
   };
   return (
     <section className="reward-screen screen-content">
-      <span className="section-index">战利 · 择一</span><h1>妖影散尽，灵光未灭</h1><p>奖励已按章节、稀有度和当前职业牌池生成。</p>
+      <span className="section-index">战利 · 择一</span><h1>妖影散尽，灵光未灭</h1><p>至少一张战利会推进当前最接近的流派，其余保留补强与转型空间。</p>
+      {buildDirection && <div className="reward-build-direction">
+        <div><small>当前构筑方向 · {buildDirection.recipe.rank}</small><strong>{buildDirection.recipe.name}</strong></div>
+        <span>{buildDirection.progress}/5</span>
+        <i><b style={{ width: `${buildDirection.progress * 20}%` }} /></i>
+        <p>{buildDirection.recipe.focus} · 尚缺 {buildDirection.missing.length} 张核心组件</p>
+      </div>}
       <div className="reward-cards">{rewards.map((card, index) => {
-        const fit = rewardFit(card, deck);
+        const fit = rewardFit(card, deck, origin);
         return <div className={`reward-card-wrap fit-${fit.rank}`} style={{ "--delay": `${180 + index * 120}ms` }} key={card.id}>
           <div className="reward-fit"><b>推荐 {fit.rank}</b><span>{fit.reason}</span></div>
           <Card card={card} index={index} playable onClick={() => claimReward(card)} />
@@ -2488,7 +2564,7 @@ function TreasureStrip({ treasures, compact = false }) {
   );
 }
 
-function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen, profile, runChoices, runChronicle, runStats }) {
+function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen, profile, runChoices, runChronicle, runClues, runStats }) {
   const evaluation = evaluateRun(runStats, hp, maxHp);
   const baseEnding = {
     1: ["雨停山门，灯灭其一。", "你带着第二十四人的线索走入内门，师姐的名字仍在血书上发亮。"],
@@ -2502,6 +2578,11 @@ function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen,
       ? ["末页新书，诸命由己。", "你没有修复旧日秩序，而是在命册末页写下新的规则：从今以后，名字只能记录选择，不能替任何人决定前路。"]
       : ["旧册重明，无名归卷。", "你修复命册，却保留了所有被抹去的旧名。天地重新记住他们，也永远留下了篡改命数的罪证。"]
     : baseEnding;
+  const investigation = CHAPTER_INVESTIGATIONS[chapter];
+  const investigationComplete = runClues.length >= 4;
+  const archive = profile.investigationArchive?.[String(chapter)] || [];
+  const archiveTotal = investigationEvidence(chapter).length;
+  const archiveComplete = archiveTotal > 0 && archive.length === archiveTotal;
   return (
     <section className="summary-screen screen-content">
       <div className="summary-seal"><span>{evaluation.grade}</span><small>{evaluation.score} 分 · {evaluation.title}</small></div>
@@ -2513,13 +2594,24 @@ function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen,
         <div><small>牌组 / 法宝</small><strong>{deck.length} / {treasures.length}</strong></div>
       </div>
       <div className="summary-rewards"><span>本章所得</span><b>修为 +{runStats.xpGained}</b><b>悟道 +{runStats.spiritGained}</b><b>灵玉 +{runStats.jadeGained}</b><b>灵石结余 {stones}</b></div>
+      {investigation && <div className={`summary-investigation ${investigationComplete ? "complete" : ""}`}>
+        <span>{investigationComplete ? "真相已明" : "疑云未尽"} · 线索 {runClues.length}/5</span>
+        <strong>{investigation.objective}</strong>
+        <p>{investigationComplete ? investigation.conclusion : `仍缺 ${Math.max(0, 4 - runClues.length)} 条关键证据；重返本章选择其他路线可补全真相。`}</p>
+        <div>{runClues.slice(-4).map((clue, index) => <small key={`${clue}-${index}`}>{clue}</small>)}</div>
+      </div>}
+      {investigation && <div className={`summary-archive ${archiveComplete ? "complete" : ""}`}>
+        <span>异闻宗卷 · {archive.length}/{archiveTotal}</span>
+        <strong>{archiveComplete ? "本章全部分支证据已收录" : `跨局再寻 ${archiveTotal - archive.length} 条分支证据`}</strong>
+        <small>{archiveComplete ? `宗卷圆满奖励：悟道 +${INVESTIGATION_COMPLETION_REWARD.spirit} · 灵玉 +${INVESTIGATION_COMPLETION_REWARD.jade}` : "已获证据会永久保留，重返本章可选择另一条路线。"}</small>
+      </div>}
       {runChronicle.length > 0 && <div className="summary-chronicle"><span>本章命途</span>{runChronicle.slice(-4).map((entry, index) => <small key={`${entry}-${index}`}>{entry}</small>)}</div>}
       <button className="primary-cta summary-action" onClick={() => setScreen("home")}><span>返回山门</span></button>
     </section>
   );
 }
 
-function DefeatScreen({ chapter, stage, deck, treasures, onRetry, onHome }) {
+function DefeatScreen({ chapter, stage, deck, treasures, clues, pendingClue, onRetry, onHome }) {
   const analysis = analyzeDeck(deck);
   return (
     <section className="defeat-screen screen-content">
@@ -2533,6 +2625,8 @@ function DefeatScreen({ chapter, stage, deck, treasures, onRetry, onHome }) {
           <div><small>随身法宝</small><strong>{treasures.length ? treasures.map((item) => item.name).join(" / ") : "尚未获得"}</strong></div>
           <div><small>成型组件</small><strong>{analysis.keyComponents.map(([name]) => name).join(" / ") || "尚未成型"}</strong></div>
           <div><small>下次优先</small><strong>{analysis.priorities.join(" / ") || "保持当前节奏"}</strong></div>
+          <div><small>已带回线索</small><strong>{clues.length}/5</strong></div>
+          <div><small>中断调查</small><strong>{pendingClue?.text || "本次未遗失待查证线索"}</strong></div>
         </div>
         <div className="defeat-actions">
           <button onClick={onRetry}>重启本章</button>
@@ -2543,8 +2637,14 @@ function DefeatScreen({ chapter, stage, deck, treasures, onRetry, onHome }) {
   );
 }
 
-function Overlay({ type, close, deck, profile, setProfile, treasures, savedRun, abandonRun, feedback }) {
+function Overlay({ type, close, deck, origin, profile, setProfile, treasures, savedRun, abandonRun, feedback }) {
   const analysis = analyzeDeck(deck);
+  const build = currentBuildState(deck, origin);
+  const archiveChapters = [...CHAPTERS].sort((a, b) => {
+    const bCount = (profile.investigationArchive?.[String(b.id)] || []).length;
+    const aCount = (profile.investigationArchive?.[String(a.id)] || []).length;
+    return bCount - aCount || a.id - b.id;
+  });
   const content = useMemo(() => ({
     guide: ["试炼札记", "先读敌人意图，再决定护体或进攻。每一幕至少经过一次坊市或修炼，避免牌组失衡。"],
     codex: ["青岚图鉴", "术法、敌情、法宝和山中异闻会在发现后记入此卷。"],
@@ -2558,6 +2658,12 @@ function Overlay({ type, close, deck, profile, setProfile, treasures, savedRun, 
         <button className="overlay-close" onClick={close}>收起</button>
         <span className="section-index">卷册</span><h2>{content[0]}</h2><p>{content[1]}</p>
         {type === "deck" && <>
+          {build && <div className={`deck-build-state progress-${build.progress}`}>
+            <div><small>{build.label} · {build.recipe.rank}</small><strong>{build.recipe.name}</strong><p>{build.recipe.strategy}</p></div>
+            <span>{build.progress}<i>/5</i></span>
+            <b><i style={{ width: `${build.progress * 20}%` }} /></b>
+            <em>{build.complete ? "五张核心术法已经成卷。" : build.nextCard ? `下一核心：${build.nextCard.name} · ${build.nextCard.keyword}` : "继续强化当前核心组件。"}</em>
+          </div>}
           <div className="deck-analysis-grid">
             <div><small>牌组</small><strong>{analysis.total}</strong></div>
             <div><small>攻击</small><strong>{analysis.attack}</strong></div>
@@ -2572,11 +2678,33 @@ function Overlay({ type, close, deck, profile, setProfile, treasures, savedRun, 
           <div className="deck-scroll-list">{deck.map((card, index) => <span key={`${card.id}-${index}`}><img src={card.art} alt="" /><b>{card.name}</b><small>{card.cost} 费 · {card.keyword}</small></span>)}</div>
         </>}
         {type === "codex" && <>
+          {(() => {
+            const totalEvidence = CHAPTERS.reduce((sum, chapter) => sum + investigationEvidence(chapter.id).length, 0);
+            const foundEvidence = CHAPTERS.reduce((sum, chapter) => sum + (profile.investigationArchive?.[String(chapter.id)] || []).length, 0);
+            return <div className="casebook-overview"><span>五章调查宗卷</span><strong>{foundEvidence}<i>/{totalEvidence}</i></strong><p>每章单局查明真相后，重返另一条路线可补齐全部分支证据。</p></div>;
+          })()}
           <div className="codex-summary">
             <div><small>已收录术法</small><strong>{profile.discoveredCards?.length || 0}/{ALL_CARDS.length}</strong></div>
             <div><small>已见法宝</small><strong>{profile.discoveredTreasures?.length || 0}/{TREASURES.length}</strong></div>
             <div><small>剧情印记</small><strong>{profile.choices?.length || 0}</strong></div>
             <div><small>结局卷</small><strong>{profile.unlockedEndings?.length || 0}/6</strong></div>
+          </div>
+          <h3 className="codex-heading">调查宗卷</h3>
+          <div className="investigation-archive">
+            {archiveChapters.map((chapter) => {
+              const investigation = CHAPTER_INVESTIGATIONS[chapter.id];
+              const evidence = investigationEvidence(chapter.id);
+              const found = profile.investigationArchive?.[String(chapter.id)] || [];
+              const complete = evidence.length > 0 && found.length === evidence.length;
+              const rewarded = (profile.investigationRewards || []).includes(`investigation-${chapter.id}-complete`);
+              return <article className={complete ? "complete" : ""} key={chapter.id}>
+                <header><span>第 {chapter.id} 卷</span><b>{found.length}/{evidence.length}</b></header>
+                <strong>{investigation.objective}</strong>
+                <i><em style={{ width: `${evidence.length ? found.length / evidence.length * 100 : 0}%` }} /></i>
+                <p>{complete ? investigation.conclusion : found.at(-1) || "尚未带回本章调查证据。"}</p>
+                <small>{complete ? rewarded ? "宗卷圆满 · 奖励已领取" : "宗卷圆满 · 通关结算时领取奖励" : `尚缺 ${evidence.length - found.length} 条分支证据`}</small>
+              </article>;
+            })}
           </div>
           <h3 className="codex-heading">法宝录</h3>
           <div className="codex-treasures">

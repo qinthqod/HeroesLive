@@ -1,10 +1,15 @@
 import {
   ALL_CARDS,
   BOSS_MOVE_PATTERNS,
+  ENCOUNTER_ENEMIES,
+  ENCOUNTER_MOVE_PATTERNS,
   CHAPTERS,
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
   CHAPTER_STORIES,
+  CHAPTER_INVESTIGATIONS,
+  CHAPTER_EVENTS,
+  CHAPTER_MARKETS,
   DECK_RECIPES,
   MASTERY_MILESTONES,
   MASTERY_SIGNATURE_BY_JOB,
@@ -41,6 +46,24 @@ for (const chapter of CHAPTERS) {
   bossMoveNames.push(...moves.map((move) => move.name));
 }
 expect(new Set(bossMoveNames).size === bossMoveNames.length, "首领招式名称必须在五章间保持唯一");
+const encounterMoveNames = [];
+for (const chapter of CHAPTERS) {
+  const enemies = ENCOUNTER_ENEMIES[chapter.id] || {};
+  expect(Object.keys(enemies).length === 3, `${chapter.name} 必须配置普通、精英与首领敌人`);
+  for (const stage of [1, 2, 3]) {
+    const enemy = enemies[stage];
+    expect(Boolean(enemy?.name && enemy?.art && enemy?.archetype && enemy?.trait && enemy?.counter), `${chapter.name} 第 ${stage} 战缺少敌人身份或反制提示`);
+    expect(Number.isFinite(enemy?.hp) && enemy.hp === enemy.max && enemy.hp > 0, `${chapter.name} 第 ${stage} 战生命配置非法`);
+  }
+  for (const stage of [1, 2]) {
+    const moves = ENCOUNTER_MOVE_PATTERNS[chapter.id]?.[stage] || [];
+    expect(moves.length === 3, `${chapter.name} 第 ${stage} 战必须有三式独立循环`);
+    expect(moves.every((move) => move.name && move.note && Number.isFinite(move.damage)), `${chapter.name} 第 ${stage} 战招式缺少名称、说明或伤害`);
+    expect(moves.some((move) => move.shield || move.heal || move.weak || move.drainQi || move.drawPenalty || move.curse || move.hits), `${chapter.name} 第 ${stage} 战缺少可辨识机制`);
+    encounterMoveNames.push(...moves.map((move) => move.name));
+  }
+}
+expect(new Set(encounterMoveNames).size === encounterMoveNames.length, "十场普通与精英战的招式名称必须保持唯一");
 expect(new Set(TREASURES.map((treasure) => treasure.id)).size === TREASURES.length, "法宝 ID 必须唯一");
 expect(new Set(TREASURES.map((treasure) => treasure.name)).size === TREASURES.length, "法宝名称必须唯一");
 const supportedTreasureEffects = new Set(["firstTurnQi", "firstAttackDamage", "firstSkillDraw", "battleHeal", "marketDiscount", "startShield", "battleConsumable", "burnDamage", "battleStones", "maxQi", "firstTurnDraw"]);
@@ -56,7 +79,31 @@ for (const chapter of CHAPTERS) {
   expect((CHAPTER_ROUTE_COPY[chapter.id]?.beats || []).length === 4, `${chapter.name} 需要 4 层路线叙事`);
   expect(Boolean(CHAPTER_ROUTE_COPY[chapter.id]?.clue), `${chapter.name} 缺少章节线索`);
   expect((CHAPTER_ROUTES[chapter.id] || []).length === 4, `${chapter.name} 需要 4 层独立路线`);
+  const investigation = CHAPTER_INVESTIGATIONS[chapter.id];
+  expect(Boolean(investigation?.objective && investigation?.opening && investigation?.conclusion), `${chapter.name} 缺少调查目标、开场线索或结论`);
+  expect(investigation?.routes?.length === 4, `${chapter.name} 调查链必须覆盖四层路线`);
+  for (const [routeIndex, nodes] of (CHAPTER_ROUTES[chapter.id] || []).entries()) {
+    for (const node of nodes) {
+      expect(Boolean(investigation?.routes?.[routeIndex]?.[node.id]), `${chapter.name} 路线「${node.name}」缺少专属线索`);
+    }
+  }
+  const event = CHAPTER_EVENTS[chapter.id];
+  expect(Boolean(event?.eyebrow && event?.name && event?.description && event?.art), `${chapter.name} 缺少独立奇遇场景`);
+  expect(event?.options?.length === 4, `${chapter.name} 奇遇必须提供四个清晰选项`);
+  expect(new Set((event?.options || []).map((option) => option.id)).size === 4, `${chapter.name} 奇遇选项 ID 必须唯一`);
+  expect(new Set((event?.options || []).map((option) => JSON.stringify(option.effect))).size >= 3, `${chapter.name} 奇遇后果差异不足`);
+  expect((event?.options || []).every((option) => option.label && option.title && option.detail && option.tone && typeof option.revealsClue === "boolean"), `${chapter.name} 奇遇缺少透明的风险收益说明`);
+  expect((event?.options || []).some((option) => !option.revealsClue && Object.keys(option.effect).length === 0), `${chapter.name} 奇遇需要一个无收益无风险的离开选项`);
+  const market = CHAPTER_MARKETS[chapter.id];
+  expect(Boolean(market?.eyebrow && market?.name && market?.description && market?.stall && market?.stockNote), `${chapter.name} 缺少独立坊市文案`);
+  expect(Boolean(market?.bias && market?.special?.id && market?.special?.label && market?.special?.title && market?.special?.detail), `${chapter.name} 缺少坊市货架倾向或专属交易`);
+  for (const field of ["cardPrice", "removeCost", "refineCost", "treasureCost"]) {
+    expect(Number.isInteger(market?.[field]) && market[field] >= 0, `${chapter.name} 坊市 ${field} 定价非法`);
+  }
 }
+expect(new Set(Object.values(CHAPTER_MARKETS).map((market) => market.name)).size === CHAPTERS.length, "五章坊市名称必须唯一");
+expect(new Set(Object.values(CHAPTER_MARKETS).map((market) => market.bias)).size === CHAPTERS.length, "五章坊市货架倾向必须唯一");
+expect(new Set(Object.values(CHAPTER_MARKETS).map((market) => market.special.id)).size === CHAPTERS.length, "五章坊市专属交易必须唯一");
 
 for (const job of PROFESSIONS) {
   const names = new Set(job.cards.map((card) => card.name));
@@ -64,6 +111,8 @@ for (const job of PROFESSIONS) {
   const keywords = new Set(job.cards.map((card) => card.keyword));
   expect(job.cards.length === 20, `${job.name} 应有 20 张卡牌`);
   expect(job.starterDeck.length === 12, `${job.name} 起始牌组应有 12 张`);
+  expect(new Set(job.starterDeck).size >= 6 && new Set(job.starterDeck).size <= 8, `${job.name} 起始牌组应由 6–8 种基础牌组成合理复数`);
+  expect(job.starterDeck.every((cardId) => job.cards.slice(0, 10).some((card) => card.id === cardId)), `${job.name} 起始牌组不得提前包含真解牌`);
   expect(names.size === job.cards.length, `${job.name} 存在重复卡名`);
   expect(effects.size >= 18, `${job.name} 的效果差异不足`);
   expect(keywords.size >= 8, `${job.name} 的关键词覆盖不足`);
