@@ -38,6 +38,11 @@ expect(!source.includes("<span>甲上</span>") && !source.includes("<strong>+38<
 expect(source.includes("defaultDiscoveredCards") && source.includes("discoveredCards"), "藏经阁必须具有兼容旧档的卡牌发现状态");
 expect(source.includes("runDeck.forEach((card)") && source.includes("discovered.add(card.id)"), "进入本局牌组的卡牌必须永久写入藏经阁");
 expect(source.includes("未收录术法") && source.includes("collection-progress"), "藏经阁必须区分未知卡牌并展示职业收集进度");
+expect(source.includes("流派图谱") && source.includes("BuildRecipeCard"), "藏经阁必须提供可浏览的流派图谱");
+expect(source.includes("未收录组件") && source.includes("recipe.cards.every"), "流派图谱必须显示缺失组件并计算真实完成度");
+expect(source.includes("completedNodes") && source.includes("chapter-1-scene-"), "章节剧情节点必须形成跨局完成进度");
+expect(source.includes("shen-handbook-1") && source.includes("unlockHandbook ? 8 : 0"), "第一章三段剧情完成后必须一次性解锁手札并奖励悟道");
+expect(source.includes("lore-scrolls") && source.includes("人物手札"), "异闻录必须展示已解锁与未解锁人物手札");
 
 if (failures.length) {
   console.error(`Run continuity check failed (${failures.length})`);

@@ -292,18 +292,55 @@ export const BOSS_MOVE_PATTERNS = {
   ],
 };
 
-export const DECK_RECIPES = PROFESSIONS.flatMap((job) =>
-  Array.from({ length: 18 }, (_, index) => {
-    const core = job.cards.slice(index % 8, (index % 8) + 5);
+function fiveCardCombinations() {
+  const combinations = [];
+  for (let first = 0; first < 6; first += 1) {
+    for (let second = first + 1; second < 7; second += 1) {
+      for (let third = second + 1; third < 8; third += 1) {
+        for (let fourth = third + 1; fourth < 9; fourth += 1) {
+          for (let fifth = fourth + 1; fifth < 10; fifth += 1) {
+            combinations.push([first, second, third, fourth, fifth]);
+          }
+        }
+      }
+    }
+  }
+  return combinations;
+}
+
+const RECIPE_ARCHETYPES = ["连携", "守御", "爆发", "循环", "秘仪", "逆转"];
+const RECIPE_RANKS = [
+  { name: "入门", note: "核心明确，适合初次尝试" },
+  { name: "进阶", note: "需要围绕职业资源安排出牌顺序" },
+  { name: "真传", note: "依赖多段联动与真解术法" },
+];
+const FIVE_CARD_COMBINATIONS = fiveCardCombinations();
+
+function buildDeckRecipes(job) {
+  return Array.from({ length: 18 }, (_, index) => {
+    const rank = Math.floor(index / 6);
+    const combinationIndex = Math.round(index * (FIVE_CARD_COMBINATIONS.length - 1) / 17);
+    const baseSlots = FIVE_CARD_COMBINATIONS[combinationIndex];
+    const cards = baseSlots.map((slot, cardIndex) => {
+      const useRefined = (slot + index + cardIndex) % 5 < rank + 1;
+      return job.cards[slot + (useRefined ? 10 : 0)];
+    });
+    const keywords = [...new Set(cards.map((card) => card.keyword))];
     return {
       id: `${job.id}-build-${index + 1}`,
       job: job.id,
-      name: `${job.prefixes[index % job.prefixes.length]}${["连携", "守御", "爆发", "循环", "秘仪", "逆转"][index % 6]}流`,
-      cards: core.map((card) => card.id),
+      name: `${job.prefixes[index % job.prefixes.length]}${RECIPE_ARCHETYPES[index % RECIPE_ARCHETYPES.length]}流`,
+      cards: cards.map((card) => card.id),
       focus: job.style.split(" · ")[index % 2],
+      rank: RECIPE_RANKS[rank].name,
+      rankNote: RECIPE_RANKS[rank].note,
+      keywords,
+      strategy: `先以「${keywords[0]}」建立节奏，再用「${keywords[1] || keywords[0]}」承接，最终围绕「${keywords.at(-1)}」完成收束。`,
     };
-  })
-);
+  });
+}
+
+export const DECK_RECIPES = PROFESSIONS.flatMap(buildDeckRecipes);
 
 export const CHAPTERS = [
   {

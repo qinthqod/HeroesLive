@@ -342,6 +342,7 @@ function App() {
   const debugAutoClick = import.meta.env.DEV && query.get("autoclick") === "1";
   const debugAutoEnd = import.meta.env.DEV && query.get("autoend") === "1";
   const debugTutorial = import.meta.env.DEV && query.get("tutorial") === "1";
+  const debugAutoStory = import.meta.env.DEV && query.get("autostory") === "1";
   const debugMastery = import.meta.env.DEV ? debugNumber("mastery") : 0;
   const debugMoveIndex = import.meta.env.DEV ? debugNumber("move") : 0;
   const makeEnemy = (chapter, encounterStage) => {
@@ -392,6 +393,7 @@ function App() {
       unlockedJobs: PROFESSIONS.map((job) => job.id),
       completedNodes: [],
       choices: [],
+      unlockedLore: [],
       talentLevels: { meridian: 2, mind: 1, edge: 0 },
       jobMastery: {},
       discoveredTreasures: [],
@@ -409,6 +411,8 @@ function App() {
         ...(import.meta.env.DEV && query.has("mastery") ? { [initialOrigin]: debugMastery } : {}),
       },
       choices: debugChoice ? [...(base.choices || []), debugChoice] : (base.choices || []),
+      completedNodes: base.completedNodes || [],
+      unlockedLore: base.unlockedLore || [],
       discoveredTreasures: base.discoveredTreasures || [],
       discoveredCards: base.discoveredCards || defaultDiscoveredCards(),
       unlockedEndings: base.unlockedEndings || [],
@@ -584,6 +588,11 @@ function App() {
     return () => window.clearTimeout(id);
   }, []);
   useEffect(() => {
+    if (!debugAutoStory || screen !== "story") return;
+    const id = window.setTimeout(() => continueStory(), 250);
+    return () => window.clearTimeout(id);
+  }, []);
+  useEffect(() => {
     if (["summary", "defeat"].includes(screen)) {
       window.localStorage.removeItem("qinglan-run-v1");
       setSavedRun(null);
@@ -730,10 +739,22 @@ function App() {
   }
 
   function continueStory(choice) {
+    const sceneId = `chapter-${selectedChapter}-scene-${storyIndex + 1}`;
+    setProfile((value) => {
+      const completedNodes = [...new Set([...(value.completedNodes || []), sceneId])];
+      const firstChapterScenes = completedNodes.filter((node) => node.startsWith("chapter-1-scene-")).length;
+      const unlockHandbook = firstChapterScenes >= 3 && !(value.unlockedLore || []).includes("shen-handbook-1");
+      return {
+        ...value,
+        completedNodes,
+        choices: choice ? [...(value.choices || []).slice(-7), choice] : (value.choices || []),
+        unlockedLore: unlockHandbook ? [...(value.unlockedLore || []), "shen-handbook-1"] : (value.unlockedLore || []),
+        spirit: value.spirit + (unlockHandbook ? 8 : 0),
+      };
+    });
     if (choice) {
       setRunChoices((value) => [...value, choice]);
       setRunChronicle((value) => [...value.slice(-5), `抉择 · ${choice}`]);
-      setProfile((value) => ({ ...value, choices: [...value.choices.slice(-7), choice] }));
       const consequence = {
         "相信守门人": () => setStones((value) => value + 6),
         "隐瞒血书": () => setConsumables((value) => ({ ...value, clarity: value.clarity + 1 })),
@@ -1640,6 +1661,8 @@ function MobileTopBar({ title, subtitle, onBack, profile }) {
 }
 
 function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resumeRun }) {
+  const firstChapterProgress = Math.min(3, (profile.completedNodes || []).filter((node) => node.startsWith("chapter-1-scene-")).length);
+  const handbookUnlocked = (profile.unlockedLore || []).includes("shen-handbook-1");
   return (
     <section className="mobile-shell home-screen screen-content">
       <div className={`home-hero ${savedRun ? "has-save" : ""}`}>
@@ -1671,9 +1694,9 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resume
           <button onClick={() => setScreen("growth")}><img src="/ui/insights/open_meridians.png" alt="" /><span><strong>悟道树</strong><small>永久成长</small></span></button>
           <button onClick={() => setOverlay("codex")}><img src="/ui/treasures/spirit_lamp.png" alt="" /><span><strong>异闻录</strong><small>人物与线索</small></span></button>
         </div>
-        <article className="daily-thread">
-          <div><span className="section-index">今夜异闻</span><h2>谁点亮了第七盏灯？</h2><p>完成第一章的三个剧情节点，解锁沈砚秋的旧日手札。</p></div>
-          <strong>1/3</strong>
+        <article className={`daily-thread ${handbookUnlocked ? "completed" : ""}`} onClick={() => handbookUnlocked && setOverlay("codex")}>
+          <div><span className="section-index">{handbookUnlocked ? "异闻已解" : "今夜异闻"}</span><h2>谁点亮了第七盏灯？</h2><p>{handbookUnlocked ? "《砚秋手札·雨亭残页》已收入异闻录 · 获得 8 悟道" : "完成第一章的三个剧情节点，解锁沈砚秋的旧日手札。"}</p></div>
+          <strong>{handbookUnlocked ? "已收录" : `${firstChapterProgress}/3`}</strong>
         </article>
       </div>
       <nav className="mobile-nav">
@@ -1813,23 +1836,74 @@ function GrowthScreen({ profile, setProfile, onBack }) {
 
 function CollectionScreen({ origin, setOrigin, profile, onBack }) {
   const current = getProfession(origin);
+  const queryView = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("collectionView") : null;
+  const [view, setView] = useState(queryView === "builds" ? "builds" : "cards");
   const [rarity, setRarity] = useState("全部");
   const shown = rarity === "全部" ? current.cards : current.cards.filter((card) => card.rarity === rarity);
   const discovered = new Set(profile.discoveredCards || []);
   const currentDiscovered = current.cards.filter((card) => discovered.has(card.id)).length;
   const refinedDiscovered = current.cards.filter((card) => card.refined && discovered.has(card.id)).length;
+  const recipes = DECK_RECIPES.filter((recipe) => recipe.job === current.id);
+  const completedRecipes = recipes.filter((recipe) => recipe.cards.every((cardId) => discovered.has(cardId))).length;
+  const totalCompletedRecipes = DECK_RECIPES.filter((recipe) => recipe.cards.every((cardId) => discovered.has(cardId))).length;
   return (
     <section className="mobile-shell collection-screen screen-content">
-      <MobileTopBar title="藏经阁" subtitle={`${profile.discoveredCards?.length || 0}/${ALL_CARDS.length} 张术法已收录`} onBack={onBack} />
+      <MobileTopBar title="藏经阁" subtitle={`${profile.discoveredCards?.length || 0}/${ALL_CARDS.length} 张术法 · ${totalCompletedRecipes}/${DECK_RECIPES.length} 套流派`} onBack={onBack} />
       <div className="collection-jobs">{PROFESSIONS.map((job) => {
         const count = job.cards.filter((card) => discovered.has(card.id)).length;
         return <button className={job.id === origin ? "active" : ""} key={job.id} onClick={() => setOrigin(job.id)}><img src={job.icon} alt="" /><span>{job.short}<small>{count}/20</small></span></button>;
       })}</div>
-      <div className="rarity-filter">{["全部", "普通", "精良", "稀有", "传说"].map((item) => <button className={item === rarity ? "active" : ""} key={item} onClick={() => setRarity(item)}>{item}</button>)}</div>
-      <div className="collection-count"><span>{current.name} · 真解 {refinedDiscovered}/10</span><strong>{currentDiscovered} / 20</strong></div>
-      <div className="collection-progress"><i><b style={{ width: `${currentDiscovered * 5}%` }} /></i><small>{currentDiscovered === 20 ? "本门术法已全部收录" : `再发现 ${20 - currentDiscovered} 张，补全本门卷册`}</small></div>
-      <div className="card-library">{shown.map((card) => <LibraryCard card={card} discovered={discovered.has(card.id)} key={card.id} />)}</div>
+      <div className="collection-mode" role="tablist" aria-label="藏经阁分类">
+        <button className={view === "cards" ? "active" : ""} onClick={() => setView("cards")} role="tab" aria-selected={view === "cards"}><span>术法卷</span><small>{currentDiscovered}/20</small></button>
+        <button className={view === "builds" ? "active" : ""} onClick={() => setView("builds")} role="tab" aria-selected={view === "builds"}><span>流派图谱</span><small>{completedRecipes}/18</small></button>
+      </div>
+      {view === "cards" ? (
+        <>
+          <div className="rarity-filter">{["全部", "普通", "精良", "稀有", "传说"].map((item) => <button className={item === rarity ? "active" : ""} key={item} onClick={() => setRarity(item)}>{item}</button>)}</div>
+          <div className="collection-count"><span>{current.name} · 真解 {refinedDiscovered}/10</span><strong>{currentDiscovered} / 20</strong></div>
+          <div className="collection-progress"><i><b style={{ width: `${currentDiscovered * 5}%` }} /></i><small>{currentDiscovered === 20 ? "本门术法已全部收录" : `再发现 ${20 - currentDiscovered} 张，补全本门卷册`}</small></div>
+          <div className="card-library">{shown.map((card) => <LibraryCard card={card} discovered={discovered.has(card.id)} key={card.id} />)}</div>
+        </>
+      ) : (
+        <>
+          <div className="build-atlas-intro">
+            <div><small>{current.name} · 构筑研习</small><strong>{completedRecipes}<i>/18</i></strong></div>
+            <p>每卷由五张核心术法构成。收录全部组件即可成卷，并获得一条清晰的出牌思路。</p>
+          </div>
+          <div className="build-library">
+            {recipes.map((recipe, index) => <BuildRecipeCard key={recipe.id} recipe={recipe} index={index} cards={current.cards} discovered={discovered} />)}
+          </div>
+        </>
+      )}
     </section>
+  );
+}
+
+function BuildRecipeCard({ recipe, index, cards, discovered }) {
+  const components = recipe.cards.map((cardId) => cards.find((card) => card.id === cardId)).filter(Boolean);
+  const known = components.filter((card) => discovered.has(card.id));
+  const complete = known.length === components.length;
+  const missing = components.length - known.length;
+  return (
+    <article className={`build-recipe ${complete ? "complete" : ""}`}>
+      <header>
+        <span>卷 {String(index + 1).padStart(2, "0")} · {recipe.rank}</span>
+        <b>{complete ? "已成卷" : `缺 ${missing} 张`}</b>
+      </header>
+      <h2>{recipe.name}</h2>
+      <p className="build-focus">{recipe.focus} · {recipe.rankNote}</p>
+      <div className="build-keywords">{recipe.keywords.map((keyword) => <span key={keyword}>{keyword}</span>)}</div>
+      <div className="build-components">
+        {components.map((card) => (
+          <div className={discovered.has(card.id) ? "known" : "unknown"} key={card.id}>
+            <img src={discovered.has(card.id) ? card.art : "/card_back_qinglan_trial.png"} alt="" />
+            <small>{discovered.has(card.id) ? card.name : "未收录组件"}</small>
+          </div>
+        ))}
+      </div>
+      <div className="build-progress"><i><b style={{ width: `${known.length * 20}%` }} /></i><span>{known.length}/5</span></div>
+      <p className="build-strategy">{complete ? recipe.strategy : `继续在战利、坊市或异闻中寻找 ${missing} 张核心术法。`}</p>
+    </article>
   );
 }
 
@@ -2513,6 +2587,12 @@ function Overlay({ type, close, deck, profile, setProfile, treasures, savedRun, 
           </div>
           <h3 className="codex-heading">命途印记</h3>
           <div className="codex-marks">{profile.choices?.length ? profile.choices.map((choice, index) => <span key={`${choice}-${index}`}>{choice}</span>) : <p>尚未留下剧情选择。进入章节后，你的决定会被记录在这里。</p>}</div>
+          <h3 className="codex-heading">人物手札</h3>
+          <div className="lore-scrolls">
+            {(profile.unlockedLore || []).includes("shen-handbook-1")
+              ? <article><span>沈砚秋 · 雨亭残页</span><strong>“第七盏灯不是为亡者而点。它在等一个仍然活着、却已经被命册写完的人。”</strong><small>完成第一章三段剧情后收录</small></article>
+              : <article className="locked"><span>未解手札</span><strong>完成第一章三个剧情节点后显现。</strong><small>进度 {(profile.completedNodes || []).filter((node) => node.startsWith("chapter-1-scene-")).length}/3</small></article>}
+          </div>
           <h3 className="codex-heading">结局卷轴</h3>
           <div className="codex-marks">{profile.unlockedEndings?.length ? profile.unlockedEndings.map((ending) => <span key={ending}>{{
             chapter_1_ending: "雨停山门",

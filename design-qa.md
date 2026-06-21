@@ -18,6 +18,8 @@
   - `/tmp/qinglan-settings-mobile.png`
   - `/tmp/qinglan-summary-mobile.png`
   - `/tmp/qinglan-collection-mobile.png`
+  - `/tmp/qinglan-home-lore-mobile.png`
+  - `/tmp/qinglan-build-atlas-500.png`
 - Combined comparison: `/tmp/qinglan-web-comparison.png`
 - Viewports: 1280×720, 960×720, 599×772 and 430×932
 - States: mobile home, chapter selection, six-profession selection, story dialogue/choice, card collection, growth tree, route map, combat, card play/enemy turn, reward selection
@@ -70,6 +72,8 @@ No actionable P0, P1 or P2 findings remain in the tested states.
 - Added persistent sound, haptic and volume controls; the settings scroll was tightened to prevent its two-column feedback controls from widening the mobile overlay.
 - Replaced the fixed chapter grade and fake cultivation reward with a performance-based result sheet showing real combat, card, damage and progression totals.
 - Converted the card archive into a persistent discovery collection with per-profession progress, refined-form counts and styled unknown-card clues.
+- Replaced the duplicated recipe counter with 108 genuinely unique five-card builds and added a mobile flow atlas showing rank, keywords, known/unknown components, completion progress and an unlocked play pattern.
+- Replaced the static home-side story counter with real scene progress, a one-time cultivation reward and a persistent character manuscript in the codex.
 - Added a 599×772 responsive pass and locked the battle viewport against focus-induced scrolling.
 - Removed the React development-root duplication warning during hot updates.
 - Added a mobile home hub, five-chapter campaign archive, six distinct professions, 120-card library, 108 recommended deck recipes, permanent talent growth and local profile persistence.

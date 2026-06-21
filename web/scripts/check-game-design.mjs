@@ -69,6 +69,17 @@ for (const job of PROFESSIONS) {
   expect(keywords.size >= 8, `${job.name} 的关键词覆盖不足`);
   expect(job.cards.some((card) => card.baseName === MASTERY_SIGNATURE_BY_JOB[job.id] && card.refined), `${job.name} 缺少熟练度真传术式`);
   expect(TREASURES.some((treasure) => treasure.id === MASTERY_TREASURE_BY_JOB[job.id]), `${job.name} 缺少熟练度本命法宝`);
+  const recipes = DECK_RECIPES.filter((recipe) => recipe.job === job.id);
+  const recipeCardSets = recipes.map((recipe) => [...recipe.cards].sort().join("|"));
+  expect(recipes.length === 18, `${job.name} 应有 18 套构筑图谱`);
+  expect(new Set(recipes.map((recipe) => recipe.name)).size === recipes.length, `${job.name} 存在重复流派名`);
+  expect(new Set(recipeCardSets).size === recipes.length, `${job.name} 的构筑配方必须全部唯一`);
+  for (const recipe of recipes) {
+    expect(recipe.cards.length === 5 && new Set(recipe.cards).size === 5, `${recipe.name} 必须由 5 张不同核心牌组成`);
+    expect(recipe.cards.every((cardId) => job.cards.some((card) => card.id === cardId)), `${recipe.name} 引用了其他职业或不存在的卡牌`);
+    expect(Boolean(recipe.focus && recipe.rank && recipe.rankNote && recipe.strategy), `${recipe.name} 缺少流派说明`);
+    expect(Array.isArray(recipe.keywords) && recipe.keywords.length >= 2, `${recipe.name} 的关键词线索不足`);
+  }
   for (const card of job.cards) {
     for (const field of ["name", "type", "rarity", "keyword", "text", "combo", "upgrade", "art"]) {
       expect(Boolean(card[field]), `${card.id} 缺少 ${field}`);
