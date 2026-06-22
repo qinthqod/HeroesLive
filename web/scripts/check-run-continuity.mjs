@@ -18,7 +18,7 @@ expect(source.includes("completePendingClue()") && source.includes("证据已带
 expect(!source.includes("if (clue) setRunClues"), "进入路线节点时不得提前发放调查线索");
 expect(source.includes("setRunChoices(savedRun.runChoices || [])"), "继续云游必须恢复本局剧情选择");
 expect(source.includes("setNextEnemyShield((value) => value + effect.enemyShield)"), "奇遇的下一战护体代价必须真实写入状态");
-expect(source.includes("setEnemyShield(nextEnemyShield)"), "进入战斗时必须兑现待处理的敌方护体");
+expect(source.includes("setEnemyShield(nextEnemyShield + trialShield)"), "进入战斗时必须同时兑现事件代价与每日异兆护体");
 expect(source.includes("className=\"run-chronicle\""), "路线页必须展示本局命途回响");
 expect(source.includes("onClick={() => playCard(index)}"), "战斗卡牌必须单击立即出牌");
 expect(!source.includes("card-inspector") && !source.includes("onDoubleClick"), "战斗不得残留二次确认或双击施放");
@@ -28,6 +28,18 @@ expect(source.includes("masteryStarterDeck") && source.includes("masteryOpeningS
 expect(source.includes("mastery >= 25 ? 4 : 0") && source.includes("mastery >= 100"), "熟练度资粮与本命法宝里程碑必须接入新局");
 expect(source.includes("setDiscardPile(hasEnoughDraw ? turnDiscard : [])"), "抽牌堆充足时，回合弃牌不得被错误清空");
 expect(source.includes("currentMove.curse") && source.includes("FATE_CURSE"), "第五章首领必须能将心魔真实写入牌堆");
+expect(source.includes("ENCOUNTER_ENEMIES") && source.includes("ENCOUNTER_MOVE_PATTERNS"), "普通与精英战必须读取章节专属敌人与招式数据");
+expect(source.includes("className=\"enemy-readout\"") && source.includes("enemy.counter"), "战场必须展示敌人特性与反制方向");
+expect(source.includes("archetype: currentEnemy.archetype") && source.includes("moves: currentEnemy.moves"), "旧战斗存档恢复时必须迁移到当前敌人身份与招式循环");
+expect(source.includes("retrySupportFor") && source.includes("chapterFailures"), "失败后必须记录章节受挫次数并生成有限扶助");
+expect(source.includes("Math.min(3, (value.chapterFailures?.[selectedChapter] || 0) + 1)"), "章节扶助必须封顶，避免故意失败无限叠加");
+expect(source.includes("chapterFailures: { ...(archived.chapterFailures || {}), [selectedChapter]: 0 }"), "章节通关后必须清零对应受挫记录");
+expect(source.includes("扶助只改善容错，不降低敌人强度"), "失败页必须公开说明扶助边界");
+expect(!source.includes("jobMastery: { ...value.jobMastery, [origin]: (value.jobMastery[origin] || 0) + 10 }"), "开始或重试章节不得直接发放熟练度，避免故意失败刷成长");
+expect(source.includes("nextProgressGoals(profile, 2)") && source.includes("progress-board"), "首页必须展示可行动的下一长期目标");
+expect(source.includes("recentRuns: [runRecord") && source.includes("最近战绩"), "章节通关必须记录最近战绩并在异闻录展示");
+expect(source.includes("runMode,") && source.includes("runSeed,") && source.includes("runTrial,"), "试炼模式、种子与异兆必须进入自动存档");
+expect(source.includes("completedDailyTrials") && source.includes("dailyFirstClear"), "每日首胜奖励必须具有永久日期锁");
 expect(source.includes("createFeedbackEngine") && source.includes("navigator.vibrate"), "战斗必须提供可降级的音效与触觉反馈");
 expect(source.includes("feedback: { sound: true, haptics: true, volume: 0.55"), "反馈偏好必须具有可持久化默认值");
 for (const feedbackKind of ["cast", "impact", "draw", "enemy", "hurt", "reward"]) {

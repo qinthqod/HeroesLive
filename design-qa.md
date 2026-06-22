@@ -37,6 +37,8 @@
   - `/tmp/qinglan-market-chapter5-v2.png`
   - `/tmp/qinglan-enemy-chapter1-mobile.png`
   - `/tmp/qinglan-enemy-chapter5-elite-mobile.png`
+  - `/tmp/qinglan-defeat-retry-support-mobile.png`
+  - `/tmp/qinglan-home-progress-board-mobile.png`
   - `/tmp/qinglan-build-atlas-500.png`
 - Combined comparison: `/tmp/qinglan-web-comparison.png`
 - Viewports: 1280×720, 960×720, 599×772 and 430×932
@@ -101,6 +103,17 @@ No actionable P0, P1 or P2 findings remain in the tested states.
 - Replaced the repeated shrine event template with five chapter-specific four-way dilemmas whose card, health, qi, consumable, currency, curse and next-battle costs are disclosed before selection; cautious exits explicitly forfeit evidence.
 - Replaced the repeated market template with five chapter-specific economies, stock biases, service prices and one-off trades; unaffordable cards remain readable and now state the exact missing currency instead of disappearing into a disabled treatment.
 - Replaced the two shared non-boss move templates with ten encounter-specific three-move cycles. Mobile combat now exposes each enemy's archetype, signature trait and counterplay while preserving the intent, enemy art and five-card hand hierarchy.
+- Added a mobile failure-to-retry bridge with three capped, transparent defensive support tiers. The page explains exactly what enters the next run, keeps deck diagnosis and lost evidence visible, and scrolls safely at 430×932.
+- Added a home challenge board and codex progress scroll backed by real profile data: nearest long-term goals, bounded progress bars, completion states and recent run records.
+- Completed the challenge-board reward loop with claimable priority, explicit jade/spirit/xp/title rewards, a persistent single-claim lock, immediate resource updates and a visible equipped epithet in the home header.
+- Corrected overlay selector scope so the codex shell keeps its lacquer treatment without forcing full overlay sizing, padding and unfold animation onto every nested challenge, run, treasure and investigation card.
+- Added a fully playable daily trial surface with a date-derived profession, chapter, modifier and public seed. The seed now drives opening hands, reshuffles, rest outcomes, market stock, treasures and combat rewards rather than serving as decorative copy.
+- Added real paired daily modifiers, persistent run-mode/seed/trial snapshots, same-seed retries, a one-clear-per-date reward lock and recent-run seed records. Existing saves block a new daily start instead of being silently overwritten.
+- Verified the June 21, 2026 trial at 430×932: fixed sword/chapter-two/blood-moon configuration, +1 thunder consumable, +2 enemy attack damage, no horizontal overflow, no combat-control overlap and no console warnings.
+- Added versioned, checksummed challenge codes for seeded run sharing. The import surface validates tampering, previews profession/chapter/modifier/seed, blocks save replacement and explicitly excludes daily first-clear rewards.
+- Finished the challenge-replay mobile surface and verified a valid blood-moon code at 430×932 with no horizontal overflow or console warnings.
+- Added repeatable Cloudflare Workers Static Assets deployment, SPA fallback, Wrangler scripts and a Web-build cleanup pass that removes 81 Godot-only files before upload.
+- Added an in-run trial notebook across map, combat, event and reward surfaces. It derives current objectives from investigation state, pending evidence, enemy counterplay, build progress, deck weaknesses, survival risk and long-term goals; the mobile combat version is deliberately reduced so it does not cover cards or the end-turn control.
 - Added a 599×772 responsive pass and locked the battle viewport against focus-induced scrolling.
 - Removed the React development-root duplication warning during hot updates.
 - Added a mobile home hub, five-chapter campaign archive, six distinct professions, 120-card library, 108 recommended deck recipes, permanent talent growth and local profile persistence.

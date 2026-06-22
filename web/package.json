@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vite build",
+    "build": "vite build && node scripts/clean-web-assets.mjs",
     "preview": "vite preview --host 127.0.0.1",
-    "check:game": "node scripts/check-game-design.mjs && node scripts/check-card-runtime.mjs && node scripts/check-reward-strategy.mjs && node scripts/check-investigation-state.mjs && node scripts/check-investigation-archive.mjs && node scripts/check-run-continuity.mjs",
+    "deploy:check": "npm run check:game && npm run build && wrangler deploy --dry-run",
+    "deploy:cloudflare": "npm run check:game && npm run build && wrangler deploy",
+    "cloudflare:login": "wrangler login",
+    "cloudflare:whoami": "wrangler whoami",
+    "check:game": "node scripts/check-game-design.mjs && node scripts/check-card-runtime.mjs && node scripts/check-reward-strategy.mjs && node scripts/check-investigation-state.mjs && node scripts/check-investigation-archive.mjs && node scripts/check-retry-support.mjs && node scripts/check-progress-goals.mjs && node scripts/check-daily-trial.mjs && node scripts/check-challenge-code.mjs && node scripts/check-run-notebook.mjs && node scripts/check-run-continuity.mjs",
     "smoke:combat": "node scripts/smoke-card-combos.mjs",
     "smoke:enemy": "node scripts/smoke-enemy-patterns.mjs",
     "smoke:boss": "node scripts/smoke-boss-patterns.mjs",
@@ -16,9 +20,11 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.4.1",
-    "vite": "^6.4.1",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "vite": "^6.4.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "wrangler": "^4.103.0"
+  }
 }

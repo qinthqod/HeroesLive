@@ -26,6 +26,25 @@ import {
 import { analyzeDeck, currentBuildState, generateRewardChoices, rewardFit, rewardRecipeTarget } from "./deckStrategy";
 import { createPendingClue, settlePendingClue } from "./investigationState";
 import { INVESTIGATION_COMPLETION_REWARD, investigationEvidence, mergeInvestigationArchive } from "./investigationArchive";
+import { retrySupportFor } from "./retrySupport";
+import {
+  claimProgressGoal,
+  formatProgressReward,
+  nextProgressGoals,
+  progressSummaries,
+} from "./progressGoals";
+import { createRunNotebook } from "./runNotebook";
+import {
+  DAILY_TRIAL_REWARD,
+  applyDailyEnemy,
+  createRunSeed,
+  dailyRewardStatus,
+  dailyTrialForDate,
+  seededRandom,
+  seededShuffle,
+  settleDailyTrial,
+} from "./dailyTrial";
+import { challengeCodeForRun, parseChallengeCode } from "./challengeCode";
 
 const origins = PROFESSIONS.map((job) => ({ ...job, line: job.style }));
 
@@ -140,7 +159,7 @@ function createFeedbackEngine() {
   };
 }
 
-function buildEnemyMoves(chapter, encounterStage, enemyName) {
+function buildEnemyMoves(chapter, encounterStage) {
   return encounterStage === 3
     ? BOSS_MOVE_PATTERNS[chapter]
     : ENCOUNTER_MOVE_PATTERNS[chapter][encounterStage];
@@ -256,15 +275,20 @@ function App() {
   const debugArchiveChapter = import.meta.env.DEV ? Math.min(5, Math.max(1, debugNumber("archiveChapter", initialChapter))) : 0;
   const debugArchiveCount = import.meta.env.DEV ? Math.min(7, debugNumber("archiveCount")) : 0;
   const debugEventChoice = import.meta.env.DEV && query.has("eventChoice") ? Math.min(3, debugNumber("eventChoice")) : null;
-  const makeEnemy = (chapter, encounterStage) => {
+  const hasDebugFailures = import.meta.env.DEV && query.has("failures");
+  const debugFailures = hasDebugFailures ? Math.min(3, debugNumber("failures")) : 0;
+  const debugResetFailure = import.meta.env.DEV && query.get("resetFailure") === "1";
+  const makeEnemy = (chapter, encounterStage, trial = null) => {
     const enemyData = { ...ENCOUNTER_ENEMIES[chapter][encounterStage] };
-    const moves = buildEnemyMoves(chapter, encounterStage, enemyData.name);
+    const moves = buildEnemyMoves(chapter, encounterStage);
     enemyData.moves = moves;
     enemyData.moveIndex = Math.min(moves.length - 1, debugMoveIndex);
-    enemyData.intent = intentLabel(moves[enemyData.moveIndex]);
-    if (debugEnemyHp > 0) enemyData.hp = Math.min(enemyData.max, debugEnemyHp);
-    return enemyData;
+    const modified = applyDailyEnemy(enemyData, trial);
+    modified.intent = intentLabel(modified.moves[modified.moveIndex]);
+    if (debugEnemyHp > 0) modified.hp = Math.min(modified.max, debugEnemyHp);
+    return modified;
   };
+  const todaysTrial = dailyTrialForDate(new Date());
   const [screen, setScreen] = useState(initialScreen);
   const [savedRun, setSavedRun] = useState(() => {
     try {
@@ -276,6 +300,9 @@ function App() {
   const [origin, setOrigin] = useState(initialOrigin);
   const [stage, setStage] = useState(initialStage);
   const [selectedChapter, setSelectedChapter] = useState(initialChapter);
+  const [runMode, setRunMode] = useState("story");
+  const [runSeed, setRunSeed] = useState(() => createRunSeed());
+  const [runTrial, setRunTrial] = useState(null);
   const [storyIndex, setStoryIndex] = useState(initialStory);
   const [routeProgress, setRouteProgress] = useState(0);
   const [runChoices, setRunChoices] = useState([]);
@@ -322,6 +349,12 @@ function App() {
       unlockedEndings: [],
       investigationArchive: {},
       investigationRewards: [],
+      chapterFailures: {},
+      recentRuns: [],
+      claimedProgressGoals: [],
+      unlockedTitles: [],
+      equippedTitle: "云游录",
+      completedDailyTrials: [],
       tutorialFlags: {},
       feedback: { sound: true, haptics: true, volume: 0.55 },
     };
@@ -341,6 +374,14 @@ function App() {
       unlockedEndings: base.unlockedEndings || [],
       investigationArchive: base.investigationArchive || {},
       investigationRewards: base.investigationRewards || [],
+      claimedProgressGoals: base.claimedProgressGoals || [],
+      unlockedTitles: base.unlockedTitles || [],
+      equippedTitle: base.equippedTitle || "云游录",
+      completedDailyTrials: base.completedDailyTrials || [],
+      chapterFailures: debugResetFailure
+        ? { ...(base.chapterFailures || {}), [initialChapter]: 0 }
+        : (base.chapterFailures || {}),
+      recentRuns: base.recentRuns || [],
       tutorialFlags: base.tutorialFlags || {},
       feedback: { sound: true, haptics: true, volume: 0.55, ...(base.feedback || {}) },
       ...(debugArchiveCount ? {
@@ -351,6 +392,7 @@ function App() {
       } : {}),
     };
   });
+  const [progressNotice, setProgressNotice] = useState("");
   const [hp, setHp] = useState(() => 72 + (profile.talentLevels.meridian || 0) * 4);
   const [qi, setQi] = useState(debugNumber("qi", 3 + treasureValue(debugTreasures, "maxQi") + treasureValue(debugTreasures, "firstTurnQi")));
   const [maxQi, setMaxQi] = useState(3 + treasureValue(debugTreasures, "maxQi"));
@@ -411,6 +453,32 @@ function App() {
     feedbackEngine.current ||= createFeedbackEngine();
     feedbackEngine.current(kind, profile.feedback);
   };
+  function claimChallengeReward(goalId) {
+    const result = claimProgressGoal(profile, goalId);
+    if (!result.claimed) return;
+    setProfile(result.profile);
+    setProgressNotice(`${result.goal.title} · ${formatProgressReward(result.reward)}`);
+    feedback("reward");
+    timers.current.push(window.setTimeout(() => setProgressNotice(""), 2800));
+  }
+  async function copyChallengeCode(code) {
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch {
+      const field = document.createElement("textarea");
+      field.value = code;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      document.execCommand("copy");
+      field.remove();
+    }
+    setProgressNotice(`挑战码已抄录 · ${code}`);
+    timers.current.push(window.setTimeout(() => setProgressNotice(""), 2600));
+  }
 
   useEffect(() => {
     const root = document.querySelector(".app");
@@ -491,11 +559,14 @@ function App() {
       lastPlayedCard: lastPlayedCardRef.current,
       firstAttackUsed: firstAttackUsed.current,
       firstSkillUsed: firstSkillUsed.current,
+      runMode,
+      runSeed,
+      runTrial,
       savedAt: Date.now(),
     };
     window.localStorage.setItem("qinglan-run-v1", JSON.stringify(snapshot));
     setSavedRun(snapshot);
-  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, runChoices, runChronicle, runClues, pendingClue, nextEnemyShield, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log]);
+  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, runChoices, runChronicle, runClues, pendingClue, nextEnemyShield, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log, runMode, runSeed, runTrial]);
   useEffect(() => {
     if (screen === "combat" && enemy.hp <= 0 && !combatResolved.current) {
       finishCombat("敌影溃散");
@@ -506,9 +577,16 @@ function App() {
       combatResolved.current = true;
       setCombatBusy(true);
       setLog("道心失守，眼前的雨夜沉入黑暗……");
+      setProfile((value) => ({
+        ...value,
+        chapterFailures: {
+          ...(value.chapterFailures || {}),
+          [selectedChapter]: Math.min(3, (value.chapterFailures?.[selectedChapter] || 0) + 1),
+        },
+      }));
       later(() => changeScreen("defeat", 180), 620);
     }
-  }, [hp, screen]);
+  }, [hp, screen, selectedChapter]);
   useEffect(() => {
     if (!debugAutoplay || screen !== "combat") return;
     const id = window.setTimeout(() => playCard(0), 300);
@@ -556,20 +634,39 @@ function App() {
     }, delay);
   }
 
-  function beginRun(chapterId = selectedChapter) {
+  function beginRun(chapterId = selectedChapter, options = {}) {
+    const nextMode = options.mode || "story";
+    const nextTrial = options.trial || null;
+    const runOrigin = options.origin || origin;
+    const nextSeed = options.seed || createRunSeed();
+    setOrigin(runOrigin);
     setSelectedChapter(chapterId);
-    const mastery = profile.jobMastery[origin] || 0;
-    const starter = masteryStarterDeck(getProfession(origin), mastery);
+    setRunMode(nextMode);
+    setRunTrial(nextTrial);
+    setRunSeed(nextSeed);
+    const mastery = profile.jobMastery[runOrigin] || 0;
+    const retrySupport = retrySupportFor(hasDebugFailures ? debugFailures : (profile.chapterFailures?.[chapterId] || 0));
+    const profession = getProfession(runOrigin);
+    let starter = masteryStarterDeck(profession, mastery);
+    if (nextTrial?.modifier?.refineStarter) {
+      const refineIndex = starter.findIndex((card) => refinedVersion(card, profession));
+      if (refineIndex >= 0) starter = starter.map((card, index) => index === refineIndex ? refinedVersion(card, profession) : card);
+    }
     const masteryTreasure = mastery >= 100
-      ? TREASURES.find((treasure) => treasure.id === MASTERY_TREASURE_BY_JOB[origin])
+      ? TREASURES.find((treasure) => treasure.id === MASTERY_TREASURE_BY_JOB[runOrigin])
       : null;
     setRunDeck(starter);
-    prepareDeck(starter, false);
+    prepareDeck(starter, false, 0, mastery, runOrigin, nextSeed, "opening");
     setStage(1);
-    setHp(maxHp);
-    setStones(startingStones + (mastery >= 25 ? 4 : 0));
-    setMaxQi(3 + (masteryTreasure?.maxQi || 0));
-    setConsumables({ spirit: 2, skin: 1, clarity: 1, thunder: 1 });
+    setHp(Math.max(1, maxHp + (nextTrial?.modifier?.hpDelta || 0)));
+    setStones(Math.max(0, startingStones + (mastery >= 25 ? 4 : 0) + retrySupport.stones + (nextTrial?.modifier?.stonesDelta || 0)));
+    setMaxQi(Math.min(5, 3 + (masteryTreasure?.maxQi || 0) + (nextTrial?.modifier?.maxQiDelta || 0)));
+    setConsumables({
+      spirit: 2 + (nextTrial?.modifier?.consumables?.spirit || 0),
+      skin: 1 + retrySupport.skin + (nextTrial?.modifier?.consumables?.skin || 0),
+      clarity: 1 + retrySupport.clarity + (nextTrial?.modifier?.consumables?.clarity || 0),
+      thunder: 1 + (nextTrial?.modifier?.consumables?.thunder || 0),
+    });
     setTreasures(masteryTreasure ? [masteryTreasure] : []);
     setStoryIndex(0);
     setRouteProgress(0);
@@ -579,13 +676,18 @@ function App() {
     setRunStats(freshRunStats());
     const inherited = MASTERY_MILESTONES.filter((milestone) => mastery >= milestone.level).map((milestone) => milestone.name);
     setRunChronicle([
-      `第 ${chapterId} 章启程 · ${getProfession(origin).name}`,
+      `第 ${chapterId} 章启程 · ${profession.name}`,
+      ...(nextMode === "daily"
+        ? [`今日试炼 · ${nextTrial.modifier.name} · ${nextSeed}`]
+        : nextMode === "challenge"
+          ? [`挑战复刻 · ${nextTrial?.modifier?.name || "标准规则"} · ${nextSeed}`]
+          : [`试炼种子 · ${nextSeed}`]),
       ...(inherited.length ? [`道途传承 · ${inherited.join(" / ")}`] : []),
+      ...(retrySupport.tier ? [`山门扶助 · ${retrySupport.title} · ${retrySupport.detail}`] : []),
     ]);
     setNextEnemyShield(0);
     setProfile((value) => ({
       ...value,
-      jobMastery: { ...value.jobMastery, [origin]: (value.jobMastery[origin] || 0) + 10 },
       discoveredTreasures: masteryTreasure
         ? [...new Set([...(value.discoveredTreasures || []), masteryTreasure.id])]
         : value.discoveredTreasures,
@@ -602,6 +704,9 @@ function App() {
     const resumedDeck = restoreCards(savedRun.deck);
     setOrigin(savedRun.origin || "sword");
     setSelectedChapter(savedRun.selectedChapter || 1);
+    setRunMode(savedRun.runMode || "story");
+    setRunSeed(savedRun.runSeed || createRunSeed(savedRun.savedAt || Date.now()));
+    setRunTrial(savedRun.runTrial || null);
     setStage(savedRun.stage || 1);
     setHp(Math.max(1, savedRun.hp || 72));
     setQi(savedRun.qi ?? savedRun.maxQi ?? 3);
@@ -623,7 +728,18 @@ function App() {
     setRunDeck(resumedDeck.length ? resumedDeck : cards[savedRun.origin || "sword"]);
     if (savedRun.screen === "combat" && savedRun.enemy) {
       combatResolved.current = false;
-      setEnemy({ ...savedRun.enemy });
+      const currentEnemy = makeEnemy(savedRun.selectedChapter || 1, savedRun.stage || 1, savedRun.runTrial || null);
+      const restoredMoveIndex = Math.min(currentEnemy.moves.length - 1, savedRun.enemy.moveIndex || 0);
+      setEnemy({
+        ...currentEnemy,
+        ...savedRun.enemy,
+        archetype: currentEnemy.archetype,
+        trait: currentEnemy.trait,
+        counter: currentEnemy.counter,
+        moves: currentEnemy.moves,
+        moveIndex: restoredMoveIndex,
+        intent: intentLabel(currentEnemy.moves[restoredMoveIndex]),
+      });
       setEnemyBurn(savedRun.enemyBurn || 0);
       setEnemyPoison(savedRun.enemyPoison || 0);
       setEnemyWeak(savedRun.enemyWeak || 0);
@@ -657,25 +773,20 @@ function App() {
     changeScreen("home");
   }
 
-  function shuffle(items) {
-    const copy = [...items];
-    for (let index = copy.length - 1; index > 0; index -= 1) {
-      const swap = Math.floor(Math.random() * (index + 1));
-      [copy[index], copy[swap]] = [copy[swap], copy[index]];
-    }
-    return copy;
+  function shuffle(items, salt = "shuffle", seed = runSeed) {
+    return seededShuffle(items, seed, salt);
   }
 
-  function prepareDeck(deckCards, showDraw = true, extraDraw = 0, mastery = 0) {
-    const pile = shuffle(deckCards);
+  function prepareDeck(deckCards, showDraw = true, extraDraw = 0, mastery = 0, runOrigin = origin, seed = runSeed, salt = "opening") {
+    const pile = shuffle(deckCards, salt, seed);
     const openingHand = pile.slice(0, 5 + extraDraw);
     setHand(openingHand);
     setDrawPile(pile.slice(5 + extraDraw));
     setDiscardPile([]);
     setExhaustPile([]);
     setCombatTurn(1);
-    setEdge(origin === "sword" && mastery >= 75 ? 1 : 0);
-    setJobState(masteryOpeningState(origin, mastery));
+    setEdge(runOrigin === "sword" && mastery >= 75 ? 1 : 0);
+    setJobState(masteryOpeningState(runOrigin, mastery));
     if (showDraw) {
       setDrawFx({ cards: openingHand, source: "开局手牌", nonce: Date.now() });
       later(() => setDrawFx(null), 1250);
@@ -729,14 +840,15 @@ function App() {
   function enterCombat(nextStage = stage) {
     combatResolved.current = false;
     setStage(nextStage);
-    const nextEnemy = makeEnemy(selectedChapter, nextStage);
+    const nextEnemy = makeEnemy(selectedChapter, nextStage, runTrial);
     setEnemy(nextEnemy);
     setQi(maxQi + treasureValue(treasures, "firstTurnQi") + (nextStage === 1 ? (profile.talentLevels.edge || 0) : 0));
     setEnemyBurn(0);
     setEnemyPoison(0);
     setEnemyWeak(0);
-    setEnemyShield(nextEnemyShield);
-    enemyShieldRef.current = nextEnemyShield;
+    const trialShield = runTrial?.modifier?.enemyShield || 0;
+    setEnemyShield(nextEnemyShield + trialShield);
+    enemyShieldRef.current = nextEnemyShield + trialShield;
     if (nextEnemyShield > 0) {
       setRunChronicle((value) => [...value.slice(-5), `代价兑现 · 敌人获得 ${nextEnemyShield} 点护体`]);
       setNextEnemyShield(0);
@@ -752,7 +864,7 @@ function App() {
     setCombatFx(null);
     setTriggerFx(null);
     setShield(treasureValue(treasures, "startShield"));
-    prepareDeck(runDeck, true, treasureValue(treasures, "firstTurnDraw"), profile.jobMastery[origin] || 0);
+    prepareDeck(runDeck, true, treasureValue(treasures, "firstTurnDraw"), profile.jobMastery[origin] || 0, origin, runSeed, `combat:${selectedChapter}:${nextStage}:${routeProgress}`);
     changeScreen("combat");
   }
 
@@ -767,7 +879,7 @@ function App() {
     if (afterStones) setStones((value) => value + afterStones);
     if (treasureValue(treasures, "battleConsumable")) {
       const keys = ["spirit", "skin", "clarity", "thunder"];
-      const key = keys[Math.floor(Math.random() * keys.length)];
+      const key = keys[Math.floor(seededRandom(runSeed, `battle-consumable:${selectedChapter}:${stage}:${routeProgress}`) * keys.length)];
       setConsumables((value) => ({ ...value, [key]: (value[key] || 0) + 1 }));
     }
     const recoveredClue = completePendingClue();
@@ -1322,7 +1434,7 @@ function App() {
       const nextHandSize = Math.max(3, 5 - (currentMove.drawPenalty || 0));
       const turnDiscard = [...discardPile, ...hand, ...(currentMove.curse ? [{ ...FATE_CURSE, id: `${FATE_CURSE.id}-${Date.now()}` }] : [])];
       const carry = [...drawPile];
-      const reshuffled = shuffle(turnDiscard);
+      const reshuffled = shuffle(turnDiscard, `reshuffle:${selectedChapter}:${stage}:${combatTurn}`);
       const hasEnoughDraw = carry.length >= nextHandSize;
       const source = hasEnoughDraw ? carry : [...carry, ...reshuffled];
       const nextHand = source.slice(0, nextHandSize);
@@ -1357,13 +1469,18 @@ function App() {
     if (rewardClaimedRef.current) return;
     rewardClaimedRef.current = true;
     const archiveResult = stage >= 3 ? mergeInvestigationArchive(profile, selectedChapter, runClues) : null;
+    const dailyFirstClear = stage >= 3
+      && runMode === "daily"
+      && runTrial
+      && !(profile.completedDailyTrials || []).includes(runTrial.dateKey);
+    const dailyBonus = dailyFirstClear ? DAILY_TRIAL_REWARD : { jade: 0, spirit: 0, xp: 0 };
     feedback("reward");
     setRunStats((value) => ({
       ...value,
       rewardsTaken: value.rewardsTaken + 1,
-      xpGained: value.xpGained + 90,
-      spiritGained: value.spiritGained + 4 + (archiveResult?.newlyCompleted ? INVESTIGATION_COMPLETION_REWARD.spirit : 0),
-      jadeGained: value.jadeGained + (stage >= 3 ? 120 : 0) + (archiveResult?.newlyCompleted ? INVESTIGATION_COMPLETION_REWARD.jade : 0),
+      xpGained: value.xpGained + 90 + dailyBonus.xp,
+      spiritGained: value.spiritGained + 4 + dailyBonus.spirit + (archiveResult?.newlyCompleted ? INVESTIGATION_COMPLETION_REWARD.spirit : 0),
+      jadeGained: value.jadeGained + (stage >= 3 ? 120 : 0) + dailyBonus.jade + (archiveResult?.newlyCompleted ? INVESTIGATION_COMPLETION_REWARD.jade : 0),
     }));
     if (card) setRunDeck((value) => [...value, card]);
     if (treasure) {
@@ -1384,14 +1501,34 @@ function App() {
       const endingId = selectedChapter === 5
         ? (runChoices.includes("重写命册") ? "rewrite_fate" : "restore_fate")
         : `chapter_${selectedChapter}_ending`;
+      const evaluation = evaluateRun({ ...runStats, combatsWon: Math.max(runStats.combatsWon, 3) }, hp, maxHp);
       setProfile((value) => {
         const archived = mergeInvestigationArchive(value, selectedChapter, runClues).profile;
-        return {
+        const runRecord = {
+          id: `${Date.now()}-${selectedChapter}`,
+          chapter: selectedChapter,
+          job: origin,
+          mode: runMode,
+          seed: runSeed,
+          trialName: runTrial?.modifier?.name || "",
+          modifierId: runTrial?.modifier?.id || "none",
+          grade: evaluation.grade,
+          score: evaluation.score,
+          deckSize: runDeck.length + (card ? 1 : 0),
+          treasures: treasures.length + (treasure ? 1 : 0),
+          clues: runClues.length,
+          ending: endingId,
+        };
+        let completedProfile = {
           ...archived,
           chapter: Math.max(Math.min(5, selectedChapter + 1), value.chapter),
           jade: archived.jade + 120,
           unlockedEndings: [...new Set([...(value.unlockedEndings || []), endingId])],
+          chapterFailures: { ...(archived.chapterFailures || {}), [selectedChapter]: 0 },
+          recentRuns: [runRecord, ...(archived.recentRuns || [])].slice(0, 6),
         };
+        if (dailyFirstClear) completedProfile = settleDailyTrial(completedProfile, runTrial).profile;
+        return completedProfile;
       });
       changeScreen("summary");
     }
@@ -1418,6 +1555,7 @@ function App() {
     >
       <Atmosphere />
       <div className="screen-curtain" />
+      {progressNotice && <div className="progress-reward-toast" role="status"><small>挑战卷已落印</small><strong>{progressNotice}</strong></div>}
       {screen === "home" && (
         <HomeScreen
           profile={profile}
@@ -1426,6 +1564,37 @@ function App() {
           beginRun={() => changeScreen("classes")}
           savedRun={savedRun}
           resumeRun={resumeRun}
+          claimProgressReward={claimChallengeReward}
+          dailyTrial={todaysTrial}
+        />
+      )}
+      {screen === "daily" && (
+        <DailyTrialScreen
+          trial={todaysTrial}
+          profile={profile}
+          savedRun={savedRun}
+          onBack={() => changeScreen("home")}
+          onResume={resumeRun}
+          onStart={() => beginRun(todaysTrial.chapter, {
+            mode: "daily",
+            trial: todaysTrial,
+            origin: todaysTrial.origin,
+            seed: todaysTrial.seed,
+          })}
+        />
+      )}
+      {screen === "challenge" && (
+        <ChallengeCodeScreen
+          profile={profile}
+          savedRun={savedRun}
+          onBack={() => changeScreen("home")}
+          onCopy={copyChallengeCode}
+          onStart={(challenge) => beginRun(challenge.chapter, {
+            mode: "challenge",
+            trial: challenge.trial,
+            origin: challenge.origin,
+            seed: challenge.seed,
+          })}
         />
       )}
       {screen === "chapters" && (
@@ -1475,7 +1644,7 @@ function App() {
           origin={origin}
           setOrigin={setOrigin}
           selectedOrigin={selectedOrigin}
-          beginRun={beginRun}
+          beginRun={() => beginRun(selectedChapter)}
           setOverlay={setOverlay}
         />
       )}
@@ -1495,9 +1664,14 @@ function App() {
           choices={runChoices}
           chronicle={runChronicle}
           clues={runClues}
+          pendingClue={pendingClue}
+          profile={profile}
           treasures={treasures}
           deck={runDeck}
           origin={origin}
+          runMode={runMode}
+          runSeed={runSeed}
+          runTrial={runTrial}
           onChooseNode={(node, clue) => {
             setRunChronicle((value) => [...value.slice(-5), `路线 · ${node.name}`]);
             setPendingClue(createPendingClue(clue, node, routeProgress));
@@ -1521,6 +1695,8 @@ function App() {
           setTreasures={setTreasures}
           setMaxQi={setMaxQi}
           setProfile={setProfile}
+          randomSeed={runSeed}
+          routeProgress={routeProgress}
           onLeave={() => {
             completePendingClue();
             setRouteProgress((value) => Math.min(3, value + 1));
@@ -1537,6 +1713,8 @@ function App() {
           setHp={setHp}
           setDeck={setRunDeck}
           setConsumables={setConsumables}
+          randomSeed={runSeed}
+          routeProgress={routeProgress}
           onComplete={() => {
             completePendingClue();
             setRouteProgress((value) => Math.min(3, value + 1));
@@ -1558,7 +1736,7 @@ function App() {
           }}
         />
       )}
-      {screen === "event" && <EventScreen chapter={selectedChapter} origin={selectedOrigin} deck={runDeck} maxQi={maxQi} autoChoice={debugEventChoice} setProfile={setProfile} setScreen={setScreen} setHp={setHp} maxHp={maxHp} setStones={setStones} setRunDeck={setRunDeck} setRouteProgress={setRouteProgress} setNextEnemyShield={setNextEnemyShield} setMaxQi={setMaxQi} setConsumables={setConsumables} completeInvestigation={completePendingClue} abandonInvestigation={() => setPendingClue(null)} addRunEcho={(text) => setRunChronicle((value) => [...value.slice(-5), text])} />}
+      {screen === "event" && <EventScreen chapter={selectedChapter} origin={selectedOrigin} deck={runDeck} hp={hp} maxHp={maxHp} stones={stones} clues={runClues} pendingClue={pendingClue} profile={profile} routeProgress={routeProgress} maxQi={maxQi} autoChoice={debugEventChoice} setProfile={setProfile} setScreen={setScreen} setHp={setHp} setStones={setStones} setRunDeck={setRunDeck} setRouteProgress={setRouteProgress} setNextEnemyShield={setNextEnemyShield} setMaxQi={setMaxQi} setConsumables={setConsumables} completeInvestigation={completePendingClue} abandonInvestigation={() => setPendingClue(null)} addRunEcho={(text) => setRunChronicle((value) => [...value.slice(-5), text])} />}
       {screen === "combat" && (
         <CombatScreen
           origin={selectedOrigin}
@@ -1573,6 +1751,10 @@ function App() {
           jobState={jobState}
           stones={stones}
           enemy={enemy}
+          routeProgress={routeProgress}
+          clues={runClues}
+          pendingClue={pendingClue}
+          profile={profile}
           enemyBurn={enemyBurn}
           enemyPoison={enemyPoison}
           enemyWeak={enemyWeak}
@@ -1602,8 +1784,8 @@ function App() {
           completeGuide={() => setProfile((value) => ({ ...value, tutorialFlags: { ...value.tutorialFlags, combat: true } }))}
         />
       )}
-      {screen === "reward" && <RewardScreen stage={stage} origin={origin} deck={runDeck} treasures={treasures} stones={stones} setStones={setStones} claimReward={claimReward} skipReward={skipReward} />}
-      {screen === "summary" && <SummaryScreen chapter={selectedChapter} hp={hp} maxHp={maxHp} stones={stones} treasures={treasures} deck={runDeck} setScreen={setScreen} profile={profile} runChoices={runChoices} runChronicle={runChronicle} runClues={runClues} runStats={runStats} />}
+      {screen === "reward" && <RewardScreen stage={stage} chapter={selectedChapter} routeProgress={routeProgress} origin={origin} hp={hp} maxHp={maxHp} deck={runDeck} treasures={treasures} stones={stones} clues={runClues} pendingClue={pendingClue} profile={profile} randomSeed={runSeed} setStones={setStones} claimReward={claimReward} skipReward={skipReward} />}
+      {screen === "summary" && <SummaryScreen chapter={selectedChapter} hp={hp} maxHp={maxHp} stones={stones} treasures={treasures} deck={runDeck} setScreen={setScreen} profile={profile} runChoices={runChoices} runChronicle={runChronicle} runClues={runClues} runStats={runStats} runMode={runMode} runSeed={runSeed} runTrial={runTrial} />}
       {screen === "defeat" && (
         <DefeatScreen
           chapter={selectedChapter}
@@ -1612,11 +1794,15 @@ function App() {
           treasures={treasures}
           clues={runClues}
           pendingClue={pendingClue}
-          onRetry={() => beginRun(selectedChapter)}
+          runMode={runMode}
+          runSeed={runSeed}
+          runTrial={runTrial}
+          failureStreak={hasDebugFailures ? debugFailures : (profile.chapterFailures?.[selectedChapter] || 0)}
+          onRetry={() => beginRun(selectedChapter, { mode: runMode, trial: runTrial, origin, seed: runSeed })}
           onHome={() => changeScreen("home")}
         />
       )}
-      {overlay && <Overlay type={overlay} close={() => setOverlay(null)} deck={runDeck} origin={origin} profile={profile} setProfile={setProfile} treasures={treasures} savedRun={savedRun} abandonRun={abandonRun} feedback={feedback} />}
+      {overlay && <Overlay type={overlay} close={() => setOverlay(null)} deck={runDeck} origin={origin} profile={profile} setProfile={setProfile} treasures={treasures} savedRun={savedRun} abandonRun={abandonRun} feedback={feedback} claimProgressReward={claimChallengeReward} />}
     </main>
   );
 }
@@ -1643,15 +1829,34 @@ function MobileTopBar({ title, subtitle, onBack, profile }) {
   );
 }
 
-function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resumeRun }) {
+function ChallengeGoalCard({ goal, claimProgressReward, compact = false }) {
+  const state = goal.claimed ? "claimed" : goal.claimable ? "claimable" : goal.complete ? "complete" : "active";
+  return (
+    <article className={`challenge-goal ${state} ${compact ? "compact" : ""}`}>
+      <div className="challenge-goal-copy"><strong>{goal.title}</strong><p>{goal.hook}</p></div>
+      <span className="challenge-goal-state">
+        {goal.claimed ? "已领取" : goal.claimable ? "待领取" : `${goal.current}/${goal.target}`}
+      </span>
+      <i className="challenge-goal-progress"><b style={{ width: `${goal.percent}%` }} /></i>
+      <div className="challenge-goal-reward">
+        <small>{formatProgressReward(goal.reward)}</small>
+        {goal.claimable && <button onClick={() => claimProgressReward(goal.id)}>领取</button>}
+      </div>
+    </article>
+  );
+}
+
+function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resumeRun, claimProgressReward, dailyTrial }) {
   const firstChapterProgress = Math.min(3, (profile.completedNodes || []).filter((node) => node.startsWith("chapter-1-scene-")).length);
   const handbookUnlocked = (profile.unlockedLore || []).includes("shen-handbook-1");
+  const goals = nextProgressGoals(profile, 2);
+  const latestRun = profile.recentRuns?.[0];
   return (
     <section className="mobile-shell home-screen screen-content">
       <div className={`home-hero ${savedRun ? "has-save" : ""}`}>
         <img src="/ui/bg_title_shrine.png" alt="" />
         <div className="home-shade" />
-        <MobileTopBar title="青岚夜行" subtitle="云游录 · 第七夜" profile={profile} />
+        <MobileTopBar title="青岚夜行" subtitle={`${profile.equippedTitle || "云游录"} · 第七夜`} profile={profile} />
         <div className="home-player">
           <span className="section-index">当前境界 · 炼气七层</span>
           <h1>命册有缺，<br />此夜无归。</h1>
@@ -1681,6 +1886,25 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resume
           <div><span className="section-index">{handbookUnlocked ? "异闻已解" : "今夜异闻"}</span><h2>谁点亮了第七盏灯？</h2><p>{handbookUnlocked ? "《砚秋手札·雨亭残页》已收入异闻录 · 获得 8 悟道" : "完成第一章的三个剧情节点，解锁沈砚秋的旧日手札。"}</p></div>
           <strong>{handbookUnlocked ? "已收录" : `${firstChapterProgress}/3`}</strong>
         </article>
+        <button className={`daily-trial-card ${dailyRewardStatus(profile, dailyTrial).claimed ? "completed" : ""}`} onClick={() => setScreen("daily")}>
+          <span className="daily-trial-moon"><img src="/ui/treasures/spirit_lamp.png" alt="" /></span>
+          <div>
+            <small>{dailyTrial.dateLabel} · 今日试炼</small>
+            <strong>{dailyTrial.modifier.name}</strong>
+            <p>固定 {getProfession(dailyTrial.origin).short} · 第 {dailyTrial.chapter} 章 · 种子 {dailyTrial.seed}</p>
+          </div>
+          <b>{dailyRewardStatus(profile, dailyTrial).claimed ? "已破局" : "查看"}</b>
+        </button>
+        <button className="challenge-code-entry" onClick={() => setScreen("challenge")}>
+          <span>复刻卷</span>
+          <div><strong>挑战码</strong><small>导入好友种子，或抄录最近战绩</small></div>
+          <b>›</b>
+        </button>
+        <section className="progress-board">
+          <header><span className="section-index">挑战卷</span><button onClick={() => setOverlay("codex")}>查看全卷</button></header>
+          {goals.map((goal) => <ChallengeGoalCard goal={goal} compact claimProgressReward={claimProgressReward} key={goal.id} />)}
+          {latestRun && <aside><small>{latestRun.mode === "daily" ? "最近今日试炼" : "最近云游"}</small><strong>第 {latestRun.chapter} 章 · {getProfession(latestRun.job).short} · {latestRun.grade}</strong><em>{latestRun.score} 分 · 线索 {latestRun.clues}/5 · 种子 {latestRun.seed || "旧档"}</em></aside>}
+        </section>
       </div>
       <nav className="mobile-nav">
         <button className="active"><span>山门</span></button>
@@ -1688,6 +1912,95 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resume
         <button onClick={() => setScreen("collection")}><span>藏经</span></button>
         <button onClick={() => setScreen("growth")}><span>悟道</span></button>
       </nav>
+    </section>
+  );
+}
+
+function ChallengeCodeScreen({ profile, savedRun, onBack, onCopy, onStart }) {
+  const [code, setCode] = useState("");
+  const parsed = useMemo(() => parseChallengeCode(code), [code]);
+  const blockedBySave = Boolean(savedRun);
+  const recent = (profile.recentRuns || []).map((run) => ({ run, code: challengeCodeForRun(run) })).filter((item) => item.code);
+  const reason = {
+    format: "格式不完整，请粘贴完整挑战码。",
+    checksum: "挑战码校验失败，可能在传递时被改动。",
+    chapter: "挑战码中的章节不存在。",
+    origin: "挑战码中的道途不存在。",
+    seed: "挑战种子不合法。",
+    modifier: "挑战码引用了不存在的异兆。",
+  }[parsed.reason];
+  return (
+    <section className="mobile-shell challenge-code-screen screen-content">
+      <MobileTopBar title="挑战复刻" subtitle="同种同局 · 不发每日首胜" onBack={onBack} profile={profile} />
+      <div className="challenge-code-heading">
+        <span className="section-index">好友挑战码</span>
+        <h1>把同一夜，<br />交给另一位修士。</h1>
+        <p>挑战码会固定职业、章节、异兆和关键随机结果。剧情选择仍由你自己决定。</p>
+      </div>
+      <div className="challenge-code-form">
+        <label htmlFor="challenge-code">粘贴挑战码</label>
+        <textarea id="challenge-code" value={code} onChange={(event) => setCode(event.target.value.trim())} placeholder="QL1.2.sword.blood_moon.NIGHT-20260621.XXXX" spellCheck="false" />
+        {code && !parsed.valid && <small className="challenge-code-error">{reason}</small>}
+        {parsed.valid && <div className="challenge-code-preview">
+          <span>挑战卷可用</span>
+          <strong>第 {parsed.chapter} 章 · {getProfession(parsed.origin).name}</strong>
+          <p>{parsed.trial?.modifier ? `${parsed.trial.modifier.name}：${parsed.trial.modifier.boon} / ${parsed.trial.modifier.hazard}` : "标准云游规则 · 无额外异兆"}</p>
+          <small>种子 {parsed.seed}</small>
+        </div>}
+        {blockedBySave && <p className="daily-save-warning">当前有未完成云游。请先继续或主动放弃该存档，再开始复刻挑战。</p>}
+        <button className="primary-cta challenge-code-start" disabled={!parsed.valid || blockedBySave} onClick={() => parsed.valid && onStart(parsed)}><span>展开挑战卷</span></button>
+      </div>
+      <section className="challenge-code-history">
+        <header><span className="section-index">最近可分享战绩</span><small>挑战码只复刻开局条件，不复制你的剧情选择</small></header>
+        {recent.length ? recent.slice(0, 4).map(({ run, code: runCode }) => (
+          <article key={run.id}>
+            <div><strong>{run.mode === "daily" ? run.trialName : `第 ${run.chapter} 章`} · {getProfession(run.job).short}</strong><small>{run.grade} · {run.score} 分 · {run.seed}</small></div>
+            <button onClick={() => onCopy(runCode)}>复制挑战码</button>
+          </article>
+        )) : <p>完成带有种子的云游后，可以在这里生成挑战码。</p>}
+      </section>
+    </section>
+  );
+}
+
+function DailyTrialScreen({ trial, profile, savedRun, onBack, onResume, onStart }) {
+  const profession = getProfession(trial.origin);
+  const chapter = CHAPTERS[trial.chapter - 1];
+  const status = dailyRewardStatus(profile, trial);
+  const resumable = savedRun?.runMode === "daily" && savedRun?.runTrial?.dateKey === trial.dateKey;
+  const blockedBySave = Boolean(savedRun && !resumable);
+  return (
+    <section className="mobile-shell daily-trial-screen screen-content">
+      <div className="daily-trial-hero">
+        <img src="/ui/bg_title_shrine.png" alt="" />
+        <div className="daily-trial-shade" />
+        <MobileTopBar title="今日试炼" subtitle={`${trial.dateLabel} · 同日同局`} onBack={onBack} profile={profile} />
+        <div className="daily-trial-title">
+          <span className="section-index">挑战种子 · {trial.seed}</span>
+          <h1>{trial.modifier.name}</h1>
+          <p>今夜所有修士面对相同职业、章节与异兆。关键洗牌、坊市和战利也由同一种子决定。</p>
+        </div>
+      </div>
+      <div className="daily-trial-body">
+        <div className="daily-trial-route">
+          <article><small>指定道途</small><strong>{profession.name}</strong><span>{profession.style}</span></article>
+          <article><small>指定章节</small><strong>第 {trial.chapter} 章 · {chapter.name}</strong><span>{chapter.region}</span></article>
+        </div>
+        <section className="daily-mandate">
+          <span className="section-index">今夜异兆</span>
+          <h2>{trial.title}</h2>
+          <div><b>助力</b><strong>{trial.modifier.boon}</strong></div>
+          <div className="hazard"><b>劫数</b><strong>{trial.modifier.hazard}</strong></div>
+        </section>
+        <section className={`daily-first-clear ${status.claimed ? "claimed" : ""}`}>
+          <div><small>每日首胜</small><strong>{status.claimed ? "今日奖励已领取" : "首次通关自动结算"}</strong></div>
+          <p>灵玉 +{DAILY_TRIAL_REWARD.jade} · 悟道 +{DAILY_TRIAL_REWARD.spirit} · 修为 +{DAILY_TRIAL_REWARD.xp} · 称号「{DAILY_TRIAL_REWARD.title}」</p>
+        </section>
+        {blockedBySave && <p className="daily-save-warning">当前另有未完成云游。请先回到山门继续或放弃该存档，避免覆盖进度。</p>}
+        <button className="primary-cta daily-start" disabled={blockedBySave} onClick={resumable ? onResume : onStart}>
+          <span>{resumable ? "继续今日试炼" : status.claimed ? "再次挑战 · 不重复发放首胜" : "领取试炼签 · 开始挑战"}</span>
+        </button>
+      </div>
     </section>
   );
 }
@@ -1951,18 +2264,42 @@ function TitleScreen({ origin, setOrigin, selectedOrigin, beginRun, setOverlay }
   );
 }
 
-function RunHeader({ stage, chapter, hp, maxHp, stones }) {
+function RunHeader({ stage, chapter, hp, maxHp, stones, runMode, runSeed, runTrial }) {
   const chapterData = CHAPTERS[chapter - 1];
   return (
     <header className="run-header">
-      <div className="run-brand"><span className="brand-mark small">青</span><div><strong>青岚夜行</strong><small>第 {chapter} 章 · {chapterData?.region} · 路线 {stage}/3</small></div></div>
+      <div className="run-brand"><span className="brand-mark small">青</span><div><strong>{runMode === "daily" ? "今日试炼" : runMode === "challenge" ? "挑战复刻" : "青岚夜行"}</strong><small>{runMode !== "story" ? `${runTrial?.modifier?.name || "标准规则"} · ${runSeed}` : `第 ${chapter} 章 · ${chapterData?.region} · 路线 ${stage}/3`}</small></div></div>
       <div className="run-progress"><span style={{ width: `${Math.min(100, stage * 33)}%` }} /></div>
       <div className="header-resources"><span><img src="/ui/icons/hp.png" alt="" />{hp}/{maxHp}</span><span><img src="/ui/icons/stones.png" alt="" />{stones}</span></div>
     </header>
   );
 }
 
-function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, treasures, deck, origin, onChooseNode }) {
+function RunNotebook({ notebook, compact = false, className = "" }) {
+  if (!notebook) return null;
+  const shownItems = compact ? notebook.items.slice(0, 3) : notebook.items;
+  return (
+    <aside className={`run-notebook ${compact ? "compact" : ""} ${className}`}>
+      <header>
+        <span>试炼札记</span>
+        <strong>{notebook.title}</strong>
+        <small>{notebook.subtitle}</small>
+      </header>
+      <div className="notebook-lines">
+        {shownItems.map((item) => (
+          <article key={item.key}>
+            <b>{item.label}</b>
+            <em>{item.value}</em>
+            <p>{item.text}</p>
+          </article>
+        ))}
+      </div>
+      <footer>{notebook.advice}</footer>
+    </aside>
+  );
+}
+
+function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, pendingClue, profile, treasures, deck, origin, runMode, runSeed, runTrial, onChooseNode }) {
   const chapterRoutes = CHAPTER_ROUTES[chapter] || ROUTE_ROWS;
   const baseChoices = chapterRoutes[Math.min(routeProgress, chapterRoutes.length - 1)];
   const currentChoices = [
@@ -1973,6 +2310,7 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
   const chapterCopy = CHAPTER_ROUTE_COPY[chapter];
   const investigation = CHAPTER_INVESTIGATIONS[chapter];
   const build = currentBuildState(deck, origin);
+  const notebook = createRunNotebook({ screen: "map", chapter, stage, routeProgress, hp, maxHp, stones, deck, origin: getProfession(origin), clues, pendingClue, profile });
   const routeMeta = {
     story: { risk: "无战斗", reward: "剧情线索", consequence: choices.includes("相信守门人") ? "陆观愿意透露名册旧案" : "陆观仍在试探你的来意" },
     battle: { risk: "危险 · 低", reward: "职业卡牌", consequence: "稳定补强牌组" },
@@ -1994,7 +2332,7 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
   };
   return (
     <section className="map-screen campaign-map screen-content">
-      <RunHeader stage={stage} chapter={chapter} hp={hp} maxHp={maxHp} stones={stones} />
+      <RunHeader stage={stage} chapter={chapter} hp={hp} maxHp={maxHp} stones={stones} runMode={runMode} runSeed={runSeed} runTrial={runTrial} />
       <div className="map-intro">
         <span className="section-index">第 {chapter} 章 · 路线 {routeProgress + 1}/4</span>
         <h1>{chapterCopy.title}</h1>
@@ -2006,6 +2344,7 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
         <i><b style={{ width: `${Math.min(100, clues.length * 20)}%` }} /></i>
         <p>{clues.at(-1) || "完成开场剧情后获得第一条线索。"}</p>
       </div>}
+      <RunNotebook notebook={notebook} className="map-notebook" />
       <div className="route-journey">
         <div className="route-progress-scroll">
           {chapterRoutes.map((row, index) => <i key={index} className={index < routeProgress ? "done" : index === routeProgress ? "current" : ""}><span>{index + 1}</span></i>)}
@@ -2049,21 +2388,21 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
   );
 }
 
-function RestScreen({ hp, maxHp, deck, origin, setHp, setDeck, setConsumables, onComplete }) {
+function RestScreen({ hp, maxHp, deck, origin, randomSeed, routeProgress, setHp, setDeck, setConsumables, onComplete }) {
   const upgradable = deck.map((card, index) => ({ card, index, next: refinedVersion(card, origin) })).filter((item) => item.next);
   const resolve = (kind) => {
     if (kind === "heal") setHp((value) => Math.min(maxHp, value + 18));
     if (kind === "refine") {
       setHp((value) => Math.min(maxHp, value + 8));
       if (upgradable.length) {
-        const chosen = upgradable[Math.floor(Math.random() * upgradable.length)];
+        const chosen = upgradable[Math.floor(seededRandom(randomSeed, `rest-refine:${routeProgress}`) * upgradable.length)];
         setDeck((value) => value.map((card, index) => index === chosen.index ? chosen.next : card));
       }
     }
     if (kind === "supply") {
       setHp((value) => Math.min(maxHp, value + 6));
       const keys = ["spirit", "skin", "clarity", "thunder"];
-      const key = keys[Math.floor(Math.random() * keys.length)];
+      const key = keys[Math.floor(seededRandom(randomSeed, `rest-supply:${routeProgress}`) * keys.length)];
       setConsumables((value) => ({ ...value, [key]: (value[key] || 0) + 1 }));
     }
     onComplete();
@@ -2108,7 +2447,7 @@ function TrainingScreen({ deck, origin, maxQi, setMaxQi, setDeck, onComplete }) 
   );
 }
 
-function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones, setStones, consumables, setConsumables, treasures, setTreasures, setMaxQi, setProfile, onLeave }) {
+function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones, setStones, consumables, setConsumables, treasures, setTreasures, setMaxQi, setProfile, randomSeed, routeProgress, onLeave }) {
   const market = CHAPTER_MARKETS[chapter];
   const [notice, setNotice] = useState(`${market.name}可多次交易，离开后路线才会推进。`);
   const [sold, setSold] = useState([]);
@@ -2123,14 +2462,14 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
       return Number(["稀有", "传说"].includes(card.rarity)) * 7 + Number(card.refined) * 8 + card.tier;
     };
     const pool = origin.cards.filter((card) => chapter >= 3 || !card.refined);
-    return [...pool].map((card) => ({ card, order: score(card) + Math.random() * 3 })).sort((a, b) => b.order - a.order).slice(0, 3).map((item) => item.card);
-  }, [chapter, market.bias, origin.id]);
+    return [...pool].map((card) => ({ card, order: score(card) + seededRandom(randomSeed, `market:${chapter}:${routeProgress}:${card.id}`) * 3 })).sort((a, b) => b.order - a.order).slice(0, 3).map((item) => item.card);
+  }, [chapter, market.bias, origin.id, randomSeed, routeProgress]);
   const discount = treasureValue(treasures, "marketDiscount");
   const priceFor = (card) => Math.max(4, ({ 普通: 10, 精良: 13, 稀有: 17, 传说: 22 }[card.rarity] || 12) + market.cardPrice + (card.refined ? 4 : 0) - discount);
   const treasureOffer = useMemo(() => {
     const pool = TREASURES.filter((treasure) => !treasures.some((owned) => owned.id === treasure.id));
-    return pool[Math.floor(Math.random() * pool.length)] || null;
-  }, []);
+    return pool[Math.floor(seededRandom(randomSeed, `market-treasure:${chapter}:${routeProgress}`) * pool.length)] || null;
+  }, [chapter, randomSeed, routeProgress]);
   const buy = (card) => {
     const price = priceFor(card);
     if (stones < price || sold.includes(card.id)) return;
@@ -2272,8 +2611,9 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
   );
 }
 
-function EventScreen({ chapter, origin, deck, maxQi, autoChoice, setProfile, setScreen, setHp, maxHp, setStones, setRunDeck, setRouteProgress, setNextEnemyShield, setMaxQi, setConsumables, completeInvestigation, abandonInvestigation, addRunEcho }) {
+function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingClue, profile, routeProgress, maxQi, autoChoice, setProfile, setScreen, setHp, setStones, setRunDeck, setRouteProgress, setNextEnemyShield, setMaxQi, setConsumables, completeInvestigation, abandonInvestigation, addRunEcho }) {
   const event = CHAPTER_EVENTS[chapter];
+  const notebook = createRunNotebook({ screen: "event", chapter, routeProgress, hp, maxHp, stones, deck, origin, clues, pendingClue, profile });
   const choose = (option) => {
     const effect = option.effect || {};
     if (effect.heal) setHp((value) => Math.min(maxHp, value + effect.heal));
@@ -2330,6 +2670,7 @@ function EventScreen({ chapter, origin, deck, maxQi, autoChoice, setProfile, set
     <section className="event-screen screen-content">
       <div className="event-art"><img src={event.art} alt="" /></div>
       <div className="event-copy"><span className="section-index">{event.eyebrow}</span><h1>{event.name}</h1><p>{event.description}</p></div>
+      <RunNotebook notebook={notebook} compact className="event-notebook" />
       <div className="event-choices">
         {event.options.map((option, index) => <button className={option.revealsClue ? "" : "safe-exit"} style={{ "--delay": `${140 + index * 70}ms` }} key={option.id} onClick={() => choose(option)}>
           <small>{option.label}<em>{option.tone}</em></small><strong>{option.title}</strong><span>{option.detail}</span>
@@ -2339,7 +2680,7 @@ function EventScreen({ chapter, origin, deck, maxQi, autoChoice, setProfile, set
   );
 }
 
-function CombatScreen({ origin, stage, chapter, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, playCard, effectiveCardCost, cardSynergyState, endTurn, consumables, treasures, deck, useConsumable, setOverlay, showGuide, completeGuide }) {
+function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, playCard, effectiveCardCost, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, useConsumable, setOverlay, showGuide, completeGuide }) {
   const [guideStep, setGuideStep] = useState(showGuide ? 0 : -1);
   const hpPercent = Math.max(0, (enemy.hp / enemy.max) * 100);
   const currentEnemyMove = enemy.moves[enemy.moveIndex || 0];
@@ -2352,6 +2693,7 @@ function CombatScreen({ origin, stage, chapter, hp, maxHp, qi, maxQi, shield, ed
     soul: { icon: "/ui/icons/curse.png", label: "魂灯", value: jobState.lamps },
   }[origin.id];
   const build = currentBuildState(deck, origin.id);
+  const notebook = createRunNotebook({ screen: "combat", chapter, stage, routeProgress, hp, maxHp, stones, deck, origin, clues, pendingClue, profile, enemy });
   useEffect(() => {
     if (guideStep === 1 && combatFx?.card) setGuideStep(2);
   }, [combatFx?.card, guideStep]);
@@ -2426,6 +2768,7 @@ function CombatScreen({ origin, stage, chapter, hp, maxHp, qi, maxQi, shield, ed
           <button onClick={() => setOverlay("settings")}>设置</button>
         </nav>
       </aside>
+      <RunNotebook notebook={notebook} compact className="combat-notebook" />
       <div className={`hand hand-${Math.min(7, hand.length)} ${guideStep === 1 ? "guide-focus" : ""}`}>
         {hand.slice(0, 7).map((card, index) => {
           const cost = effectiveCardCost(card);
@@ -2506,18 +2849,20 @@ function Card({ card, index, playable, displayCost = card.cost, comboReady = fal
   );
 }
 
-function RewardScreen({ stage, origin, deck, treasures, stones, setStones, claimReward, skipReward }) {
+function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, treasures, stones, clues, pendingClue, profile, randomSeed, setStones, claimReward, skipReward }) {
   const [rerollCount, setRerollCount] = useState(0);
   const profession = getProfession(origin);
+  const notebook = createRunNotebook({ screen: "reward", chapter, stage, routeProgress, hp, maxHp, stones, deck, origin: profession, clues, pendingClue, profile });
   const buildDirection = useMemo(() => rewardRecipeTarget(profession, stage, deck), [profession, stage, deck]);
   const rewards = useMemo(() => {
-    return generateRewardChoices(profession, stage, deck);
-  }, [profession, stage, deck, rerollCount]);
+    let call = 0;
+    return generateRewardChoices(profession, stage, deck, () => seededRandom(randomSeed, `reward:${chapter}:${stage}:${routeProgress}:${rerollCount}:${call++}`));
+  }, [profession, stage, deck, rerollCount, randomSeed, chapter, routeProgress]);
   const treasureReward = useMemo(() => {
     if (stage < 2) return null;
     const pool = TREASURES.filter((treasure) => !treasures.some((owned) => owned.id === treasure.id));
-    return pool[Math.floor(Math.random() * pool.length)] || null;
-  }, [origin, stage, rerollCount]);
+    return pool[Math.floor(seededRandom(randomSeed, `reward-treasure:${chapter}:${stage}:${routeProgress}:${rerollCount}`) * pool.length)] || null;
+  }, [origin, stage, rerollCount, randomSeed, chapter, routeProgress]);
   const rerollPrice = Math.max(4, 6 - Math.min(2, treasureValue(treasures, "marketDiscount")));
   const reroll = () => {
     if (stones < rerollPrice) return;
@@ -2533,6 +2878,7 @@ function RewardScreen({ stage, origin, deck, treasures, stones, setStones, claim
         <i><b style={{ width: `${buildDirection.progress * 20}%` }} /></i>
         <p>{buildDirection.recipe.focus} · 尚缺 {buildDirection.missing.length} 张核心组件</p>
       </div>}
+      <RunNotebook notebook={notebook} compact className="reward-notebook" />
       <div className="reward-cards">{rewards.map((card, index) => {
         const fit = rewardFit(card, deck, origin);
         return <div className={`reward-card-wrap fit-${fit.rank}`} style={{ "--delay": `${180 + index * 120}ms` }} key={card.id}>
@@ -2564,7 +2910,7 @@ function TreasureStrip({ treasures, compact = false }) {
   );
 }
 
-function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen, profile, runChoices, runChronicle, runClues, runStats }) {
+function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen, profile, runChoices, runChronicle, runClues, runStats, runMode, runSeed, runTrial }) {
   const evaluation = evaluateRun(runStats, hp, maxHp);
   const baseEnding = {
     1: ["雨停山门，灯灭其一。", "你带着第二十四人的线索走入内门，师姐的名字仍在血书上发亮。"],
@@ -2586,7 +2932,7 @@ function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen,
   return (
     <section className="summary-screen screen-content">
       <div className="summary-seal"><span>{evaluation.grade}</span><small>{evaluation.score} 分 · {evaluation.title}</small></div>
-      <div className="summary-copy"><span className="section-index">第 {chapter} 章 · 已完成</span><h1>{endings[0]}</h1><p>{endings[1]}</p>{chapter === 5 && <small className="ending-unlocked">新结局已收入异闻录 · {runChoices.includes("重写命册") ? "诸命由己" : "旧名归卷"}</small>}</div>
+      <div className="summary-copy"><span className="section-index">{runMode === "daily" ? `今日试炼 · ${runTrial?.modifier?.name}` : `第 ${chapter} 章 · 已完成`}</span><h1>{endings[0]}</h1><p>{endings[1]}</p><small className="run-seed-note">种子 {runSeed}</small>{chapter === 5 && <small className="ending-unlocked">新结局已收入异闻录 · {runChoices.includes("重写命册") ? "诸命由己" : "旧名归卷"}</small>}</div>
       <div className="summary-stats">
         <div><small>余命</small><strong>{hp}/{maxHp}</strong></div>
         <div><small>战斗 / 回合</small><strong>{runStats.combatsWon} / {runStats.turns}</strong></div>
@@ -2594,6 +2940,7 @@ function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen,
         <div><small>牌组 / 法宝</small><strong>{deck.length} / {treasures.length}</strong></div>
       </div>
       <div className="summary-rewards"><span>本章所得</span><b>修为 +{runStats.xpGained}</b><b>悟道 +{runStats.spiritGained}</b><b>灵玉 +{runStats.jadeGained}</b><b>灵石结余 {stones}</b></div>
+      {runMode === "daily" && <div className="summary-daily"><span>今日试炼已落印</span><strong>{runTrial?.modifier?.name} · {runSeed}</strong><p>同日重复挑战仍可复盘构筑与评阶，但每日首胜资源不会重复发放。</p></div>}
       {investigation && <div className={`summary-investigation ${investigationComplete ? "complete" : ""}`}>
         <span>{investigationComplete ? "真相已明" : "疑云未尽"} · 线索 {runClues.length}/5</span>
         <strong>{investigation.objective}</strong>
@@ -2611,15 +2958,23 @@ function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen,
   );
 }
 
-function DefeatScreen({ chapter, stage, deck, treasures, clues, pendingClue, onRetry, onHome }) {
+function DefeatScreen({ chapter, stage, deck, treasures, clues, pendingClue, runMode, runSeed, runTrial, failureStreak, onRetry, onHome }) {
   const analysis = analyzeDeck(deck);
+  const support = retrySupportFor(failureStreak);
   return (
     <section className="defeat-screen screen-content">
       <div className="defeat-moon" />
       <div className="defeat-copy">
-        <span className="section-index">云游中断 · 第 {chapter} 章</span>
+        <span className="section-index">{runMode === "daily" ? `今日试炼中断 · ${runTrial?.modifier?.name}` : `云游中断 · 第 ${chapter} 章`}</span>
         <h1>灯火未熄，<br />此路暂断。</h1>
         <p>你倒在第 {stage} 场试炼前。失败会结束本次云游，但已经获得的道途熟练与剧情记录仍会保留。</p>
+        <small className="defeat-seed">本局种子 {runSeed} · 重试会保留相同试炼条件</small>
+        <div className={`retry-support tier-${support.tier}`}>
+          <span>连续受挫 {failureStreak} 次 · 下次扶助</span>
+          <strong>{support.title}</strong>
+          <p>{support.detail}</p>
+          <small>扶助只改善容错，不降低敌人强度；通关本章后清零。</small>
+        </div>
         <div className="defeat-diagnosis">
           <div><small>最终牌组</small><strong>{deck.length} 张</strong></div>
           <div><small>随身法宝</small><strong>{treasures.length ? treasures.map((item) => item.name).join(" / ") : "尚未获得"}</strong></div>
@@ -2637,7 +2992,7 @@ function DefeatScreen({ chapter, stage, deck, treasures, clues, pendingClue, onR
   );
 }
 
-function Overlay({ type, close, deck, origin, profile, setProfile, treasures, savedRun, abandonRun, feedback }) {
+function Overlay({ type, close, deck, origin, profile, setProfile, treasures, savedRun, abandonRun, feedback, claimProgressReward }) {
   const analysis = analyzeDeck(deck);
   const build = currentBuildState(deck, origin);
   const archiveChapters = [...CHAPTERS].sort((a, b) => {
@@ -2690,6 +3045,16 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
             <div><small>结局卷</small><strong>{profile.unlockedEndings?.length || 0}/6</strong></div>
           </div>
           <h3 className="codex-heading">调查宗卷</h3>
+          <h3 className="codex-heading">挑战卷</h3>
+          <div className="challenge-scroll">
+            {progressSummaries(profile).map((goal) => <ChallengeGoalCard goal={goal} claimProgressReward={claimProgressReward} key={goal.id} />)}
+          </div>
+          <h3 className="codex-heading">最近战绩</h3>
+          <div className="recent-runs">
+            {(profile.recentRuns || []).length
+              ? profile.recentRuns.map((run) => <article key={run.id}><span>{run.mode === "daily" ? `今日试炼 · ${run.trialName}` : `第 ${run.chapter} 章`} · {getProfession(run.job).short}</span><strong>{run.grade} · {run.score} 分</strong><small>牌组 {run.deckSize} · 线索 {run.clues}/5 · 种子 {run.seed || "旧档"}</small></article>)
+              : <p>完成一次章节云游后，战绩会记录在这里。</p>}
+          </div>
           <div className="investigation-archive">
             {archiveChapters.map((chapter) => {
               const investigation = CHAPTER_INVESTIGATIONS[chapter.id];
