@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vite build && node scripts/clean-web-assets.mjs",
+    "build": "vite build && node scripts/clean-web-assets.mjs && node scripts/optimize-web-images.mjs && node scripts/check-web-bundle.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "deploy:check": "npm run check:game && npm run build && wrangler deploy --dry-run",
     "deploy:cloudflare": "npm run check:game && npm run build && wrangler deploy",
@@ -25,6 +25,7 @@
     "vite": "^6.4.1"
   },
   "devDependencies": {
+    "sharp": "^0.34.5",
     "wrangler": "^4.103.0"
   }
 }

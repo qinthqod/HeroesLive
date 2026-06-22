@@ -22,7 +22,9 @@ cd web
 npm run deploy:cloudflare
 ```
 
-该命令会依次执行游戏数据检查、生产构建和 Workers 部署。线上 Worker 名称为 `heroes-live`。
+该命令会依次执行游戏数据检查、生产构建、图片 WebP 优化、产物完整性检查和 Workers 部署。线上 Worker 名称为 `heroes-live`。
+
+生产构建会自动将可压缩的 PNG 转换为 WebP，并验证图片引用、残留 PNG 和总体积上限。当前部署包约 6.7 MiB，相比优化前约 89 MiB，图片载荷减少约 92%。
 
 只验证配置、不上传：
 
