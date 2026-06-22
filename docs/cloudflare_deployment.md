@@ -41,6 +41,8 @@ npm run deploy:check
 
 `wrangler.jsonc` 已配置 `single-page-application` 回退，直接访问或刷新应用路径不会返回 404。
 
+如果两个 Secrets 尚未配置，工作流仍会完成检查和构建，并明确提示跳过部署，不会产生误导性的失败红叉。
+
 ## 自定义域名
 
 正式部署完成后，在 Worker 的 Settings → Domains & Routes 中添加自己的域名。中国大陆网络对 `workers.dev` 可能连接不稳定，因此正式试玩建议使用自定义域名。
