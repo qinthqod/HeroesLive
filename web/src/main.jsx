@@ -1007,6 +1007,7 @@ function App() {
       逐月连斩: [edge > 0, `每层剑势强化三段伤害 · 当前 ${edge}`],
       裂魂剑: [enemyWeak > 0, `敌人已有虚弱 ${enemyWeak}`],
       引劫剑: [edge >= 5, `剑势 ${edge}/5，免除消耗`],
+      玉月成璧: [moonPhase === "frost", moonPhase === "frost" ? "霜月护体，额外抽 1 张牌" : "当前为血月，不触发额外抽牌"],
       万剑归岚: [edge > 0, `可释放 ${edge} 层剑势`],
       火弹符: [enemyWeak > 0, "敌人已有虚弱"],
       镇魂符: [playerWeak > 0, `可驱散虚弱 ${playerWeak}`],
@@ -1096,7 +1097,6 @@ function App() {
     const refined = card.refined;
 
     if (origin === "sword") {
-      if (card.type === "攻击" && base !== "万剑归岚") r.edge += 1;
       if (base === "青竹剑诀" && playedThisTurnRef.current.some((item) => item.type === "攻击")) r.edge += 1;
       if (base === "藏锋诀") {
         if (refined) r.edge += 1;
@@ -1111,7 +1111,10 @@ function App() {
       if (base === "逐月连斩") r.damage += edge * 3;
       if (base === "裂魂剑" && enemyWeak > 0) r.edge += 2;
       if (base === "引劫剑" && edge >= 5) r.exhaust = false;
-      if (base === "玉月成璧") r.draw += 1;
+      if (base === "玉月成璧" && moonPhase === "frost") {
+        r.draw += 1;
+        r.note.push("霜月护体 · 额外抽牌");
+      }
       if (base === "万剑归岚") {
         r.damage = edge * (refined ? 8 : 6);
         if (edge >= 4) r.qi += 1;
@@ -2835,7 +2838,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
   const copperCount = artificerDevices.filter((device) => device.type === "copper").length;
   const thunderCount = artificerDevices.filter((device) => device.type === "thunder").length;
   const professionResource = {
-    sword: { icon: "/ui/icons/edge.png", label: "剑势", value: edge },
+    sword: { icon: "/ui/icons/edge.png", label: "剑势", value: `${edge}·${moonPhaseLabel(moonPhase)}` },
     talisman: { icon: "/ui/icons/burn.png", label: "符印", value: jobState.seals },
     alchemy: { icon: "/ui/icons/hp.png", label: "药性", value: `${jobState.cold}寒/${jobState.heat}热` },
     beast: { icon: "/ui/icons/treasure.png", label: "灵契", value: `${jobState.activeBeast || "归巢"}·${jobState.contracts.length}契·${moonPhaseLabel(moonPhase)}` },

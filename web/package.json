@@ -16,6 +16,7 @@
     "smoke:cleanse": "node scripts/smoke-curse-cleanse.mjs",
     "smoke:artificer": "node scripts/smoke-artificer-devices.mjs",
     "smoke:beast": "node scripts/smoke-beast-mechanics.mjs",
+    "smoke:sword": "node scripts/smoke-sword-mechanics.mjs",
     "smoke:enemy": "node scripts/smoke-enemy-patterns.mjs",
     "smoke:boss": "node scripts/smoke-boss-patterns.mjs",
     "smoke:story": "node scripts/smoke-story-lore.mjs",
