@@ -52,6 +52,9 @@ const budgetSpread = Math.max(...budgetValues) - Math.min(...budgetValues);
 expect(budgetSpread <= 5, `职业基础牌预算差距过大：${JSON.stringify(classBudgets)}`);
 
 for (const card of ALL_CARDS) expect(Boolean(card.baseName), `${card.id} 缺少稳定运行时标识 baseName`);
+expect(runtimeSource.includes("purgeCurses({ hand: handAfterDiscard, discardPile, drawPile }"), "净心牌必须跨手牌、弃牌堆与抽牌堆净除心魔");
+expect(runtimeSource.includes("!isCurse(card) && qi >= cost"), "心魔牌不得因灵气充足而变为可施放");
+expect(runtimeSource.includes("Math.min(2, discardPile.filter((item) => item.job === \"alchemy\").length)"), "百草相生返还灵气必须取决于实际洗回的丹药数量");
 
 if (failures.length) {
   console.error(`Card runtime check failed (${failures.length})`);

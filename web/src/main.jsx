@@ -45,6 +45,7 @@ import {
   settleDailyTrial,
 } from "./dailyTrial";
 import { challengeCodeForRun, parseChallengeCode } from "./challengeCode";
+import { countCurses, isCurse, purgeCurses } from "./combatZones";
 
 const origins = PROFESSIONS.map((job) => ({ ...job, line: job.style }));
 
@@ -420,14 +421,21 @@ function App() {
   const [enemy, setEnemy] = useState(() => makeEnemy(initialChapter, initialStage));
   const [runDeck, setRunDeck] = useState(cards[initialOrigin]);
   const initialHandSize = Math.min(7, debugNumber("hand", 5 + treasureValue(debugTreasures, "firstTurnDraw")));
-  const initialHand = debugCard ? [debugCard, ...cards[initialOrigin].filter((card) => card.id !== debugCard.id).slice(0, initialHandSize - 1)] : cards[initialOrigin].slice(0, initialHandSize);
+  const debugHandCurseCount = debugNumber("handCurses");
+  const debugHandCurses = Array.from({ length: debugHandCurseCount }, (_, index) => ({ ...FATE_CURSE, id: `${FATE_CURSE.id}-hand-debug-${index}` }));
+  const initialHandBase = debugCard ? [debugCard, ...cards[initialOrigin].filter((card) => card.id !== debugCard.id)] : cards[initialOrigin];
+  const initialHand = [...debugHandCurses, ...initialHandBase].slice(0, initialHandSize);
   const debugDiscardCount = debugNumber("discard");
+  const debugCurseCount = debugNumber("curses");
   const initialDiscard = import.meta.env.DEV && debugDiscardCount > 0
     ? getProfession(initialOrigin).cards.filter((card) => !initialHand.some((held) => held.id === card.id)).slice(0, debugDiscardCount)
     : [];
   const [hand, setHand] = useState(initialHand);
   const [drawPile, setDrawPile] = useState(subtractCardInstances(cards[initialOrigin], initialHand));
-  const [discardPile, setDiscardPile] = useState(initialDiscard);
+  const [discardPile, setDiscardPile] = useState([
+    ...initialDiscard,
+    ...Array.from({ length: debugCurseCount }, (_, index) => ({ ...FATE_CURSE, id: `${FATE_CURSE.id}-debug-${index}` })),
+  ]);
   const [exhaustPile, setExhaustPile] = useState([]);
   const [drawFx, setDrawFx] = useState(null);
   const [combatTurn, setCombatTurn] = useState(1);
@@ -957,6 +965,7 @@ function App() {
 
   function cardSynergyState(card) {
     const base = card.baseName || card.name.replace("·真解", "");
+    const combatCurseCount = countCurses({ hand, drawPile, discardPile });
     const checks = {
       青竹剑诀: [playedThisTurnRef.current.some((item) => item.type === "攻击"), "本回合已打出攻击牌"],
       回风剑: [hand.length <= 3, "施放后手牌少于 3 张"],
@@ -970,7 +979,7 @@ function App() {
       镇魂符: [playerWeak > 0, `可驱散虚弱 ${playerWeak}`],
       阴火符: [jobState.seals > 0, `可引爆 1 枚符印 · 当前 ${jobState.seals}`],
       玄雷敕令: [jobState.seals > 0, `可引爆 ${jobState.seals} 枚符印`],
-      净坛真言: [!runDeck.some((item) => item.type === "心魔"), "无心魔时转化为灵气"],
+      净坛真言: [true, combatCurseCount > 0 ? `可净除 ${Math.min(card.refined ? 2 : 1, combatCurseCount)} 张心魔` : "无心魔时转化为 2 点灵气"],
       雷火连符: [jobState.symbolCardsPlayed > 0, `本回合已打出 ${jobState.symbolCardsPlayed} 张符牌`],
       借风燃纸: [enemyBurn >= 5, `燃烧 ${enemyBurn}/5，额外获得护盾`],
       万符归一: [jobState.seals > 0 || enemyBurn > 0, `符印 ${jobState.seals} · 燃烧 ${enemyBurn}`],
@@ -1042,7 +1051,7 @@ function App() {
       returnLast: false,
       copyFirst: false,
       discardOther: 0,
-      removeCurse: /净除/.test(text),
+      removeCurse: Number(text.match(/净除\s*(\d+)\s*张心魔/)?.[1] || 0),
       recycleAlchemy: 0,
     };
     const base = card.baseName || card.name.replace("·真解", "");
@@ -1098,7 +1107,7 @@ function App() {
         r.note.push(`引爆 ${jobState.seals} 枚符印`);
         setJobState((value) => ({ ...value, seals: 0 }));
       }
-      if (base === "净坛真言" && !runDeck.some((item) => item.type === "心魔")) r.qi += 2;
+      if (base === "净坛真言" && countCurses({ hand, drawPile, discardPile }) === 0) r.qi += 2;
       if (base === "雷火连符") r.damage += (jobState.symbolCardsPlayed * (refined ? 7 : 5));
       if (base === "借风燃纸") {
         setJobState((value) => ({ ...value, burnMultiplier: 2 }));
@@ -1128,7 +1137,7 @@ function App() {
       }
       if (base === "百草相生") {
         r.recycleAlchemy = 2;
-        r.qi += 2;
+        r.qi += Math.min(2, discardPile.filter((item) => item.job === "alchemy").length);
       }
       if (base === "腐脉毒雾" && enemyPoison > 0) r.damage += 3;
       if (base === "玉液护心" && playerWeak > 0) setJobState((value) => ({ ...value, heat: Math.min(8, value.heat + 1) }));
@@ -1246,12 +1255,20 @@ function App() {
     const kind = damage > 0 ? (/燃|火/.test(card.name) ? "fire" : "attack") : resolution.shield > 0 ? "guard" : resolution.heal > 0 ? "heal" : "spirit";
     const remainingHand = hand.filter((_, cardIndex) => cardIndex !== index);
     const otherDiscarded = resolution.discardOther && remainingHand.length ? remainingHand[remainingHand.length - 1] : null;
+    const handAfterDiscard = otherDiscarded ? remainingHand.slice(0, -1) : remainingHand;
+    const purged = resolution.removeCurse
+      ? purgeCurses({ hand: handAfterDiscard, discardPile, drawPile }, resolution.removeCurse)
+      : { hand: handAfterDiscard, discardPile, drawPile, removed: [] };
     if ((card.baseName || card.name) === "无常索命" && otherDiscarded?.type === "心魔") damage += 10;
     setCombatBusy(true);
     setRunStats((value) => ({ ...value, cardsPlayed: value.cardsPlayed + 1 }));
     feedback("cast");
     setQi((value) => value - cost);
-    setHand(otherDiscarded ? remainingHand.slice(0, -1) : remainingHand);
+    setHand(purged.hand);
+    if (purged.removed.length) {
+      setDiscardPile(purged.discardPile);
+      setDrawPile(purged.drawPile);
+    }
     setCombatFx({ card, index, kind, damage, shieldGain: resolution.shield, heal: resolution.heal, qiGain: resolution.qi, phase: "cast" });
     setLog(`${card.name} · 引诀`);
     later(() => setCombatFx((value) => value ? { ...value, phase: "impact" } : value), 360);
@@ -1266,6 +1283,7 @@ function App() {
         resolution.burn > 0 ? `燃烧 +${resolution.burn}` : "",
         resolution.poison > 0 ? `丹毒 +${resolution.poison}` : "",
         resolution.weak > 0 ? `虚弱 +${resolution.weak}` : "",
+        purged.removed.length > 0 ? `净除 ${purged.removed.length} 张心魔` : "",
         ...resolution.note,
       ].filter(Boolean);
       setTriggerFx({ card: card.name, combo: synergy.conditional && synergy.active ? synergy.reason : "", effects: triggered });
@@ -1280,10 +1298,10 @@ function App() {
       if (resolution.selfDamage) setHp((value) => Math.max(0, value - resolution.selfDamage));
       const cleanseMatch = card.text.match(/驱散\s*(\d+)\s*层虚弱/);
       if (cleanseMatch) setPlayerWeak((value) => Math.max(0, value - Number(cleanseMatch[1])));
-      if (resolution.removeCurse) setRunDeck((value) => {
-        const curseIndex = value.findIndex((item) => item.type === "心魔");
-        return curseIndex < 0 ? value : value.filter((_, itemIndex) => itemIndex !== curseIndex);
-      });
+      if (purged.removed.length) {
+        const removedIds = new Set(purged.removed.map((item) => item.id));
+        setRunDeck((value) => value.filter((item) => !removedIds.has(item.id)));
+      }
       if (resolution.draw + firstSkillBonus) drawCardsIntoHand(resolution.draw + firstSkillBonus, firstSkillBonus ? `${card.name} · 青竹残简` : card.name);
       if (resolution.returnLast && lastPlayedCardRef.current) {
         const echoed = { ...lastPlayedCardRef.current, id: `${lastPlayedCardRef.current.id}-echo-${Date.now()}` };
@@ -2801,7 +2819,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         {hand.slice(0, 7).map((card, index) => {
           const cost = effectiveCardCost(card);
           const synergy = cardSynergyState(card);
-          return <Card key={`${card.id}-${index}`} card={card} index={index} displayCost={cost} comboReady={synergy.conditional && synergy.active} playable={!combatBusy && qi >= cost} casting={combatFx?.index === index} onClick={() => playCard(index)} />;
+          return <Card key={`${card.id}-${index}`} card={card} index={index} displayCost={cost} comboReady={synergy.conditional && synergy.active} playable={!combatBusy && !isCurse(card) && qi >= cost} casting={combatFx?.index === index} onClick={() => playCard(index)} />;
         })}
       </div>
       <button className={`end-turn ${guideStep === 2 ? "guide-focus" : ""}`} disabled={combatBusy} onClick={endTurn}><span className="end-turn-ring" /><strong>结束<br />回合</strong><kbd>Space</kbd></button>
