@@ -115,6 +115,7 @@ No actionable P0, P1 or P2 findings remain in the tested states.
 - Added repeatable Cloudflare Workers Static Assets deployment, SPA fallback, Wrangler scripts and a Web-build cleanup pass that removes 81 Godot-only files before upload.
 - Added a deterministic production image pipeline that converts all 80 shipped PNG assets to visually checked WebP files, reducing the deployment bundle from about 89 MiB to 6.7 MiB and cutting image payload by 92%.
 - Added a production-bundle guard that rejects residual PNG references, missing WebP files and bundles above 10 MiB before deployment.
+- Reworked the boss-to-summary bridge so each chapter's final reward reveals the defeated boss's last testimony and investigation conclusion before the run is sealed. The four-layer route header now reports the same progress as the map, and skipping the final reward no longer grants a strategically meaningless heal that inflated the chapter grade.
 - Added an in-run trial notebook across map, combat, event and reward surfaces. It derives current objectives from investigation state, pending evidence, enemy counterplay, build progress, deck weaknesses, survival risk and long-term goals; the mobile combat version is deliberately reduced so it does not cover cards or the end-turn control.
 - Added a 599×772 responsive pass and locked the battle viewport against focus-induced scrolling.
 - Removed the React development-root duplication warning during hot updates.

@@ -252,6 +252,14 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 
 .reward-screen { position: relative; z-index: 2; height: 100%; padding-top: 8vh; text-align: center; }
 .reward-screen > p { color: #8ea096; }
+.boss-reward-screen { padding-top: 4vh; }
+.boss-revelation { position: relative; width: min(650px, calc(100% - 36px)); min-height: 78px; display: grid; grid-template-columns: 116px 1fr; gap: 14px; margin: 16px auto 0; overflow: hidden; border: 1px solid rgba(181,63,47,.38); background: linear-gradient(110deg, rgba(68,19,16,.72), rgba(6,21,17,.92)); text-align: left; box-shadow: 0 16px 42px rgba(0,0,0,.28); }
+.boss-revelation::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, transparent 0 68%, rgba(213,177,84,.06)); }
+.boss-revelation > img { width: 116px; height: 100%; min-height: 78px; object-fit: cover; filter: saturate(.72) contrast(1.08); opacity: .72; }
+.boss-revelation > div { align-self: center; padding: 10px 14px 10px 0; }
+.boss-revelation small { color: #b96e58; font-size: 8px; letter-spacing: .15em; }
+.boss-revelation strong { display: block; margin-top: 4px; color: #e0d1ad; font-family: "STKaiti", serif; font-size: 16px; font-weight: 400; line-height: 1.35; }
+.boss-revelation p { margin: 4px 0 0; color: #778c81; font-size: 8px; }
 .reward-cards { display: flex; justify-content: center; gap: 28px; margin-top: 36px; }
 .reward-build-direction { position: relative; width: min(650px, calc(100% - 36px)); display: grid; grid-template-columns: 1fr auto; gap: 5px 14px; margin: 18px auto -16px; padding: 12px 15px; overflow: hidden; border: 1px solid rgba(213,177,84,.32); background: linear-gradient(110deg, rgba(57,39,13,.54), rgba(7,25,19,.88)); text-align: left; }
 .reward-build-direction small, .reward-build-direction strong { display: block; }
@@ -750,6 +758,11 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .reward-screen { overflow-x: hidden; }
   .reward-screen h1 { max-width: 100%; font-size: 35px; line-height: 1.12; }
   .reward-screen > p { padding: 0 8px; font-size: 11px; }
+  .boss-reward-screen { padding-top: 58px; }
+  .boss-revelation { width: 100%; grid-template-columns: 86px 1fr; margin-top: 13px; }
+  .boss-revelation > img { width: 86px; min-height: 88px; }
+  .boss-revelation > div { padding-right: 10px; }
+  .boss-revelation strong { font-size: 13px; }
   .reward-build-direction { width: 100%; margin-top: 14px; margin-bottom: -12px; }
   .run-notebook.reward-notebook { width: 100%; margin: 18px 0 -6px; }
   .reward-cards { width: 100%; gap: 5px; margin-top: 24px; }

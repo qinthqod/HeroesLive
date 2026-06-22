@@ -1540,7 +1540,7 @@ function App() {
   }
 
   function skipReward() {
-    setHp((value) => Math.min(maxHp, value + 10));
+    if (stage < 3) setHp((value) => Math.min(maxHp, value + 10));
     claimReward(null);
   }
 
@@ -2264,12 +2264,13 @@ function TitleScreen({ origin, setOrigin, selectedOrigin, beginRun, setOverlay }
   );
 }
 
-function RunHeader({ stage, chapter, hp, maxHp, stones, runMode, runSeed, runTrial }) {
+function RunHeader({ stage, chapter, hp, maxHp, stones, runMode, runSeed, runTrial, routeProgress = Math.max(0, stage - 1) }) {
   const chapterData = CHAPTERS[chapter - 1];
+  const routeStep = Math.min(4, routeProgress + 1);
   return (
     <header className="run-header">
-      <div className="run-brand"><span className="brand-mark small">青</span><div><strong>{runMode === "daily" ? "今日试炼" : runMode === "challenge" ? "挑战复刻" : "青岚夜行"}</strong><small>{runMode !== "story" ? `${runTrial?.modifier?.name || "标准规则"} · ${runSeed}` : `第 ${chapter} 章 · ${chapterData?.region} · 路线 ${stage}/3`}</small></div></div>
-      <div className="run-progress"><span style={{ width: `${Math.min(100, stage * 33)}%` }} /></div>
+      <div className="run-brand"><span className="brand-mark small">青</span><div><strong>{runMode === "daily" ? "今日试炼" : runMode === "challenge" ? "挑战复刻" : "青岚夜行"}</strong><small>{runMode !== "story" ? `${runTrial?.modifier?.name || "标准规则"} · ${runSeed}` : `第 ${chapter} 章 · ${chapterData?.region} · 路线 ${routeStep}/4`}</small></div></div>
+      <div className="run-progress"><span style={{ width: `${routeStep * 25}%` }} /></div>
       <div className="header-resources"><span><img src="/ui/icons/hp.png" alt="" />{hp}/{maxHp}</span><span><img src="/ui/icons/stones.png" alt="" />{stones}</span></div>
     </header>
   );
@@ -2332,7 +2333,7 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
   };
   return (
     <section className="map-screen campaign-map screen-content">
-      <RunHeader stage={stage} chapter={chapter} hp={hp} maxHp={maxHp} stones={stones} runMode={runMode} runSeed={runSeed} runTrial={runTrial} />
+      <RunHeader stage={stage} chapter={chapter} hp={hp} maxHp={maxHp} stones={stones} runMode={runMode} runSeed={runSeed} runTrial={runTrial} routeProgress={routeProgress} />
       <div className="map-intro">
         <span className="section-index">第 {chapter} 章 · 路线 {routeProgress + 1}/4</span>
         <h1>{chapterCopy.title}</h1>
@@ -2852,6 +2853,10 @@ function Card({ card, index, playable, displayCost = card.cost, comboReady = fal
 function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, treasures, stones, clues, pendingClue, profile, randomSeed, setStones, claimReward, skipReward }) {
   const [rerollCount, setRerollCount] = useState(0);
   const profession = getProfession(origin);
+  const chapterData = CHAPTERS[chapter - 1];
+  const investigation = CHAPTER_INVESTIGATIONS[chapter];
+  const bossClue = investigation?.routes?.at(-1)?.boss;
+  const isBossReward = stage >= 3;
   const notebook = createRunNotebook({ screen: "reward", chapter, stage, routeProgress, hp, maxHp, stones, deck, origin: profession, clues, pendingClue, profile });
   const buildDirection = useMemo(() => rewardRecipeTarget(profession, stage, deck), [profession, stage, deck]);
   const rewards = useMemo(() => {
@@ -2870,8 +2875,18 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
     setRerollCount((value) => value + 1);
   };
   return (
-    <section className="reward-screen screen-content">
-      <span className="section-index">战利 · 择一</span><h1>妖影散尽，灵光未灭</h1><p>至少一张战利会推进当前最接近的流派，其余保留补强与转型空间。</p>
+    <section className={`reward-screen screen-content ${isBossReward ? "boss-reward-screen" : ""}`}>
+      <span className="section-index">{isBossReward ? `章末 · ${chapterData?.boss}已败` : "战利 · 择一"}</span>
+      <h1>{isBossReward ? "胜者执卷，真相落印" : "妖影散尽，灵光未灭"}</h1>
+      <p>{isBossReward ? investigation?.conclusion : "至少一张战利会推进当前最接近的流派，其余保留补强与转型空间。"}</p>
+      {isBossReward && bossClue && <div className="boss-revelation">
+        <img src={chapterData?.art} alt="" />
+        <div>
+          <small>首领最后的证词</small>
+          <strong>{bossClue}</strong>
+          <p>选择最后一份战利，随后本章将正式结卷。</p>
+        </div>
+      </div>}
       {buildDirection && <div className="reward-build-direction">
         <div><small>当前构筑方向 · {buildDirection.recipe.rank}</small><strong>{buildDirection.recipe.name}</strong></div>
         <span>{buildDirection.progress}/5</span>
@@ -2891,10 +2906,10 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
         <span><small>{stage === 2 ? "精英战法宝" : "首领遗珍"}</small><strong>{treasureReward.name}</strong><em>{treasureReward.effect}</em></span>
         <b>选择法宝</b>
       </button>}
-      <small className="reward-tip">第 {stage} 幕奖励 · 后续章节提高稀有牌和精研牌概率</small>
+      <small className="reward-tip">{isBossReward ? "章末战利 · 选择后进入本章结算" : `第 ${stage} 幕奖励 · 后续章节提高稀有牌和精研牌概率`}</small>
       <div className="reward-actions">
         <button className="reward-reroll" disabled={stones < rerollPrice} onClick={reroll}>重整奖励 · {rerollPrice} 灵石</button>
-        <button className="reward-skip" onClick={skipReward}>调息离开 · 恢复 10 生命</button>
+        <button className="reward-skip" onClick={skipReward}>{isBossReward ? "不取战利 · 直接结卷" : "调息离开 · 恢复 10 生命"}</button>
       </div>
     </section>
   );

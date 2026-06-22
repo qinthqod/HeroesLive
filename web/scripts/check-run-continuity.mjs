@@ -57,6 +57,9 @@ expect(source.includes("未收录术法") && source.includes("collection-progres
 expect(source.includes("流派图谱") && source.includes("BuildRecipeCard"), "藏经阁必须提供可浏览的流派图谱");
 expect(source.includes("未收录组件") && source.includes("recipe.cards.every"), "流派图谱必须显示缺失组件并计算真实完成度");
 expect(source.includes("generateRewardChoices") && source.includes("reward-build-direction"), "战利选择必须接入流派图谱并展示当前构筑方向");
+expect(source.includes("boss-revelation") && source.includes("首领最后的证词"), "首领战利必须承接章节真相，而非复用普通战文案");
+expect(source.includes("if (stage < 3) setHp") && source.includes("不取战利 · 直接结卷"), "章末跳过战利不得通过无后续价值的回血抬高评阶");
+expect(source.includes("路线 ${routeStep}/4") && source.includes("routeStep * 25"), "路线顶栏必须与四层章节地图保持一致");
 expect(source.includes("combat-build-tracker") && source.includes("route-build-goal") && source.includes("deck-build-state"), "局内流派目标必须贯穿战斗、路线和牌组卷册");
 expect(source.includes("investigation-strip") && source.includes("summary-investigation"), "章节调查必须贯穿路线进度与章末结论");
 expect(source.includes("中断调查") && source.includes("pendingClue?.text"), "失败复盘必须指出未能带回的待查证线索");
