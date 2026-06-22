@@ -17,6 +17,7 @@
     "smoke:artificer": "node scripts/smoke-artificer-devices.mjs",
     "smoke:beast": "node scripts/smoke-beast-mechanics.mjs",
     "smoke:sword": "node scripts/smoke-sword-mechanics.mjs",
+    "smoke:alchemy": "node scripts/smoke-alchemy-mechanics.mjs",
     "smoke:enemy": "node scripts/smoke-enemy-patterns.mjs",
     "smoke:boss": "node scripts/smoke-boss-patterns.mjs",
     "smoke:story": "node scripts/smoke-story-lore.mjs",
@@ -29,6 +30,7 @@
     "vite": "^6.4.1"
   },
   "devDependencies": {
+    "playwright": "^1.61.0",
     "sharp": "^0.34.5",
     "wrangler": "^4.103.0"
   }

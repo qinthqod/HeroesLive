@@ -996,6 +996,12 @@ function App() {
     return Math.max(0, cost);
   }
 
+  function cardRequirementMet(card) {
+    const base = card.baseName || card.name.replace("·真解", "");
+    if (base === "药炉温养") return jobState.cold > 0 && jobState.heat > 0;
+    return true;
+  }
+
   function cardSynergyState(card) {
     const base = card.baseName || card.name.replace("·真解", "");
     const combatCurseCount = countCurses({ hand, drawPile, discardPile });
@@ -1172,9 +1178,13 @@ function App() {
         setJobState((value) => ({ ...value, cold: Math.min(8, value.cold + (refined ? 2 : 1)), alchemyDiscount: 1 }));
       }
       if (base === "赤芝养气丹" && jobState.heat > 0) r.exhaust = false;
-      if (base === "药炉温养" && jobState.cold > 0 && jobState.heat > 0) {
-        r.shield += 6;
-        setJobState((value) => ({ ...value, cold: value.cold - 1, heat: value.heat - 1 }));
+      if (base === "药炉温养") {
+        if (jobState.cold > 0 && jobState.heat > 0) {
+          r.shield += 6;
+          setJobState((value) => ({ ...value, cold: value.cold - 1, heat: value.heat - 1 }));
+        } else {
+          r.draw = 0;
+        }
       }
       if (base === "百草相生") {
         r.recycleAlchemy = 2;
@@ -1184,9 +1194,7 @@ function App() {
       if (base === "玉液护心" && playerWeak > 0) setJobState((value) => ({ ...value, heat: Math.min(8, value.heat + 1) }));
       if (base === "逆炼血丹") r.damage += jobState.heat * 3;
       if (base === "阴阳大还丹") {
-        const total = jobState.cold + jobState.heat;
-        r.damage += total * 3;
-        r.heal += total * 2;
+        r.note.push(`调和 ${jobState.cold} 寒 / ${jobState.heat} 热`);
         setJobState((value) => ({ ...value, cold: 0, heat: 0, alchemyDiscount: 0 }));
       } else if (["法门", "术法"].includes(card.type)) {
         setJobState((value) => ({ ...value, alchemyDiscount: 0 }));
@@ -1321,7 +1329,7 @@ function App() {
   function playCard(index) {
     const card = hand[index];
     const cost = card ? effectiveCardCost(card) : 0;
-    if (!card || qi < cost || enemy.hp <= 0 || combatBusy) return;
+    if (!card || !cardRequirementMet(card) || qi < cost || enemy.hp <= 0 || combatBusy) return;
     const synergy = cardSynergyState(card);
     const resolution = resolveCardMechanics(card);
     let damage = resolution.damage;
@@ -1904,6 +1912,7 @@ function App() {
           triggerFx={triggerFx}
           playCard={playCard}
           effectiveCardCost={effectiveCardCost}
+          cardRequirementMet={cardRequirementMet}
           cardSynergyState={cardSynergyState}
           endTurn={endTurn}
           consumables={consumables}
@@ -2830,7 +2839,7 @@ function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingC
   );
 }
 
-function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, playCard, effectiveCardCost, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, moonPhase, useConsumable, setOverlay, showGuide, completeGuide }) {
+function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, playCard, effectiveCardCost, cardRequirementMet, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, moonPhase, useConsumable, setOverlay, showGuide, completeGuide }) {
   const [guideStep, setGuideStep] = useState(showGuide ? 0 : -1);
   const hpPercent = Math.max(0, (enemy.hp / enemy.max) * 100);
   const currentEnemyMove = enemy.moves[enemy.moveIndex || 0];
@@ -2926,7 +2935,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         {hand.slice(0, 7).map((card, index) => {
           const cost = effectiveCardCost(card);
           const synergy = cardSynergyState(card);
-          return <Card key={`${card.id}-${index}`} card={card} index={index} displayCost={cost} comboReady={synergy.conditional && synergy.active} playable={!combatBusy && !isCurse(card) && qi >= cost} casting={combatFx?.index === index} onClick={() => playCard(index)} />;
+          return <Card key={`${card.id}-${index}`} card={card} index={index} displayCost={cost} comboReady={synergy.conditional && synergy.active} playable={!combatBusy && !isCurse(card) && cardRequirementMet(card) && qi >= cost} casting={combatFx?.index === index} onClick={() => playCard(index)} />;
         })}
       </div>
       <button className={`end-turn ${guideStep === 2 ? "guide-focus" : ""}`} disabled={combatBusy} onClick={endTurn}><span className="end-turn-ring" /><strong>结束<br />回合</strong><kbd>Space</kbd></button>
