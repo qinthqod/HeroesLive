@@ -55,6 +55,12 @@ import {
   upgradeDevices,
   withDevices,
 } from "./artificerDevices";
+import {
+  discoverInstructions,
+  moonPhaseForTrial,
+  moonPhaseLabel,
+  recallBeastState,
+} from "./beastMechanics";
 
 const origins = PROFESSIONS.map((job) => ({ ...job, line: job.style }));
 
@@ -280,6 +286,7 @@ function App() {
   const debugAutoEnd = import.meta.env.DEV && query.get("autoend") === "1";
   const debugTutorial = import.meta.env.DEV && query.get("tutorial") === "1";
   const debugAutoStory = import.meta.env.DEV && query.get("autostory") === "1";
+  const debugMoon = import.meta.env.DEV ? query.get("moon") : null;
   const debugMastery = import.meta.env.DEV ? debugNumber("mastery") : 0;
   const debugMoveIndex = import.meta.env.DEV ? debugNumber("move") : 0;
   const debugClueCount = import.meta.env.DEV ? Math.min(5, debugNumber("clues")) : 0;
@@ -652,6 +659,7 @@ function App() {
   }, [screen]);
 
   const selectedOrigin = origins.find((item) => item.id === origin);
+  const moonPhase = debugMoon === "blood" || debugMoon === "frost" ? debugMoon : moonPhaseForTrial(runTrial);
 
   function later(callback, delay) {
     const id = window.setTimeout(callback, delay);
@@ -1018,7 +1026,10 @@ function App() {
       玄狼奔袭: [jobState.lastWasInstruction, "上一张为指令牌"],
       石猿撼地: [shield > 0, `拥有护盾 ${shield}`],
       百兽同途: [jobState.contracts.length > 0, `已契约 ${jobState.contracts.length} 种灵兽`],
+      灵狐探路: [discoverInstructions(drawPile, card.refined ? 2 : 1, Math.max(0, 7 - hand.length)).discovered.length > 0, "从抽牌堆定向发现指令或协同牌"],
       山君号令: [Boolean(jobState.activeBeast), `当前灵兽：${jobState.activeBeast}`],
+      归巢: [Boolean(jobState.activeBeast), jobState.activeBeast ? `召回当前灵兽：${jobState.activeBeast}` : "当前没有出战灵兽"],
+      血月兽潮: [moonPhase === "blood", moonPhase === "blood" ? "血月当空，每段伤害 +2" : "当前为霜月，未触发额外伤害"],
       山海盟誓: [jobState.contracts.length > 0, `召唤 ${Math.max(1, jobState.contracts.length)} 种灵兽`],
       玄甲机括: [jobState.devices > 0, `已有机关 ${jobState.devices}`],
       墨轮复位: [jobState.devices > 0, `可复位机关 ${jobState.devices}`],
@@ -1078,6 +1089,8 @@ function App() {
       discardOther: 0,
       removeCurse: Number(text.match(/净除\s*(\d+)\s*张心魔/)?.[1] || 0),
       recycleAlchemy: 0,
+      discoverInstruction: 0,
+      recallBeast: false,
     };
     const base = card.baseName || card.name.replace("·真解", "");
     const refined = card.refined;
@@ -1186,7 +1199,10 @@ function App() {
       }
       if (base === "白鹿守望") setJobState((value) => ({ ...value, whiteDeerGuard: true }));
       if (base === "青鸾回风") setJobState((value) => ({ ...value, beastDiscount: 1 }));
-      if (base === "灵狐探路") r.draw += 1;
+      if (base === "灵狐探路") {
+        r.discoverInstruction = refined ? 2 : 1;
+        r.note.push(`发现 ${r.discoverInstruction} 张指令牌`);
+      }
       if (base === "石猿撼地" && shield > 0) r.damage += 6;
       if (base === "百兽同途") {
         r.damage = Math.max(1, jobState.contracts.length) * (refined ? 6 : 4);
@@ -1198,8 +1214,18 @@ function App() {
         if (jobState.activeBeast === "白鹿") r.shield += 16;
         if (["青鸾", "灵狐"].includes(jobState.activeBeast)) r.draw += 2;
       }
-      if (base === "归巢") r.note.push("灵兽归巢，保留已建立的契约");
-      if (base === "血月兽潮") r.note.push("当前为霜月，未触发血月额外伤害");
+      if (base === "归巢") {
+        r.recallBeast = true;
+        r.note.push("当前灵兽归巢，已建立契约保留");
+      }
+      if (base === "血月兽潮") {
+        if (moonPhase === "blood") {
+          r.damage += hits * 2;
+          r.note.push(`血月强化 ${hits} 段攻击`);
+        } else {
+          r.note.push("当前为霜月，未触发血月额外伤害");
+        }
+      }
       if (base === "山海盟誓") {
         const contracts = jobState.contracts.length ? jobState.contracts : [jobState.activeBeast];
         r.damage += contracts.reduce((sum, name) => sum + ({ 玄狼: refined ? 10 : 8, 石猿: refined ? 16 : 14 }[name] || 0), 0);
@@ -1313,15 +1339,18 @@ function App() {
     const purged = resolution.removeCurse
       ? purgeCurses({ hand: handAfterDiscard, discardPile, drawPile }, resolution.removeCurse)
       : { hand: handAfterDiscard, discardPile, drawPile, removed: [] };
+    const instructionDiscovery = resolution.discoverInstruction
+      ? discoverInstructions(purged.drawPile, resolution.discoverInstruction, 7 - purged.hand.length)
+      : { discovered: [], remaining: purged.drawPile };
     if ((card.baseName || card.name) === "无常索命" && otherDiscarded?.type === "心魔") damage += 10;
     setCombatBusy(true);
     setRunStats((value) => ({ ...value, cardsPlayed: value.cardsPlayed + 1 }));
     feedback("cast");
     setQi((value) => value - cost);
-    setHand(purged.hand);
-    if (purged.removed.length) {
+    setHand([...purged.hand, ...instructionDiscovery.discovered]);
+    if (purged.removed.length || instructionDiscovery.discovered.length) {
       setDiscardPile(purged.discardPile);
-      setDrawPile(purged.drawPile);
+      setDrawPile(instructionDiscovery.remaining);
     }
     setCombatFx({ card, index, kind, damage, shieldGain: resolution.shield, heal: resolution.heal, qiGain: resolution.qi, phase: "cast" });
     setLog(`${card.name} · 引诀`);
@@ -1338,6 +1367,7 @@ function App() {
         resolution.poison > 0 ? `丹毒 +${resolution.poison}` : "",
         resolution.weak > 0 ? `虚弱 +${resolution.weak}` : "",
         purged.removed.length > 0 ? `净除 ${purged.removed.length} 张心魔` : "",
+        instructionDiscovery.discovered.length > 0 ? `发现 ${instructionDiscovery.discovered.map((item) => item.name).join(" / ")}` : "",
         ...resolution.note,
       ].filter(Boolean);
       setTriggerFx({ card: card.name, combo: synergy.conditional && synergy.active ? synergy.reason : "", effects: triggered });
@@ -1356,6 +1386,10 @@ function App() {
         const removedIds = new Set(purged.removed.map((item) => item.id));
         setRunDeck((value) => value.filter((item) => !removedIds.has(item.id)));
       }
+      if (instructionDiscovery.discovered.some((item) => effectiveCardCost(item) === 0)) {
+        setShield((value) => value + 4);
+      }
+      if (resolution.recallBeast) setJobState((value) => recallBeastState(value));
       if (resolution.draw + firstSkillBonus) drawCardsIntoHand(resolution.draw + firstSkillBonus, firstSkillBonus ? `${card.name} · 青竹残简` : card.name);
       if (resolution.returnLast && lastPlayedCardRef.current) {
         const echoed = { ...lastPlayedCardRef.current, id: `${lastPlayedCardRef.current.id}-echo-${Date.now()}` };
@@ -1872,6 +1906,7 @@ function App() {
           consumables={consumables}
           treasures={treasures}
           deck={runDeck}
+          moonPhase={moonPhase}
           useConsumable={useConsumable}
           setOverlay={setOverlay}
           showGuide={(debugTutorial || (!profile.tutorialFlags.combat && selectedChapter === 1 && stage === 1)) && !debugAutoplay && !debugAutoClick}
@@ -2792,7 +2827,7 @@ function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingC
   );
 }
 
-function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, playCard, effectiveCardCost, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, useConsumable, setOverlay, showGuide, completeGuide }) {
+function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, playCard, effectiveCardCost, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, moonPhase, useConsumable, setOverlay, showGuide, completeGuide }) {
   const [guideStep, setGuideStep] = useState(showGuide ? 0 : -1);
   const hpPercent = Math.max(0, (enemy.hp / enemy.max) * 100);
   const currentEnemyMove = enemy.moves[enemy.moveIndex || 0];
@@ -2803,7 +2838,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
     sword: { icon: "/ui/icons/edge.png", label: "剑势", value: edge },
     talisman: { icon: "/ui/icons/burn.png", label: "符印", value: jobState.seals },
     alchemy: { icon: "/ui/icons/hp.png", label: "药性", value: `${jobState.cold}寒/${jobState.heat}热` },
-    beast: { icon: "/ui/icons/treasure.png", label: "灵契", value: `${jobState.activeBeast}·${jobState.contracts.length}` },
+    beast: { icon: "/ui/icons/treasure.png", label: "灵契", value: `${jobState.activeBeast || "归巢"}·${jobState.contracts.length}契·${moonPhaseLabel(moonPhase)}` },
     artificer: { icon: "/ui/icons/shield.png", label: "机巧", value: `${jobState.cunning} · 雀${copperCount}/枢${thunderCount}` },
     soul: { icon: "/ui/icons/curse.png", label: "魂灯", value: jobState.lamps },
   }[origin.id];
