@@ -55,6 +55,8 @@ for (const card of ALL_CARDS) expect(Boolean(card.baseName), `${card.id} 缺少�
 expect(runtimeSource.includes("purgeCurses({ hand: handAfterDiscard, discardPile, drawPile }"), "净心牌必须跨手牌、弃牌堆与抽牌堆净除心魔");
 expect(runtimeSource.includes("!isCurse(card) && qi >= cost"), "心魔牌不得因灵气充足而变为可施放");
 expect(runtimeSource.includes("Math.min(2, discardPile.filter((item) => item.job === \"alchemy\").length)"), "百草相生返还灵气必须取决于实际洗回的丹药数量");
+expect(runtimeSource.includes("device.type === \"thunder\"") && runtimeSource.includes("新回合抽牌唤醒铜雀"), "铜雀与雷枢必须按不同触发时机结算");
+expect(runtimeSource.includes("upgradeDevices(normalizeDevices(value))"), "天工开物必须永久升级当前机关阵列");
 
 if (failures.length) {
   console.error(`Card runtime check failed (${failures.length})`);

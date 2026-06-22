@@ -46,6 +46,15 @@ import {
 } from "./dailyTrial";
 import { challengeCodeForRun, parseChallengeCode } from "./challengeCode";
 import { countCurses, isCurse, purgeCurses } from "./combatZones";
+import {
+  addDevices,
+  deviceDamage,
+  normalizeDevices,
+  removeDevice,
+  triggerDevices,
+  upgradeDevices,
+  withDevices,
+} from "./artificerDevices";
 
 const origins = PROFESSIONS.map((job) => ({ ...job, line: job.style }));
 
@@ -104,6 +113,7 @@ function masteryOpeningState(job, mastery) {
   }
   if (job === "artificer") {
     state.devices = 1;
+    state.deviceTypes = [{ type: "copper", power: 2 }];
     state.cunning = 1;
   }
   if (job === "soul") state.lamps = 1;
@@ -203,7 +213,9 @@ const freshJobState = () => ({
   contracts: [],
   activeBeast: "玄狼",
   devices: 0,
+  deviceTypes: [],
   cunning: 0,
+  copperTriggered: false,
   lamps: 0,
   attackBonus: 0,
   burnMultiplier: 1,
@@ -400,16 +412,28 @@ function App() {
   const [maxQi, setMaxQi] = useState(3 + treasureValue(debugTreasures, "maxQi"));
   const [shield, setShield] = useState(treasureValue(debugTreasures, "startShield"));
   const [edge, setEdge] = useState(debugNumber("edge"));
-  const [jobState, setJobState] = useState(() => ({
-    ...freshJobState(),
-    seals: debugNumber("seals"),
-    cold: debugNumber("cold"),
-    heat: debugNumber("heat"),
-    contracts: debugNumber("contracts") > 0 ? ["玄狼", "白鹿", "青鸾", "石猿", "灵狐"].slice(0, debugNumber("contracts")) : [],
-    devices: debugNumber("devices"),
-    cunning: debugNumber("cunning"),
-    lamps: debugNumber("lamps"),
-  }));
+  const [jobState, setJobState] = useState(() => {
+    const debugCopperDevices = debugNumber("copperDevices");
+    const debugThunderDevices = debugNumber("thunderDevices");
+    const debugDevices = debugCopperDevices + debugThunderDevices || debugNumber("devices");
+    const debugDeviceTypes = debugCopperDevices + debugThunderDevices
+      ? [
+          ...Array.from({ length: debugCopperDevices }, () => ({ type: "copper", power: 2 })),
+          ...Array.from({ length: debugThunderDevices }, () => ({ type: "thunder", power: 6 })),
+        ]
+      : Array.from({ length: debugDevices }, () => ({ type: "thunder", power: 6 }));
+    return {
+      ...freshJobState(),
+      seals: debugNumber("seals"),
+      cold: debugNumber("cold"),
+      heat: debugNumber("heat"),
+      contracts: debugNumber("contracts") > 0 ? ["玄狼", "白鹿", "青鸾", "石猿", "灵狐"].slice(0, debugNumber("contracts")) : [],
+      devices: debugDevices,
+      deviceTypes: debugDeviceTypes,
+      cunning: debugNumber("cunning"),
+      lamps: debugNumber("lamps"),
+    };
+  });
   const [enemyBurn, setEnemyBurn] = useState(debugNumber("burn"));
   const [enemyPoison, setEnemyPoison] = useState(debugNumber("poison"));
   const [enemyWeak, setEnemyWeak] = useState(debugNumber("weak"));
@@ -758,7 +782,8 @@ function App() {
       setEnemyShield(savedRun.enemyShield || 0);
       enemyShieldRef.current = savedRun.enemyShield || 0;
       setCombatTurn(savedRun.combatTurn || 1);
-      setJobState({ ...freshJobState(), ...(savedRun.jobState || {}) });
+      const restoredJobState = { ...freshJobState(), ...(savedRun.jobState || {}) };
+      setJobState(withDevices(restoredJobState, normalizeDevices(restoredJobState)));
       setHand(restoreCards(savedRun.hand));
       setDrawPile(restoreCards(savedRun.drawPile));
       setDiscardPile(restoreCards(savedRun.discardPile));
@@ -1186,32 +1211,61 @@ function App() {
     }
 
     if (origin === "artificer") {
-      if (base === "铜雀飞梭" || base === "雷枢阵列") setJobState((value) => ({ ...value, devices: Math.min(8, value.devices + 1), cunning: Math.min(10, value.cunning + 1) }));
-      if (base === "雷枢阵列") r.damage = 0;
+      const devices = normalizeDevices(jobState);
+      if (base === "铜雀飞梭") {
+        setJobState((value) => ({
+          ...addDevices(value, [{ type: "copper", power: 2 }]),
+          cunning: Math.min(10, value.cunning + 1),
+        }));
+        r.note.push("部署铜雀 · 每回合首次抽牌造成 2 点伤害");
+      }
+      if (base === "雷枢阵列") {
+        r.damage = 0;
+        setJobState((value) => ({
+          ...addDevices(value, [{ type: "thunder", power: refined ? 10 : 6 }]),
+          cunning: Math.min(10, value.cunning + 1),
+        }));
+        r.note.push(`部署雷枢 · 回合结束造成 ${refined ? 10 : 6}+机巧增幅伤害`);
+      }
       if (base === "玄甲机括") {
-        if (jobState.devices > 0) r.shield += 3;
+        if (devices.length > 0) r.shield += 3;
         setJobState((value) => ({ ...value, cunning: Math.min(10, value.cunning + (refined ? 2 : 1)) }));
       }
-      if (base === "墨轮复位" && jobState.devices > 0) {
-        r.damage += 4 + Math.floor(jobState.cunning / 2);
+      if (base === "墨轮复位" && devices.length > 0) {
+        const target = devices.find((device) => device.type === "thunder") || devices[0];
+        r.damage += deviceDamage(target, jobState.cunning);
+        r.note.push(`复位${target.type === "thunder" ? "雷枢" : "铜雀"}`);
         setJobState((value) => ({ ...value, cunning: Math.min(10, value.cunning + 1) }));
       }
-      if (base === "千机连弩") r.damage += jobState.devices * (refined ? 6 : 4);
-      if (base === "拆解回收" && jobState.devices > 0) {
-        r.shield += 3;
-        setJobState((value) => ({ ...value, devices: value.devices - 1 }));
+      if (base === "千机连弩") r.damage += devices.length * (refined ? 6 : 4);
+      if (base === "拆解回收" && devices.length > 0) {
+        setJobState((value) => removeDevice(value).state);
+        r.note.push(`拆解${devices[0].type === "thunder" ? "雷枢" : "铜雀"}`);
       }
       if (base === "偃师护心镜") setJobState((value) => ({ ...value, mirrorDamage: (refined ? 14 : 10) + (value.cunning > 0 ? 5 : 0) }));
       if (base === "飞梭穿云") {
         r.ignoreShield = true;
         if (enemyShieldRef.current > 0) r.draw += 1;
       }
-      if (base === "机关城垒") setJobState((value) => ({ ...value, devices: Math.min(8, value.devices + 2), cunning: Math.min(10, value.cunning + 2) }));
+      if (base === "机关城垒") {
+        const additions = [0, 1].map((index) => seededRandom(runSeed, `fortress:${selectedChapter}:${stage}:${combatTurn}:${index}`) < 0.5
+          ? { type: "copper", power: 2 }
+          : { type: "thunder", power: 6 });
+        setJobState((value) => ({
+          ...addDevices(value, additions),
+          cunning: Math.min(10, value.cunning + 2),
+        }));
+        r.note.push(`部署${additions.map((device) => device.type === "thunder" ? "雷枢" : "铜雀").join("与")}`);
+      }
       if (base === "天工开物") {
         const triggers = refined ? 2 : 1;
-        r.damage += jobState.devices * (6 + Math.floor(jobState.cunning / 2)) * triggers;
-        r.shield += jobState.devices * triggers;
-        setJobState((value) => ({ ...value, cunning: Math.min(10, value.cunning + value.devices) }));
+        r.damage += triggerDevices(devices, jobState.cunning, triggers);
+        r.shield += devices.length * triggers;
+        setJobState((value) => ({
+          ...withDevices(value, upgradeDevices(normalizeDevices(value))),
+          cunning: Math.min(10, value.cunning + normalizeDevices(value).length),
+        }));
+        r.note.push(`${devices.length} 个机关触发 ${triggers} 次并完成升级`);
       }
     }
 
@@ -1364,6 +1418,13 @@ function App() {
   }
 
   function drawCardsIntoHand(amount, source) {
+    const copperDevices = normalizeDevices(jobState).filter((device) => device.type === "copper");
+    const canDraw = hand.length < 7 && drawPile.length + discardPile.length > 0;
+    if (origin === "artificer" && copperDevices.length && !jobState.copperTriggered && amount > 0 && canDraw) {
+      const copperDamage = triggerDevices(copperDevices, jobState.cunning);
+      damageEnemy(copperDamage, `${source}唤醒铜雀`);
+      setJobState((value) => ({ ...value, copperTriggered: true }));
+    }
     setHand((currentHand) => {
       let pool = [...drawPile];
       let recycled = [...discardPile];
@@ -1438,6 +1499,7 @@ function App() {
       setLog(`敌人发动「${currentMove.name}」。护盾抵去 ${Math.min(shield, incoming)}，你受到 ${lost} 点伤害${extra ? `；${extra}` : ""}。`);
     }, 560);
     later(() => {
+      const nextHandSize = Math.max(3, 5 - (currentMove.drawPenalty || 0));
       const burnTick = enemyBurn > 0 ? (enemyBurn + treasureValue(treasures, "burnDamage")) * jobState.burnMultiplier : 0;
       if (burnTick > 0) {
         damageEnemy(burnTick, "燃烧吞没了敌影");
@@ -1450,10 +1512,13 @@ function App() {
       if (origin === "talisman" && jobState.seals > 0) {
         damageEnemy(jobState.seals * 2, "符印随敌人行动震荡");
       }
-      if (origin === "artificer" && jobState.devices > 0) {
-        damageEnemy(jobState.devices * (4 + Math.floor(jobState.cunning / 2)) + 2, "机关阵列齐射");
+      if (origin === "artificer") {
+        const devices = normalizeDevices(jobState);
+        const thunderDevices = devices.filter((device) => device.type === "thunder");
+        if (thunderDevices.length) damageEnemy(triggerDevices(thunderDevices, jobState.cunning), "雷枢阵列齐射");
+        const copperDevices = devices.filter((device) => device.type === "copper");
+        if (copperDevices.length && nextHandSize > 0) damageEnemy(triggerDevices(copperDevices, jobState.cunning), "新回合抽牌唤醒铜雀");
       }
-      const nextHandSize = Math.max(3, 5 - (currentMove.drawPenalty || 0));
       const turnDiscard = [...discardPile, ...hand, ...(currentMove.curse ? [{ ...FATE_CURSE, id: `${FATE_CURSE.id}-${Date.now()}` }] : [])];
       const carry = [...drawPile];
       const reshuffled = shuffle(turnDiscard, `reshuffle:${selectedChapter}:${stage}:${combatTurn}`);
@@ -1472,6 +1537,7 @@ function App() {
         symbolCardsPlayed: 0,
         lastWasInstruction: false,
         whiteDeerGuard: false,
+        copperTriggered: normalizeDevices(value).some((device) => device.type === "copper"),
       }));
       setEnemy((value) => {
         const nextIndex = ((value.moveIndex || 0) + 1) % (value.moves?.length || 1);
@@ -2730,12 +2796,15 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
   const [guideStep, setGuideStep] = useState(showGuide ? 0 : -1);
   const hpPercent = Math.max(0, (enemy.hp / enemy.max) * 100);
   const currentEnemyMove = enemy.moves[enemy.moveIndex || 0];
+  const artificerDevices = normalizeDevices(jobState);
+  const copperCount = artificerDevices.filter((device) => device.type === "copper").length;
+  const thunderCount = artificerDevices.filter((device) => device.type === "thunder").length;
   const professionResource = {
     sword: { icon: "/ui/icons/edge.png", label: "剑势", value: edge },
     talisman: { icon: "/ui/icons/burn.png", label: "符印", value: jobState.seals },
     alchemy: { icon: "/ui/icons/hp.png", label: "药性", value: `${jobState.cold}寒/${jobState.heat}热` },
     beast: { icon: "/ui/icons/treasure.png", label: "灵契", value: `${jobState.activeBeast}·${jobState.contracts.length}` },
-    artificer: { icon: "/ui/icons/shield.png", label: "机巧", value: `${jobState.cunning}/${jobState.devices}机` },
+    artificer: { icon: "/ui/icons/shield.png", label: "机巧", value: `${jobState.cunning} · 雀${copperCount}/枢${thunderCount}` },
     soul: { icon: "/ui/icons/curse.png", label: "魂灯", value: jobState.lamps },
   }[origin.id];
   const build = currentBuildState(deck, origin.id);
@@ -2763,8 +2832,8 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         <Resource icon="/ui/icons/qi.png" name="灵气" value={`${qi}/${maxQi}`} />
         <Resource icon="/ui/icons/shield.png" name="护盾" value={shield} />
         {playerWeak > 0 && <Resource icon="/ui/icons/weak.png" name="虚弱" value={playerWeak} />}
-        <Resource icon={professionResource.icon} name={professionResource.label} value={professionResource.value} />
-        <Resource icon="/ui/icons/stones.png" name="灵石" value={stones} />
+        <Resource className="profession-resource" icon={professionResource.icon} name={professionResource.label} value={professionResource.value} />
+        <Resource className="stones-resource" icon="/ui/icons/stones.png" name="灵石" value={stones} />
         <div className="quick-items">
           <button disabled={!consumables.spirit || combatBusy} aria-label={`聚气散，剩余 ${consumables.spirit}`} onClick={() => useConsumable("spirit")}><img src="/ui/consumables/spirit_draught.png" alt="" /><span>{consumables.spirit}</span></button>
           <button disabled={!consumables.skin || combatBusy} aria-label={`石肤符，剩余 ${consumables.skin}`} onClick={() => useConsumable("skin")}><img src="/ui/consumables/stone_skin_talisman.png" alt="" /><span>{consumables.skin}</span></button>
@@ -2875,8 +2944,8 @@ function PlayedCardFx({ fx }) {
   );
 }
 
-function Resource({ icon, name, value }) {
-  return <div className="resource"><img src={icon} alt="" /><span>{name}</span><strong>{value}</strong></div>;
+function Resource({ icon, name, value, className = "" }) {
+  return <div className={`resource ${className}`}><img src={icon} alt="" /><span>{name}</span><strong>{value}</strong></div>;
 }
 
 function Card({ card, index, playable, displayCost = card.cost, comboReady = false, casting = false, onClick }) {

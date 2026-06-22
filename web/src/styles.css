@@ -698,9 +698,23 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .player-rail {
     left: 14px;
     top: 15px;
-    width: 132px;
-    transform: scale(.74);
+    width: 142px;
+    transform: none;
   }
+  .player-rail .portrait { width: 46px; height: 46px; box-shadow: 0 0 0 4px rgba(6,18,15,.78), 0 6px 20px #000; }
+  .player-rail .player-name { position: absolute; top: 5px; left: 52px; width: 92px; margin: 0; padding-left: 7px; }
+  .player-rail .player-name strong { font-size: 13px; }
+  .player-rail .player-name small { font-size: 7px; }
+  .player-rail .resource { width: 46px; height: 23px; display: inline-grid; grid-template-columns: 16px 1fr; margin-top: 3px; vertical-align: top; }
+  .player-rail .resource img { width: 14px; height: 14px; }
+  .player-rail .resource span { display: none; }
+  .player-rail .resource strong { font-size: 9px; white-space: nowrap; }
+  .player-rail .profession-resource { width: 140px; grid-template-columns: 18px 36px 1fr; border: 1px solid rgba(211,169,73,.24); background: rgba(7,24,18,.76); }
+  .player-rail .profession-resource span { display: block; font-size: 8px; }
+  .player-rail .profession-resource strong { color: #dfc87e; font-size: 9px; }
+  .player-rail .stones-resource { display: none; }
+  .player-rail .quick-items { gap: 5px; margin-top: 6px; }
+  .player-rail .quick-items button { width: 28px; height: 28px; }
   .progress-rail {
     right: 8px;
     top: 18px;
@@ -721,7 +735,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .enemy-readout p { display: -webkit-box; overflow: hidden; font-size: 7px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
   .enemy-art { top: 15%; height: 70%; max-width: 72%; }
   .combat-log { bottom: 1%; width: 78%; padding: 7px 10px; font-size: 9px; }
-  .run-notebook.combat-notebook { left: 12px; right: auto; top: 184px; width: 132px; padding: 7px 8px; }
+  .run-notebook.combat-notebook { left: 12px; right: auto; top: 190px; width: 142px; padding: 7px 8px; }
   .combat-notebook header strong { font-size: 12px; }
   .combat-notebook header small, .combat-notebook .notebook-lines article:nth-child(n+3), .combat-notebook footer { display: none; }
   .combat-notebook .notebook-lines p { -webkit-line-clamp: 1; }
