@@ -318,6 +318,7 @@ function App() {
     return text ? createPendingClue(text, { id: debugPendingNode, name: debugPendingNode }, debugPendingRoute) : null;
   });
   const [nextEnemyShield, setNextEnemyShield] = useState(0);
+  const [marketVisit, setMarketVisit] = useState({ key: "", sold: [], specialUsed: false, treasureBought: false });
   const [runStats, setRunStats] = useState(() => ({
     ...freshRunStats(),
     cardsPlayed: debugNumber("cards"),
@@ -540,6 +541,7 @@ function App() {
       runClues,
       pendingClue,
       nextEnemyShield,
+      marketVisit,
       runStats,
       screen,
       deck: runDeck,
@@ -566,7 +568,7 @@ function App() {
     };
     window.localStorage.setItem("qinglan-run-v1", JSON.stringify(snapshot));
     setSavedRun(snapshot);
-  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, runChoices, runChronicle, runClues, pendingClue, nextEnemyShield, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log, runMode, runSeed, runTrial]);
+  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, runChoices, runChronicle, runClues, pendingClue, nextEnemyShield, marketVisit, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log, runMode, runSeed, runTrial]);
   useEffect(() => {
     if (screen === "combat" && enemy.hp <= 0 && !combatResolved.current) {
       finishCombat("敌影溃散");
@@ -686,6 +688,7 @@ function App() {
       ...(retrySupport.tier ? [`山门扶助 · ${retrySupport.title} · ${retrySupport.detail}`] : []),
     ]);
     setNextEnemyShield(0);
+    setMarketVisit({ key: "", sold: [], specialUsed: false, treasureBought: false });
     setProfile((value) => ({
       ...value,
       discoveredTreasures: masteryTreasure
@@ -724,6 +727,7 @@ function App() {
     setRunClues(savedRun.runClues || []);
     setPendingClue(savedRun.pendingClue || null);
     setNextEnemyShield(savedRun.nextEnemyShield || 0);
+    setMarketVisit(savedRun.marketVisit || { key: "", sold: [], specialUsed: false, treasureBought: false });
     setRunStats({ ...freshRunStats(), ...(savedRun.runStats || {}) });
     setRunDeck(resumedDeck.length ? resumedDeck : cards[savedRun.origin || "sword"]);
     if (savedRun.screen === "combat" && savedRun.enemy) {
@@ -1657,7 +1661,11 @@ function App() {
           stones={stones}
           enterCombat={enterCombat}
           setScreen={setScreen}
-          openMarket={() => changeScreen("market")}
+          openMarket={() => {
+            const key = `${selectedChapter}:${routeProgress}`;
+            setMarketVisit((value) => value.key === key ? value : { key, sold: [], specialUsed: false, treasureBought: false });
+            changeScreen("market");
+          }}
           openRest={() => changeScreen("rest")}
           openTraining={() => changeScreen("training")}
           routeProgress={routeProgress}
@@ -1697,6 +1705,8 @@ function App() {
           setProfile={setProfile}
           randomSeed={runSeed}
           routeProgress={routeProgress}
+          visit={marketVisit}
+          setVisit={setMarketVisit}
           onLeave={() => {
             completePendingClue();
             setRouteProgress((value) => Math.min(3, value + 1));
@@ -2390,8 +2400,11 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
 }
 
 function RestScreen({ hp, maxHp, deck, origin, randomSeed, routeProgress, setHp, setDeck, setConsumables, onComplete }) {
+  const resolvedRef = useRef(false);
   const upgradable = deck.map((card, index) => ({ card, index, next: refinedVersion(card, origin) })).filter((item) => item.next);
   const resolve = (kind) => {
+    if (resolvedRef.current) return;
+    resolvedRef.current = true;
     if (kind === "heal") setHp((value) => Math.min(maxHp, value + 18));
     if (kind === "refine") {
       setHp((value) => Math.min(maxHp, value + 8));
@@ -2421,11 +2434,14 @@ function RestScreen({ hp, maxHp, deck, origin, randomSeed, routeProgress, setHp,
 }
 
 function TrainingScreen({ deck, origin, maxQi, setMaxQi, setDeck, onComplete }) {
+  const resolvedRef = useRef(false);
   const upgradable = deck.map((card, index) => ({ card, index, next: refinedVersion(card, origin) })).filter((item) => item.next);
   const removable = deck
     .map((card, index) => ({ card, index, score: card.cost * 3 + deck.filter((item) => item.name === card.name).length }))
     .sort((a, b) => b.score - a.score);
   const resolve = (kind) => {
+    if (resolvedRef.current) return;
+    resolvedRef.current = true;
     if (kind === "qi") setMaxQi((value) => Math.min(5, value + 1));
     if (kind === "refine" && upgradable.length) {
       const chosen = upgradable[0];
@@ -2448,11 +2464,14 @@ function TrainingScreen({ deck, origin, maxQi, setMaxQi, setDeck, onComplete }) 
   );
 }
 
-function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones, setStones, consumables, setConsumables, treasures, setTreasures, setMaxQi, setProfile, randomSeed, routeProgress, onLeave }) {
+function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones, setStones, consumables, setConsumables, treasures, setTreasures, setMaxQi, setProfile, randomSeed, routeProgress, visit, setVisit, onLeave }) {
   const market = CHAPTER_MARKETS[chapter];
+  const visitKey = `${chapter}:${routeProgress}`;
   const [notice, setNotice] = useState(`${market.name}可多次交易，离开后路线才会推进。`);
-  const [sold, setSold] = useState([]);
-  const [specialUsed, setSpecialUsed] = useState(false);
+  const sold = visit?.key === visitKey ? (visit.sold || []) : [];
+  const specialUsed = visit?.key === visitKey && Boolean(visit.specialUsed);
+  const treasureBought = visit?.key === visitKey && Boolean(visit.treasureBought);
+  const leavingRef = useRef(false);
   const offers = useMemo(() => {
     const score = (card) => {
       const text = `${card.text}${card.combo || ""}`;
@@ -2476,7 +2495,7 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
     if (stones < price || sold.includes(card.id)) return;
     setStones((value) => value - price);
     setDeck((value) => [...value, card]);
-    setSold((value) => [...value, card.id]);
+    setVisit((value) => ({ ...(value.key === visitKey ? value : { key: visitKey, sold: [], specialUsed: false, treasureBought: false }), sold: [...new Set([...(value.key === visitKey ? value.sold || [] : []), card.id])] }));
     setNotice(`购得「${card.name}」。牌组增至 ${deck.length + 1} 张。`);
   };
   const remove = (index) => {
@@ -2495,11 +2514,12 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
   };
   const buyTreasure = () => {
     const price = Math.max(12, market.treasureCost - discount);
-    if (!treasureOffer || stones < price || treasures.some((item) => item.id === treasureOffer.id)) return;
+    if (!treasureOffer || treasureBought || stones < price || treasures.some((item) => item.id === treasureOffer.id)) return;
     setStones((value) => value - price);
     setTreasures((value) => [...value, treasureOffer]);
     setProfile((value) => ({ ...value, discoveredTreasures: [...new Set([...(value.discoveredTreasures || []), treasureOffer.id])] }));
     if (treasureOffer.maxQi) setMaxQi((value) => Math.min(5, value + treasureOffer.maxQi));
+    setVisit((value) => ({ ...(value.key === visitKey ? value : { key: visitKey, sold: [], specialUsed: false }), treasureBought: true }));
     setNotice(`淘得法宝「${treasureOffer.name}」：${treasureOffer.effect}。`);
   };
   const specialTrade = () => {
@@ -2552,7 +2572,7 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
         setNotice("无术可重写，命页化作 1 份聚气散。");
       }
     }
-    setSpecialUsed(true);
+    setVisit((value) => ({ ...(value.key === visitKey ? value : { key: visitKey, sold: [], treasureBought: false }), specialUsed: true }));
   };
   const analysis = analyzeDeck(deck);
   return (
@@ -2588,7 +2608,7 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
           {treasureOffer && <article className="market-treasure">
             <img src={treasureOffer.art} alt="" />
             <div><small>本次法宝</small><strong>{treasureOffer.name}</strong><p>{treasureOffer.effect}</p></div>
-            <button disabled={stones < Math.max(12, market.treasureCost - discount) || treasures.some((item) => item.id === treasureOffer.id)} onClick={buyTreasure}>{treasures.some((item) => item.id === treasureOffer.id) ? "已拥有" : `${Math.max(12, market.treasureCost - discount)} 灵石`}</button>
+            <button disabled={treasureBought || stones < Math.max(12, market.treasureCost - discount) || treasures.some((item) => item.id === treasureOffer.id)} onClick={buyTreasure}>{treasureBought || treasures.some((item) => item.id === treasureOffer.id) ? "已购得" : `${Math.max(12, market.treasureCost - discount)} 灵石`}</button>
           </article>}
           <div className="deck-mini-analysis">
             <b>当前短板</b>
@@ -2607,15 +2627,22 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
           </div>
         </aside>
       </div>
-      <button className="market-leave" onClick={onLeave}>收起行囊 · 返回命途</button>
+      <button className="market-leave" onClick={() => {
+        if (leavingRef.current) return;
+        leavingRef.current = true;
+        onLeave();
+      }}>收起行囊 · 返回命途</button>
     </section>
   );
 }
 
 function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingClue, profile, routeProgress, maxQi, autoChoice, setProfile, setScreen, setHp, setStones, setRunDeck, setRouteProgress, setNextEnemyShield, setMaxQi, setConsumables, completeInvestigation, abandonInvestigation, addRunEcho }) {
   const event = CHAPTER_EVENTS[chapter];
+  const resolvedRef = useRef(false);
   const notebook = createRunNotebook({ screen: "event", chapter, routeProgress, hp, maxHp, stones, deck, origin, clues, pendingClue, profile });
   const choose = (option) => {
+    if (resolvedRef.current) return;
+    resolvedRef.current = true;
     const effect = option.effect || {};
     if (effect.heal) setHp((value) => Math.min(maxHp, value + effect.heal));
     if (effect.hpLoss) setHp((value) => Math.max(1, value - effect.hpLoss));

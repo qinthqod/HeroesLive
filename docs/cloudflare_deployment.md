@@ -51,6 +51,6 @@ npm run deploy:check
 
 ## 当前正式地址
 
-- URL：`https://heroes-live.history-sim.workers.dev`
+- 推荐 URL：`https://heroes.20190628.xyz`
 - Worker：`heroes-live`
-- 中国大陆网络对 `workers.dev` 可能连接超时；正式对外试玩建议绑定已接入 Cloudflare 的自定义域名。
+- `workers.dev` 在部分中国大陆网络会出现 DNS 污染或连接超时，当前已关闭该入口，正式对外试玩统一使用自定义域名。

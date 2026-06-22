@@ -2,6 +2,13 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "heroes-live",
   "compatibility_date": "2026-06-21",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "heroes.20190628.xyz",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": "../exports/web",
     "not_found_handling": "single-page-application",
