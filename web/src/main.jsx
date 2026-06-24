@@ -432,6 +432,9 @@ function App() {
     return {
       ...freshJobState(),
       seals: debugNumber("seals"),
+      burnMultiplier: Math.max(1, debugNumber("burnMultiplier", 1)),
+      talismanDiscount: debugNumber("talismanDiscount"),
+      symbolCardsPlayed: debugNumber("symbols"),
       cold: debugNumber("cold"),
       heat: debugNumber("heat"),
       contracts: debugNumber("contracts") > 0 ? ["玄狼", "白鹿", "青鸾", "石猿", "灵狐"].slice(0, debugNumber("contracts")) : [],
@@ -999,6 +1002,7 @@ function App() {
   function cardRequirementMet(card) {
     const base = card.baseName || card.name.replace("·真解", "");
     if (base === "药炉温养") return jobState.cold > 0 && jobState.heat > 0;
+    if (base === "玄雷敕令") return jobState.seals > 0;
     return true;
   }
 
@@ -1020,7 +1024,7 @@ function App() {
       阴火符: [jobState.seals > 0, `可引爆 1 枚符印 · 当前 ${jobState.seals}`],
       玄雷敕令: [jobState.seals > 0, `可引爆 ${jobState.seals} 枚符印`],
       净坛真言: [true, combatCurseCount > 0 ? `可净除 ${Math.min(card.refined ? 2 : 1, combatCurseCount)} 张心魔` : "无心魔时转化为 2 点灵气"],
-      雷火连符: [jobState.symbolCardsPlayed > 0, `本回合已打出 ${jobState.symbolCardsPlayed} 张符牌`],
+      雷火连符: [true, `包含本牌，共追加 ${jobState.symbolCardsPlayed + 1} 次`],
       借风燃纸: [enemyBurn >= 5, `燃烧 ${enemyBurn}/5，额外获得护盾`],
       万符归一: [jobState.seals > 0 || enemyBurn > 0, `符印 ${jobState.seals} · 燃烧 ${enemyBurn}`],
       回春散: [hp < maxHp / 2, "生命低于一半，治疗增强"],
@@ -1098,6 +1102,7 @@ function App() {
       recycleAlchemy: 0,
       discoverInstruction: 0,
       recallBeast: false,
+      spellDrawQi: 0,
     };
     const base = card.baseName || card.name.replace("·真解", "");
     const refined = card.refined;
@@ -1142,10 +1147,10 @@ function App() {
       }
       if (base === "赤篆连书") {
         setJobState((value) => ({ ...value, talismanDiscount: 1 }));
-        if (drawPile[0]?.type === "术法") r.qi += 1;
+        r.spellDrawQi = 1;
       }
       if (base === "阴火符" && jobState.seals > 0) {
-        r.damage += enemyBurn + r.burn;
+        r.damage += (enemyBurn + r.burn) * jobState.burnMultiplier;
         setJobState((value) => ({ ...value, seals: value.seals - 1 }));
       }
       if (base === "玄雷敕令") {
@@ -1155,7 +1160,7 @@ function App() {
         setJobState((value) => ({ ...value, seals: 0 }));
       }
       if (base === "净坛真言" && countCurses({ hand, drawPile, discardPile }) === 0) r.qi += 2;
-      if (base === "雷火连符") r.damage += (jobState.symbolCardsPlayed * (refined ? 7 : 5));
+      if (base === "雷火连符") r.damage += ((jobState.symbolCardsPlayed + 1) * (refined ? 7 : 5));
       if (base === "借风燃纸") {
         setJobState((value) => ({ ...value, burnMultiplier: 2 }));
         if (enemyBurn >= 5) r.shield += 8;
@@ -1401,7 +1406,13 @@ function App() {
         setShield((value) => value + 4);
       }
       if (resolution.recallBeast) setJobState((value) => recallBeastState(value));
-      if (resolution.draw + firstSkillBonus) drawCardsIntoHand(resolution.draw + firstSkillBonus, firstSkillBonus ? `${card.name} · 青竹残简` : card.name);
+      if (resolution.draw + firstSkillBonus) {
+        drawCardsIntoHand(
+          resolution.draw + firstSkillBonus,
+          firstSkillBonus ? `${card.name} · 青竹残简` : card.name,
+          { spellDrawQi: resolution.spellDrawQi },
+        );
+      }
       if (resolution.returnLast && lastPlayedCardRef.current) {
         const echoed = { ...lastPlayedCardRef.current, id: `${lastPlayedCardRef.current.id}-echo-${Date.now()}` };
         if (echoed.type === "术法") echoed.cost = 0;
@@ -1462,7 +1473,7 @@ function App() {
     }, 1120);
   }
 
-  function drawCardsIntoHand(amount, source) {
+  function drawCardsIntoHand(amount, source, options = {}) {
     const copperDevices = normalizeDevices(jobState).filter((device) => device.type === "copper");
     const canDraw = hand.length < 7 && drawPile.length + discardPile.length > 0;
     if (origin === "artificer" && copperDevices.length && !jobState.copperTriggered && amount > 0 && canDraw) {
@@ -1481,6 +1492,12 @@ function App() {
       const drawn = pool.slice(0, count);
       setDrawPile(pool.slice(count));
       setDiscardPile(recycled);
+      if (options.spellDrawQi && drawn.some((card) => card.type === "术法")) {
+        setQi((value) => Math.min(maxQi + 3, value + options.spellDrawQi));
+        setTriggerFx((value) => value
+          ? { ...value, effects: [...value.effects, `实际抽到术法 · 灵气 +${options.spellDrawQi}`] }
+          : value);
+      }
       if (drawn.length) {
         feedback("draw");
         setDrawFx({ cards: drawn, source: `${source} · 抽牌`, nonce: Date.now() });
@@ -2848,7 +2865,11 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
   const thunderCount = artificerDevices.filter((device) => device.type === "thunder").length;
   const professionResource = {
     sword: { icon: "/ui/icons/edge.png", label: "剑势", value: `${edge}·${moonPhaseLabel(moonPhase)}` },
-    talisman: { icon: "/ui/icons/burn.png", label: "符印", value: jobState.seals },
+    talisman: {
+      icon: "/ui/icons/burn.png",
+      label: "符印",
+      value: `${jobState.seals}印/${jobState.symbolCardsPlayed}连${jobState.burnMultiplier > 1 ? "·燃×2" : ""}`,
+    },
     alchemy: { icon: "/ui/icons/hp.png", label: "药性", value: `${jobState.cold}寒/${jobState.heat}热` },
     beast: { icon: "/ui/icons/treasure.png", label: "灵契", value: `${jobState.activeBeast || "归巢"}·${jobState.contracts.length}契·${moonPhaseLabel(moonPhase)}` },
     artificer: { icon: "/ui/icons/shield.png", label: "机巧", value: `${jobState.cunning} · 雀${copperCount}/枢${thunderCount}` },

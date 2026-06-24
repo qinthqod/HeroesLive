@@ -1,6 +1,5 @@
-import { spawnSync } from "node:child_process";
+import { chromium } from "playwright";
 
-const chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const base = "http://127.0.0.1:5174/";
 const cases = [
   { name: "剑修终结", query: "origin=sword&card=万剑归岚&edge=5", hp: 67 },
@@ -12,21 +11,28 @@ const cases = [
   { name: "契师弃牌终结", query: "origin=soul&card=百鬼夜行&lamps=5&discard=5", hp: 85 },
 ];
 
+const browser = await chromium.launch({ headless: true });
 const failures = [];
+
 for (const test of cases) {
-  const url = `${base}?screen=combat&chapter=3&stage=3&enemyHp=100&qi=10&autoclick=1&${test.query}`;
-  const result = spawnSync(chrome, [
-    "--headless=new",
-    "--disable-gpu",
-    "--virtual-time-budget=2200",
-    "--dump-dom",
-    url,
-  ], { encoding: "utf8" });
-  const match = result.stdout.match(/<strong>(\d+)\/100<\/strong>/);
-  const actual = match ? Number(match[1]) : null;
-  if (actual !== test.hp) failures.push(`${test.name}: expected ${test.hp}/100, got ${actual ?? "no result"}`);
-  else console.log(`✓ ${test.name}: ${actual}/100`);
+  const page = await browser.newPage({ viewport: { width: 430, height: 932 } });
+  try {
+    const url = `${base}?screen=combat&chapter=3&stage=3&enemyHp=100&qi=10&autoclick=1&${test.query}`;
+    await page.goto(url, { waitUntil: "networkidle" });
+    await page.locator(".combat-screen").waitFor();
+    await page.waitForTimeout(1250);
+    const hpText = await page.locator(".enemy-health strong").innerText();
+    const actual = Number(hpText.split("/")[0]);
+    if (actual !== test.hp) throw new Error(`expected ${test.hp}/100, got ${hpText}`);
+    console.log(`✓ ${test.name}: ${actual}/100`);
+  } catch (error) {
+    failures.push(`${test.name}: ${error.message.split("\n")[0]}`);
+  } finally {
+    await page.close();
+  }
 }
+
+await browser.close();
 
 if (failures.length) {
   console.error(`Combat combo smoke failed (${failures.length})`);

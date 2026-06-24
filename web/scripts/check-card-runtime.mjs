@@ -69,6 +69,10 @@ expect(!runtimeSource.includes("card.type === \"攻击\" && base !== \"万剑归
 expect(runtimeSource.includes("base === \"玉月成璧\" && moonPhase === \"frost\""), "玉月成璧额外抽牌必须仅在霜月生效");
 expect(runtimeSource.includes("base === \"药炉温养\"") && runtimeSource.includes("cardRequirementMet(card)"), "药炉温养缺少寒热时不得获得无条件抽牌收益");
 expect(!runtimeSource.includes("r.damage += total * 3") && !runtimeSource.includes("r.heal += total * 2"), "阴阳大还丹不得附加牌面未声明的隐藏药性倍率");
+expect(runtimeSource.includes("base === \"玄雷敕令\"") && runtimeSource.includes("jobState.seals > 0"), "玄雷敕令缺少符印时不得空放");
+expect(runtimeSource.includes("(jobState.symbolCardsPlayed + 1)") && runtimeSource.includes("base === \"雷火连符\""), "雷火连符必须把自身计入追加段数");
+expect(runtimeSource.includes("(enemyBurn + r.burn) * jobState.burnMultiplier"), "阴火符即时结算必须读取本回合燃烧倍率");
+expect(runtimeSource.includes("drawn.some((card) => card.type === \"术法\")"), "赤篆连书奖励必须依据实际抽到的牌");
 
 if (failures.length) {
   console.error(`Card runtime check failed (${failures.length})`);

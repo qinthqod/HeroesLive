@@ -18,6 +18,7 @@
     "smoke:beast": "node scripts/smoke-beast-mechanics.mjs",
     "smoke:sword": "node scripts/smoke-sword-mechanics.mjs",
     "smoke:alchemy": "node scripts/smoke-alchemy-mechanics.mjs",
+    "smoke:talisman": "node scripts/smoke-talisman-mechanics.mjs",
     "smoke:enemy": "node scripts/smoke-enemy-patterns.mjs",
     "smoke:boss": "node scripts/smoke-boss-patterns.mjs",
     "smoke:story": "node scripts/smoke-story-lore.mjs",
