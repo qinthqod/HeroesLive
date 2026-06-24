@@ -4,14 +4,17 @@ import "./styles.css";
 import {
   ALL_CARDS,
   BOSS_MOVE_PATTERNS,
+  BOSS_PHASES,
   ENCOUNTER_ENEMIES,
   ENCOUNTER_MOVE_PATTERNS,
   CHAPTERS,
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
   CHAPTER_STORIES,
+  CHAPTER_STORY_CHOICES,
   CHAPTER_INVESTIGATIONS,
   CHAPTER_EVENTS,
+  CHAPTER_ROUTE_STORIES,
   CHAPTER_MARKETS,
   DECK_RECIPES,
   META_TALENTS,
@@ -266,9 +269,11 @@ function App() {
   const query = new URLSearchParams(window.location.search);
   const initialScreen = query.get("screen") || "home";
   const initialOrigin = PROFESSIONS.some((job) => job.id === query.get("origin")) ? query.get("origin") : "sword";
-  const initialChapter = Math.min(5, Math.max(1, Number(query.get("chapter")) || 1));
+  const initialChapter = Math.min(CHAPTERS.length, Math.max(1, Number(query.get("chapter")) || 1));
   const initialStage = Math.min(3, Math.max(1, Number(query.get("stage")) || 1));
-  const initialStory = import.meta.env.DEV ? Math.min(2, Math.max(0, Number(query.get("story")) || 0)) : 0;
+  const initialStory = import.meta.env.DEV
+    ? Math.min((CHAPTER_STORIES[initialChapter]?.length || 1) - 1, Math.max(0, Number(query.get("story")) || 0))
+    : 0;
   const debugEnemyHp = import.meta.env.DEV ? Math.max(0, Number(query.get("enemyHp")) || 0) : 0;
   const debugTreasures = import.meta.env.DEV
     ? (query.get("treasures") || "").split(",").map((id) => TREASURES.find((treasure) => treasure.id === id)).filter(Boolean)
@@ -292,7 +297,7 @@ function App() {
   const debugClueCount = import.meta.env.DEV ? Math.min(5, debugNumber("clues")) : 0;
   const debugPendingRoute = import.meta.env.DEV ? Math.min(3, debugNumber("pendingRoute")) : 0;
   const debugPendingNode = import.meta.env.DEV ? query.get("pendingNode") : null;
-  const debugArchiveChapter = import.meta.env.DEV ? Math.min(5, Math.max(1, debugNumber("archiveChapter", initialChapter))) : 0;
+  const debugArchiveChapter = import.meta.env.DEV ? Math.min(CHAPTERS.length, Math.max(1, debugNumber("archiveChapter", initialChapter))) : 0;
   const debugArchiveCount = import.meta.env.DEV ? Math.min(7, debugNumber("archiveCount")) : 0;
   const debugEventChoice = import.meta.env.DEV && query.has("eventChoice") ? Math.min(3, debugNumber("eventChoice")) : null;
   const hasDebugFailures = import.meta.env.DEV && query.has("failures");
@@ -303,6 +308,11 @@ function App() {
     const moves = buildEnemyMoves(chapter, encounterStage);
     enemyData.moves = moves;
     enemyData.moveIndex = Math.min(moves.length - 1, debugMoveIndex);
+    if (encounterStage === 3) {
+      enemyData.phase = 1;
+      enemyData.phaseName = "第一相 · 守序";
+      enemyData.phaseLine = "首领尚未显露真正形态。";
+    }
     const modified = applyDailyEnemy(enemyData, trial);
     modified.intent = intentLabel(modified.moves[modified.moveIndex]);
     if (debugEnemyHp > 0) modified.hp = Math.min(modified.max, debugEnemyHp);
@@ -776,16 +786,18 @@ function App() {
     if (savedRun.screen === "combat" && savedRun.enemy) {
       combatResolved.current = false;
       const currentEnemy = makeEnemy(savedRun.selectedChapter || 1, savedRun.stage || 1, savedRun.runTrial || null);
-      const restoredMoveIndex = Math.min(currentEnemy.moves.length - 1, savedRun.enemy.moveIndex || 0);
+      const savedBossPhase = savedRun.stage === 3 && savedRun.enemy.phase === 2 ? BOSS_PHASES[savedRun.selectedChapter || 1] : null;
+      const restoredMoves = savedBossPhase?.moves || currentEnemy.moves;
+      const restoredMoveIndex = Math.min(restoredMoves.length - 1, savedRun.enemy.moveIndex || 0);
       setEnemy({
         ...currentEnemy,
         ...savedRun.enemy,
         archetype: currentEnemy.archetype,
         trait: currentEnemy.trait,
         counter: currentEnemy.counter,
-        moves: currentEnemy.moves,
+        moves: restoredMoves,
         moveIndex: restoredMoveIndex,
-        intent: intentLabel(currentEnemy.moves[restoredMoveIndex]),
+        intent: intentLabel(restoredMoves[restoredMoveIndex]),
       });
       setEnemyBurn(savedRun.enemyBurn || 0);
       setEnemyPoison(savedRun.enemyPoison || 0);
@@ -842,39 +854,57 @@ function App() {
   }
 
   function continueStory(choice) {
+    const storyChoice = typeof choice === "string"
+      ? Object.values(CHAPTER_STORY_CHOICES[selectedChapter] || {}).flat().find((item) => item.value === choice)
+      : choice;
+    const choiceValue = storyChoice?.value || (typeof choice === "string" ? choice : "");
     const sceneId = `chapter-${selectedChapter}-scene-${storyIndex + 1}`;
     setProfile((value) => {
       const completedNodes = [...new Set([...(value.completedNodes || []), sceneId])];
       const firstChapterScenes = completedNodes.filter((node) => node.startsWith("chapter-1-scene-")).length;
-      const unlockHandbook = firstChapterScenes >= 3 && !(value.unlockedLore || []).includes("shen-handbook-1");
+      const unlockHandbook = firstChapterScenes >= CHAPTER_STORIES[1].length && !(value.unlockedLore || []).includes("shen-handbook-1");
       return {
         ...value,
         completedNodes,
-        choices: choice ? [...(value.choices || []).slice(-7), choice] : (value.choices || []),
+        choices: choiceValue ? [...(value.choices || []).slice(-11), choiceValue] : (value.choices || []),
         unlockedLore: unlockHandbook ? [...(value.unlockedLore || []), "shen-handbook-1"] : (value.unlockedLore || []),
         spirit: value.spirit + (unlockHandbook ? 8 : 0),
       };
     });
-    if (choice) {
-      setRunChoices((value) => [...value, choice]);
-      setRunChronicle((value) => [...value.slice(-5), `抉择 · ${choice}`]);
-      const consequence = {
-        "相信守门人": () => setStones((value) => value + 6),
-        "隐瞒血书": () => setConsumables((value) => ({ ...value, clarity: value.clarity + 1 })),
-        "接受引灯": () => {
-          setHp((value) => Math.max(1, value - 6));
-          setRunDeck((value) => [...value, getProfession(origin).cards.find((card) => card.keyword === "净心") || getProfession(origin).cards[6]]);
-        },
-        "追查旧案": () => setStones((value) => value + 10),
-        "破阵": () => setMaxQi((value) => Math.min(5, value + 1)),
-        "寻人": () => setHp((value) => Math.min(maxHp, value + 14)),
-        "归还梦境": () => setConsumables((value) => ({ ...value, thunder: value.thunder + 1, clarity: value.clarity + 1 })),
-        "夺回影子": () => setStones((value) => value + 16),
-        "修复命册": () => setHp(maxHp),
-        "重写命册": () => setRunDeck((value) => value.map((card) => refinedVersion(card, getProfession(origin)) || card)),
-      }[choice];
-      consequence?.();
-      setLog(`你的选择「${choice}」已改变本次云游。`);
+    if (choiceValue) {
+      const effect = storyChoice?.effect || {};
+      const profession = getProfession(origin);
+      setRunChoices((value) => [...value, choiceValue]);
+      setRunChronicle((value) => [...value.slice(-7), `抉择 · ${choiceValue}`]);
+      if (effect.stones) setStones((value) => value + effect.stones);
+      if (effect.heal) setHp((value) => Math.min(maxHp, value + effect.heal));
+      if (effect.fullHeal) setHp(maxHp);
+      if (effect.hpLoss) setHp((value) => Math.max(1, value - effect.hpLoss));
+      if (effect.maxQi) setMaxQi((value) => Math.min(5, value + effect.maxQi));
+      if (effect.enemyShield) setNextEnemyShield((value) => value + effect.enemyShield);
+      if (effect.consumables) {
+        setConsumables((value) => Object.fromEntries(
+          Object.entries(value).map(([key, amount]) => [key, amount + (effect.consumables[key] || 0)]),
+        ));
+      }
+      if (effect.addKeywordCard) {
+        const card = profession.cards.find((item) => item.keyword === effect.addKeywordCard && !item.refined);
+        if (card) setRunDeck((value) => [...value, card]);
+      }
+      if (effect.addRarityCard) {
+        const card = profession.cards.find((item) => item.rarity === effect.addRarityCard && !item.refined);
+        if (card) setRunDeck((value) => [...value, card]);
+      }
+      if (effect.refineOne) {
+        setRunDeck((value) => {
+          const index = value.findIndex((card) => refinedVersion(card, profession));
+          return index < 0 ? value : value.map((card, cardIndex) => cardIndex === index ? refinedVersion(card, profession) : card);
+        });
+      }
+      if (effect.refineAll) {
+        setRunDeck((value) => value.map((card) => refinedVersion(card, profession) || card));
+      }
+      setLog(`你的选择「${choiceValue}」已改变本次云游。`);
     }
     if (storyIndex < CHAPTER_STORIES[selectedChapter].length - 1) {
       setStoryIndex((value) => value + 1);
@@ -947,17 +977,43 @@ function App() {
 
   function damageEnemy(amount, source, ignoreShield = false) {
     if (amount <= 0 || combatResolved.current) return;
+    const beforeHp = enemyHpRef.current;
     const blocked = ignoreShield ? 0 : Math.min(enemyShieldRef.current, amount);
     const dealt = amount - blocked;
-    const actualDamage = Math.min(enemyHpRef.current, dealt);
-    enemyHpRef.current = Math.max(0, enemyHpRef.current - actualDamage);
+    const actualDamage = Math.min(beforeHp, dealt);
+    const nextHp = Math.max(0, beforeHp - actualDamage);
+    const phaseData = stage >= 3 ? BOSS_PHASES[selectedChapter] : null;
+    const phaseThreshold = phaseData ? enemy.max * phaseData.threshold : 0;
+    const phaseShift = Boolean(phaseData && enemy.phase !== 2 && beforeHp > phaseThreshold && nextHp <= phaseThreshold && nextHp > 0);
+    enemyHpRef.current = nextHp;
     if (actualDamage > 0) setRunStats((value) => ({ ...value, damageDealt: value.damageDealt + actualDamage }));
     if (blocked) {
       enemyShieldRef.current = Math.max(0, enemyShieldRef.current - blocked);
       setEnemyShield(enemyShieldRef.current);
     }
-    setEnemy((value) => ({ ...value, hp: Math.max(0, value.hp - dealt) }));
-    setLog(`${source}，造成 ${dealt} 点伤害${blocked ? `，其中 ${blocked} 点被护体抵消` : ""}。`);
+    if (phaseShift) {
+      const phaseMoves = phaseData.moves.map((move) => ({
+        ...move,
+        damage: move.damage ? move.damage + (runTrial?.modifier?.enemyDamageBonus || 0) : move.damage,
+      }));
+      enemyShieldRef.current += phaseData.shield || 0;
+      setEnemyShield(enemyShieldRef.current);
+      setEnemy((value) => ({
+        ...value,
+        hp: nextHp,
+        phase: 2,
+        phaseName: `第二相 · ${phaseData.name}`,
+        phaseLine: phaseData.line,
+        moves: phaseMoves,
+        moveIndex: 0,
+        intent: intentLabel(phaseMoves[0]),
+      }));
+      setTriggerFx({ card: phaseData.name, combo: "首领转相", effects: [phaseData.line, `护体 +${phaseData.shield || 0}`] });
+      later(() => setTriggerFx(null), 2100);
+    } else {
+      setEnemy((value) => ({ ...value, hp: nextHp }));
+    }
+    setLog(`${source}，造成 ${dealt} 点伤害${blocked ? `，其中 ${blocked} 点被护体抵消` : ""}。${phaseShift ? ` ${phaseData.line}` : ""}`);
   }
 
   function useConsumable(kind) {
@@ -1671,7 +1727,7 @@ function App() {
         };
         let completedProfile = {
           ...archived,
-          chapter: Math.max(Math.min(5, selectedChapter + 1), value.chapter),
+          chapter: Math.max(Math.min(CHAPTERS.length, selectedChapter + 1), value.chapter),
           jade: archived.jade + 120,
           unlockedEndings: [...new Set([...(value.unlockedEndings || []), endingId])],
           chapterFailures: { ...(archived.chapterFailures || {}), [selectedChapter]: 0 },
@@ -1771,6 +1827,7 @@ function App() {
           index={storyIndex}
           total={CHAPTER_STORIES[selectedChapter].length}
           chapter={selectedChapter}
+          choices={CHAPTER_STORY_CHOICES[selectedChapter]?.[storyIndex] || []}
           onChoose={continueStory}
         />
       )}
@@ -2166,7 +2223,7 @@ function DailyTrialScreen({ trial, profile, savedRun, onBack, onResume, onStart 
 function ChapterScreen({ profile, onBack, onChoose }) {
   return (
     <section className="mobile-shell chapter-screen screen-content">
-      <MobileTopBar title="云游录" subtitle="五卷主线 · 逐章解锁" onBack={onBack} profile={profile} />
+      <MobileTopBar title="云游录" subtitle={`${CHAPTERS.length} 卷主线 · 逐章解锁`} onBack={onBack} profile={profile} />
       <div className="chapter-heading">
         <span className="section-index">主线篇章</span>
         <h1>循灯而行</h1>
@@ -2224,26 +2281,7 @@ function ClassScreen({ origin, setOrigin, profile, onBack, onStart }) {
   );
 }
 
-function StoryScreen({ scene, index, total, chapter, onChoose }) {
-  const chapterChoices = {
-    1: [["追问第二十四人的身份", "相信守门人"], ["隐瞒师姐来信", "隐瞒血书"]],
-    2: [["接过写有自己名字的灯", "接受引灯"], ["先寻找师父留下的旧灯", "追查旧案"]],
-    3: [["借雷劫强行破阵", "破阵"], ["先寻找沈砚秋的阵眼", "寻人"]],
-    4: [["唤醒城中人的噩梦", "归还梦境"], ["夺取黑莲保存的影子", "夺回影子"]],
-    5: [["让命册保留所有旧名", "修复命册"], ["在最后一页写下新的规则", "重写命册"]],
-  }[chapter];
-  const choiceConsequences = {
-    "相信守门人": "获得 6 灵石；后续路线回应你的信任",
-    "隐瞒血书": "获得 1 份清神粉；独自保守师姐的秘密",
-    "接受引灯": "失去 6 生命；获得一张净心术法",
-    "追查旧案": "获得 10 灵石；优先调查师父旧路",
-    "破阵": "本局灵气上限 +1",
-    "寻人": "恢复 14 生命",
-    "归还梦境": "获得阴雷子与清神粉",
-    "夺回影子": "获得 16 灵石",
-    "修复命册": "生命完全恢复",
-    "重写命册": "将牌组中可精研术法全部化为真解",
-  };
+function StoryScreen({ scene, index, total, choices, onChoose }) {
   return (
     <section className="story-screen screen-content">
       <img className="story-art" src={scene.art} alt="" />
@@ -2253,9 +2291,9 @@ function StoryScreen({ scene, index, total, chapter, onChoose }) {
         <span>{scene.role}</span>
         <h1>{scene.speaker}</h1>
         <p>“{scene.text}”</p>
-        {index === 1 ? (
+        {choices.length ? (
           <div className="story-choices">
-            {chapterChoices.map(([label, value]) => <button key={value} onClick={() => onChoose(value)}><strong>{label}</strong><small>{choiceConsequences[value]}</small></button>)}
+            {choices.map((choice) => <button key={choice.value} onClick={() => onChoose(choice)}><strong>{choice.label}</strong><small>{choice.consequence}</small></button>)}
           </div>
         ) : <button className="story-next" onClick={() => onChoose()}>继续 <span>›</span></button>}
       </div>
@@ -2627,6 +2665,7 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
       if (market.bias === "defense") return Number(/护盾|恢复|驱散|净除/.test(text)) * 9 + (3 - card.cost);
       if (market.bias === "power") return card.cost * 3 + Number(card.refined) * 7 + Number(["稀有", "传说"].includes(card.rarity)) * 5;
       if (market.bias === "cycle") return Number(/抽|返回手牌|复制|发现|回收/.test(text)) * 9 + Number(card.rarity === "稀有") * 4;
+      if (market.bias === "afterlife") return Number(/净除|抽|返回手牌|复制|洗回|恢复/.test(text)) * 8 + Number(card.refined) * 5;
       return Number(["稀有", "传说"].includes(card.rarity)) * 7 + Number(card.refined) * 8 + card.tier;
     };
     const pool = origin.cards.filter((card) => chapter >= 3 || !card.refined);
@@ -2720,6 +2759,23 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
         setNotice("无术可重写，命页化作 1 份聚气散。");
       }
     }
+    if (market.special.id === "moon-debt") {
+      if (deck.length <= 8) {
+        setConsumables((value) => ({ ...value, clarity: value.clarity + 1 }));
+        setNotice("牌组已足够精简，摆渡使留下一份清神粉。");
+      } else {
+        const candidates = deck
+          .map((card, index) => ({ card, index }))
+          .filter(({ card }) => card.type !== "心魔")
+          .sort((a, b) => b.card.cost - a.card.cost || b.card.tier - a.card.tier);
+        const removed = candidates[0];
+        if (removed) {
+          setDeck((value) => value.filter((_, index) => index !== removed.index));
+          setHp((value) => Math.min(maxHp, value + 16));
+          setNotice(`偿还未行之路：忘却「${removed.card.name}」，恢复 16 点生命。`);
+        }
+      }
+    }
     setVisit((value) => ({ ...(value.key === visitKey ? value : { key: visitKey, sold: [], treasureBought: false }), specialUsed: true }));
   };
   const analysis = analyzeDeck(deck);
@@ -2785,7 +2841,7 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
 }
 
 function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingClue, profile, routeProgress, maxQi, autoChoice, setProfile, setScreen, setHp, setStones, setRunDeck, setRouteProgress, setNextEnemyShield, setMaxQi, setConsumables, completeInvestigation, abandonInvestigation, addRunEcho }) {
-  const event = CHAPTER_EVENTS[chapter];
+  const event = pendingClue?.nodeId === "story" ? CHAPTER_ROUTE_STORIES[chapter] : CHAPTER_EVENTS[chapter];
   const resolvedRef = useRef(false);
   const notebook = createRunNotebook({ screen: "event", chapter, routeProgress, hp, maxHp, stones, deck, origin, clues, pendingClue, profile });
   const choose = (option) => {
@@ -2911,6 +2967,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
       </aside>
       <div className={`enemy-stage ${combatFx?.phase === "impact" && combatFx.damage > 0 ? "enemy-impact" : ""} ${combatFx?.phase === "enemy-turn" ? "enemy-lunge" : ""}`}>
         <div className="enemy-title"><span>第 {chapter} 章 · {stage === 1 ? "普通战" : stage === 2 ? "精英战" : "首领战"} · 第 {combatTurn} 回合</span><h1>{enemy.name}</h1></div>
+        {stage === 3 && <div className={`boss-phase phase-${enemy.phase || 1}`}><small>{enemy.phaseName || "第一相 · 守序"}</small><span>{enemy.phaseLine}</span></div>}
         <div className="enemy-health"><span style={{ width: `${hpPercent}%` }} /><strong>{enemy.hp}/{enemy.max}</strong></div>
         <div className={`intent ${guideStep === 0 ? "guide-focus" : ""}`}><small>当前招式</small><strong>{enemy.intent}</strong><b>{currentEnemyMove.note}</b><em>下一式 · {intentLabel(enemy.moves[(enemy.moveIndex + 1) % enemy.moves.length])}</em></div>
         <div className="enemy-readout">
@@ -3115,6 +3172,7 @@ function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen,
     3: ["雷阵已破，道心未定。", "你跨过筑基门槛，也看清青岚谷百年安稳背后的代价。"],
     4: ["黑莲凋落，万梦归城。", "无灯城重新拥有噩梦，也重新拥有在命册之外选择明日的能力。"],
     5: ["天门无月，诸命由己。", "命册最后一页留下新的规则，沈砚秋和所有无名者终于被世界记住。"],
+    6: ["月潮退去，归墟仍在。", "你没有消灭遗憾，只让未行之路重新成为可以回望、却不能吞没此生的月影。"],
   }[chapter];
   const endings = chapter === 5
     ? runChoices.includes("重写命册")
@@ -3233,7 +3291,7 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
           {(() => {
             const totalEvidence = CHAPTERS.reduce((sum, chapter) => sum + investigationEvidence(chapter.id).length, 0);
             const foundEvidence = CHAPTERS.reduce((sum, chapter) => sum + (profile.investigationArchive?.[String(chapter.id)] || []).length, 0);
-            return <div className="casebook-overview"><span>五章调查宗卷</span><strong>{foundEvidence}<i>/{totalEvidence}</i></strong><p>每章单局查明真相后，重返另一条路线可补齐全部分支证据。</p></div>;
+            return <div className="casebook-overview"><span>{CHAPTERS.length} 章调查宗卷</span><strong>{foundEvidence}<i>/{totalEvidence}</i></strong><p>每章单局查明真相后，重返另一条路线可补齐全部分支证据。</p></div>;
           })()}
           <div className="codex-summary">
             <div><small>已收录术法</small><strong>{profile.discoveredCards?.length || 0}/{ALL_CARDS.length}</strong></div>
@@ -3280,7 +3338,7 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
           <h3 className="codex-heading">人物手札</h3>
           <div className="lore-scrolls">
             {(profile.unlockedLore || []).includes("shen-handbook-1")
-              ? <article><span>沈砚秋 · 雨亭残页</span><strong>“第七盏灯不是为亡者而点。它在等一个仍然活着、却已经被命册写完的人。”</strong><small>完成第一章三段剧情后收录</small></article>
+              ? <article><span>沈砚秋 · 雨亭残页</span><strong>“第七盏灯不是为亡者而点。它在等一个仍然活着、却已经被命册写完的人。”</strong><small>完成第一章五幕剧情后收录</small></article>
               : <article className="locked"><span>未解手札</span><strong>完成第一章三个剧情节点后显现。</strong><small>进度 {(profile.completedNodes || []).filter((node) => node.startsWith("chapter-1-scene-")).length}/3</small></article>}
           </div>
           <h3 className="codex-heading">结局卷轴</h3>

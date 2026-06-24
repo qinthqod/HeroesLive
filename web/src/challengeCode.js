@@ -1,4 +1,5 @@
 import { DAILY_MODIFIERS, seedHash } from "./dailyTrial.js";
+import { CHAPTERS } from "./gameData.js";
 
 const VERSION = "QL1";
 const ORIGINS = new Set(["sword", "talisman", "alchemy", "beast", "artificer", "soul"]);
@@ -9,7 +10,7 @@ function checksum(payload) {
 }
 
 export function createChallengeCode({ chapter, origin, seed, modifierId = "none" }) {
-  const safeChapter = Math.min(5, Math.max(1, Number(chapter) || 1));
+  const safeChapter = Math.min(CHAPTERS.length, Math.max(1, Number(chapter) || 1));
   const safeOrigin = ORIGINS.has(origin) ? origin : "sword";
   const safeModifier = DAILY_MODIFIERS.some((item) => item.id === modifierId) ? modifierId : "none";
   const safeSeed = String(seed || "").trim().toUpperCase();
@@ -26,7 +27,7 @@ export function parseChallengeCode(input) {
   const payload = [version, chapterText, origin, modifierId, seed].join(".");
   if (checksum(payload) !== signature.toUpperCase()) return { valid: false, reason: "checksum" };
   const chapter = Number(chapterText);
-  if (!Number.isInteger(chapter) || chapter < 1 || chapter > 5) return { valid: false, reason: "chapter" };
+  if (!Number.isInteger(chapter) || chapter < 1 || chapter > CHAPTERS.length) return { valid: false, reason: "chapter" };
   if (!ORIGINS.has(origin)) return { valid: false, reason: "origin" };
   if (!SEED_PATTERN.test(seed)) return { valid: false, reason: "seed" };
   const modifier = modifierId === "none" ? null : DAILY_MODIFIERS.find((item) => item.id === modifierId);

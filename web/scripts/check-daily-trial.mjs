@@ -8,6 +8,7 @@ import {
   seededShuffle,
   settleDailyTrial,
 } from "../src/dailyTrial.js";
+import { CHAPTERS } from "../src/gameData.js";
 
 const failures = [];
 const expect = (condition, message) => {
@@ -19,7 +20,7 @@ const first = dailyTrialForDate(date);
 const second = dailyTrialForDate(new Date(2026, 5, 21, 23));
 expect(JSON.stringify(first) === JSON.stringify(second), "同一天的试炼配置必须完全一致");
 expect(first.seed === "NIGHT-20260621", "每日种子应由本地日期稳定生成");
-expect(first.chapter >= 1 && first.chapter <= 5, "每日章节必须在五章范围内");
+expect(first.chapter >= 1 && first.chapter <= CHAPTERS.length, "每日章节必须在当前主线范围内");
 expect(["sword", "talisman", "alchemy", "beast", "artificer", "soul"].includes(first.origin), "每日职业必须来自六职业");
 expect(DAILY_MODIFIERS.some((modifier) => modifier.id === first.modifier.id), "每日异兆必须来自已登记池");
 expect(DAILY_TRIAL_REWARD.jade > 0 && DAILY_TRIAL_REWARD.spirit > 0 && DAILY_TRIAL_REWARD.xp > 0, "每日首胜应同时提供三类成长资源");

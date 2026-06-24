@@ -1,37 +1,48 @@
-import { rmSync } from "node:fs";
-import { spawnSync } from "node:child_process";
+import { chromium } from "playwright";
+import { CHAPTERS, CHAPTER_STORIES, CHAPTER_STORY_CHOICES } from "../src/gameData.js";
 
-const chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const base = "http://127.0.0.1:5174/";
-const profile = "/tmp/qinglan-story-lore-smoke";
-rmSync(profile, { recursive: true, force: true });
+const browser = await chromium.launch({ headless: true });
+const failures = [];
 
-const render = (url, budget = 1000) => spawnSync(chrome, [
-  "--headless=new",
-  "--disable-gpu",
-  `--user-data-dir=${profile}`,
-  `--virtual-time-budget=${budget}`,
-  "--dump-dom",
-  url,
-], { encoding: "utf8", timeout: 12000 });
-
-for (const story of [0, 1, 2]) {
-  const result = render(`${base}?screen=story&chapter=1&story=${story}&autostory=1`);
-  if (result.status !== 0) {
-    console.error(`Story lore smoke failed while reading scene ${story + 1}`);
-    process.exit(1);
+for (const chapter of CHAPTERS) {
+  const context = await browser.newContext({ viewport: { width: 430, height: 932 } });
+  const page = await context.newPage();
+  try {
+    await page.goto(`${base}?screen=story&chapter=${chapter.id}`, { waitUntil: "networkidle" });
+    const seen = [];
+    for (let index = 0; index < CHAPTER_STORIES[chapter.id].length; index += 1) {
+      await page.locator(".story-dialogue").waitFor();
+      seen.push(await page.locator(".story-dialogue h1").innerText());
+      const choices = CHAPTER_STORY_CHOICES[chapter.id]?.[index] || [];
+      if (choices.length) {
+        const buttons = page.locator(".story-choices button");
+        if (await buttons.count() !== 2) throw new Error(`第 ${index + 1} 幕没有两个抉择`);
+        await buttons.first().click();
+      } else {
+        await page.locator(".story-next").click();
+      }
+      if (index < CHAPTER_STORIES[chapter.id].length - 1) {
+        await page.waitForFunction((previous) => document.querySelector(".story-dialogue h1")?.textContent !== previous, seen.at(-1));
+      }
+    }
+    await page.locator(".campaign-map").waitFor();
+    if (seen.length !== 5) throw new Error(`只读到 ${seen.length} 幕`);
+    if (new Set(seen).size < 3) throw new Error("叙事角色变化不足");
+    if (chapter.id === 1) {
+      const profile = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-profile-v2")));
+      if (!profile.unlockedLore.includes("shen-handbook-1")) throw new Error("五幕完成后未解锁砚秋手札");
+      if (profile.spirit !== 40) throw new Error(`首次阅读后的悟道为 ${profile.spirit}`);
+    }
+    console.log(`✓ 第 ${chapter.id} 章 · 5 幕 / 2 次抉择`);
+  } catch (error) {
+    failures.push(`第 ${chapter.id} 章：${error.message.split("\n")[0]}`);
+  } finally {
+    await context.close();
   }
 }
 
-const home = render(base).stdout;
-const failures = [];
-if (!home.includes("异闻已解")) failures.push("主城未显示异闻已解");
-if (!home.includes("《砚秋手札·雨亭残页》已收入异闻录")) failures.push("主城未显示手札已收录");
-if (!home.includes("<b>40</b><small>悟道</small>")) failures.push("三段剧情后悟道应从 32 增至 40");
-
-render(`${base}?screen=story&chapter=1&story=2&autostory=1`);
-const repeated = render(base).stdout;
-if (!repeated.includes("<b>40</b><small>悟道</small>")) failures.push("重复阅读不应再次发放 8 悟道");
+await browser.close();
 
 if (failures.length) {
   console.error(`Story lore smoke failed (${failures.length})`);
@@ -39,4 +50,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log("Story lore smoke passed: three real scenes unlock one handbook and award spirit exactly once.");
+console.log(`Story lore smoke passed: ${CHAPTERS.length} chapters, 30 scenes, 12 decision points.`);

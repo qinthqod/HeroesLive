@@ -21,6 +21,14 @@ export const PROGRESS_GOALS = [
     metric: (profile) => Math.min(5, profile.unlockedEndings?.filter((id) => id.startsWith("chapter_") || id.includes("fate")).length || 0),
   },
   {
+    id: "sixth_tide",
+    title: "月海归人",
+    hook: "完成第六章“月沉归墟”，承担自由之后的第一场月潮。",
+    target: 1,
+    reward: { jade: 180, spirit: 6, xp: 50, epithet: "归墟渡月" },
+    metric: (profile) => Number((profile.unlockedEndings || []).includes("chapter_6_ending")),
+  },
+  {
     id: "hundred_cards",
     title: "百术入卷",
     hook: "收录 100 张术法，形成真正的藏经阁。",

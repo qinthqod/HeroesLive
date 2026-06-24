@@ -30,7 +30,7 @@ expect(source.includes("setDiscardPile(hasEnoughDraw ? turnDiscard : [])"), "抽
 expect(source.includes("currentMove.curse") && source.includes("FATE_CURSE"), "第五章首领必须能将心魔真实写入牌堆");
 expect(source.includes("ENCOUNTER_ENEMIES") && source.includes("ENCOUNTER_MOVE_PATTERNS"), "普通与精英战必须读取章节专属敌人与招式数据");
 expect(source.includes("className=\"enemy-readout\"") && source.includes("enemy.counter"), "战场必须展示敌人特性与反制方向");
-expect(source.includes("archetype: currentEnemy.archetype") && source.includes("moves: currentEnemy.moves"), "旧战斗存档恢复时必须迁移到当前敌人身份与招式循环");
+expect(source.includes("archetype: currentEnemy.archetype") && source.includes("moves: restoredMoves"), "旧战斗存档恢复时必须迁移到当前敌人身份与首领阶段招式循环");
 expect(source.includes("retrySupportFor") && source.includes("chapterFailures"), "失败后必须记录章节受挫次数并生成有限扶助");
 expect(source.includes("Math.min(3, (value.chapterFailures?.[selectedChapter] || 0) + 1)"), "章节扶助必须封顶，避免故意失败无限叠加");
 expect(source.includes("chapterFailures: { ...(archived.chapterFailures || {}), [selectedChapter]: 0 }"), "章节通关后必须清零对应受挫记录");
@@ -63,21 +63,23 @@ expect(source.includes("路线 ${routeStep}/4") && source.includes("routeStep * 
 expect(source.includes("combat-build-tracker") && source.includes("route-build-goal") && source.includes("deck-build-state"), "局内流派目标必须贯穿战斗、路线和牌组卷册");
 expect(source.includes("investigation-strip") && source.includes("summary-investigation"), "章节调查必须贯穿路线进度与章末结论");
 expect(source.includes("中断调查") && source.includes("pendingClue?.text"), "失败复盘必须指出未能带回的待查证线索");
-expect(source.includes("investigationArchive") && source.includes("investigationRewards"), "五章调查宗卷必须跨局保存完成度与奖励状态");
-expect(source.includes("investigation-archive") && source.includes("五章调查宗卷"), "异闻录必须展示永久调查宗卷");
+expect(source.includes("investigationArchive") && source.includes("investigationRewards"), "章节调查宗卷必须跨局保存完成度与奖励状态");
+expect(source.includes("investigation-archive") && source.includes("章调查宗卷"), "异闻录必须展示永久调查宗卷");
 expect(source.includes("rewardClaimedRef.current") && source.includes("if (rewardClaimedRef.current) return"), "战利与宗卷奖励必须防止快速连点重复领取");
-expect(source.includes("CHAPTER_EVENTS[chapter]") && source.includes("event.options.map"), "五章奇遇必须由独立数据驱动而非复用古龛模板");
+expect(source.includes("CHAPTER_EVENTS[chapter]") && source.includes("event.options.map"), "章节奇遇必须由独立数据驱动而非复用古龛模板");
 for (const effect of ["cardRarity", "refine", "removeCurse", "maxQi", "enemyShield", "consumables"]) {
   expect(source.includes(`effect.${effect}`), `奇遇运行时缺少 ${effect} 后果处理`);
 }
 expect(source.includes("if (option.revealsClue) completeInvestigation()") && source.includes("else abandonInvestigation()"), "奇遇离开选项必须放弃待查证线索");
-expect(source.includes("CHAPTER_MARKETS[chapter]") && source.includes("market.special.id"), "五章坊市必须由章节数据和专属交易驱动");
+expect(source.includes("CHAPTER_MARKETS[chapter]") && source.includes("market.special.id"), "章节坊市必须由章节数据和专属交易驱动");
 expect(source.includes("rewardFit(card, deck, origin.id)") && source.includes("market-fit"), "坊市卡牌必须展示当前构筑契合理由");
-for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite"]) {
+for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite", "moon-debt"]) {
   expect(source.includes(`market.special.id === "${trade}"`), `坊市缺少 ${trade} 专属交易运行时`);
 }
+expect(source.includes("CHAPTER_STORY_CHOICES") && source.includes("effect.refineAll") && source.includes("effect.addRarityCard"), "扩展剧情抉择必须由数据驱动并接入真实局内后果");
+expect(source.includes("BOSS_PHASES[selectedChapter]") && source.includes("phaseShift"), "章节首领必须在半血后进入独立二阶段");
 expect(source.includes("completedNodes") && source.includes("chapter-1-scene-"), "章节剧情节点必须形成跨局完成进度");
-expect(source.includes("shen-handbook-1") && source.includes("unlockHandbook ? 8 : 0"), "第一章三段剧情完成后必须一次性解锁手札并奖励悟道");
+expect(source.includes("firstChapterScenes >= CHAPTER_STORIES[1].length") && source.includes("shen-handbook-1") && source.includes("unlockHandbook ? 8 : 0"), "第一章五幕剧情完成后必须一次性解锁手札并奖励悟道");
 expect(source.includes("lore-scrolls") && source.includes("人物手札"), "异闻录必须展示已解锁与未解锁人物手札");
 
 if (failures.length) {

@@ -31,4 +31,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log("Investigation archive check passed: five seven-clue dossiers merge across runs and reward exactly once.");
+console.log(`Investigation archive check passed: ${CHAPTERS.length} seven-clue dossiers merge across runs and reward exactly once.`);

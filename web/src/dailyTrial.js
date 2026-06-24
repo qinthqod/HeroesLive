@@ -1,3 +1,5 @@
+import { CHAPTERS } from "./gameData.js";
+
 const PROFESSIONS = ["sword", "talisman", "alchemy", "beast", "artificer", "soul"];
 
 export const DAILY_TRIAL_REWARD = {
@@ -92,8 +94,8 @@ export function dailyTrialForDate(date = new Date()) {
   const dateKey = localDateKey(date);
   const seed = `NIGHT-${dateKey.replaceAll("-", "")}`;
   const hash = seedHash(seed);
-  const chapter = (hash % 5) + 1;
-  const origin = PROFESSIONS[Math.floor(hash / 5) % PROFESSIONS.length];
+  const chapter = (hash % CHAPTERS.length) + 1;
+  const origin = PROFESSIONS[Math.floor(hash / CHAPTERS.length) % PROFESSIONS.length];
   const modifier = DAILY_MODIFIERS[Math.floor(hash / 31) % DAILY_MODIFIERS.length];
   return {
     dateKey,

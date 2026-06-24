@@ -1,30 +1,73 @@
-import { spawnSync } from "node:child_process";
+import { chromium } from "playwright";
 
-const chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const base = "http://127.0.0.1:5174/";
-const render = (query) => spawnSync(chrome, [
-  "--headless=new",
-  "--disable-gpu",
-  "--virtual-time-budget=1400",
-  "--dump-dom",
-  `${base}?screen=event&origin=sword&${query}`,
-], { encoding: "utf8", timeout: 12000 }).stdout;
-
+const browser = await chromium.launch({ headless: true });
 const failures = [];
 
-const lampOil = render("chapter=2&eventChoice=2&pendingRoute=1&pendingNode=event");
-if (!lampOil.includes("/ui/icons/stones.png") || !lampOil.includes(">38</span>")) {
-  failures.push("第二章取走灯油后灵石应从 18 增至 38");
+async function run(name, query, check) {
+  const context = await browser.newContext({ viewport: { width: 430, height: 932 } });
+  const page = await context.newPage();
+  try {
+    await page.goto(`${base}?screen=event&origin=sword&${query}`, { waitUntil: "networkidle" });
+    await page.locator(".campaign-map").waitFor();
+    await page.waitForTimeout(150);
+    await check(page);
+    console.log(`✓ ${name}`);
+  } catch (error) {
+    failures.push(`${name}：${error.message.split("\n")[0]}`);
+  } finally {
+    await context.close();
+  }
 }
-if (!lampOil.includes("1/5")) failures.push("调查型奇遇完成后应带回一条证据");
 
-const relic = render("chapter=5&eventChoice=2&pendingRoute=1&pendingNode=event");
-if (!relic.includes("/ui/icons/hp.png") || !relic.includes(">68/80</span>")) {
-  failures.push("第五章取走无名者遗物后生命应从 80 降至 68");
+await run("第二章灯油结算", "chapter=2&eventChoice=2&pendingRoute=1&pendingNode=event", async (page) => {
+  const save = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-run-v1")));
+  if (save.stones !== 38) throw new Error(`灵石结余为 ${save.stones}`);
+  if (save.runClues.length !== 1 || save.nextEnemyShield !== 8) throw new Error("证据或下一战护体未结算");
+});
+
+await run("第五章无名遗物代价", "chapter=5&eventChoice=2&pendingRoute=1&pendingNode=event", async (page) => {
+  const body = await page.locator("body").innerText();
+  if (!body.includes("68/80")) throw new Error("生命没有从 80 降至 68");
+});
+
+await run("第四章谨慎离开", "chapter=4&eventChoice=3&pendingRoute=1&pendingNode=event", async (page) => {
+  const save = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-run-v1")));
+  if (save.runClues.length !== 0 || save.pendingClue) throw new Error("谨慎离开仍获得待查证线索");
+});
+
+await run("第六章途中剧情独立于奇遇", "chapter=6&eventChoice=1&pendingRoute=0&pendingNode=story", async (page) => {
+  const body = await page.locator("body").innerText();
+  if (!body.includes("72/80")) throw new Error("途中剧情的 8 点生命代价未结算");
+  const save = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-run-v1")));
+  if (!save.runChronicle.some((entry) => entry.includes("沈砚秋没有回谷的人生"))) throw new Error("途中剧情没有写入命途回响");
+});
+
+await run("第六章月海遗舟高收益代价", "chapter=6&eventChoice=2&pendingRoute=1&pendingNode=event", async (page) => {
+  const save = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-run-v1")));
+  if (save.stones !== 46) throw new Error(`灵石结余为 ${save.stones}`);
+  if (save.nextEnemyShield !== 12) throw new Error("最终首领护体代价未保留");
+});
+
+{
+  const context = await browser.newContext({ viewport: { width: 430, height: 932 } });
+  const page = await context.newPage();
+  try {
+    await page.goto(`${base}?screen=market&chapter=6&origin=sword`, { waitUntil: "networkidle" });
+    const before = await page.locator(".market-deck-list article").count();
+    await page.locator(".market-special").click();
+    const after = await page.locator(".market-deck-list article").count();
+    const notice = await page.locator(".market-notice").innerText();
+    if (before !== 12 || after !== 11 || !notice.includes("偿还未行之路")) throw new Error(`牌组 ${before}→${after}；提示「${notice}」`);
+    console.log("✓ 第六章月下浮市专属交易");
+  } catch (error) {
+    failures.push(`第六章月下浮市专属交易：${error.message.split("\n")[0]}`);
+  } finally {
+    await context.close();
+  }
 }
 
-const leave = render("chapter=4&eventChoice=3&pendingRoute=1&pendingNode=event");
-if (!leave.includes("0/5")) failures.push("谨慎离开奇遇不得获得待查证线索");
+await browser.close();
 
 if (failures.length) {
   console.error(`Event consequence smoke failed (${failures.length})`);
@@ -32,4 +75,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log("Event consequence smoke passed: numeric costs apply and leaving forfeits the pending clue.");
+console.log("Event consequence smoke passed: chapter events and route stories apply distinct persisted outcomes.");

@@ -290,6 +290,80 @@ export const BOSS_MOVE_PATTERNS = {
     { name: "删去一页", damage: 8, curse: true, shield: 10, note: "破 · 将心魔写入牌堆并获得护体" },
     { name: "天门定命", damage: 24, weak: 2, note: "急 · 最终裁定并施加 2 层虚弱" },
   ],
+  6: [
+    { name: "潮声问路", damage: 14, drawPenalty: 1, note: "序 · 月潮遮蔽来路，下一回合少抽 1 张牌" },
+    { name: "沉月成壁", damage: 5, shield: 18, note: "破 · 月影沉入归墟，攻击并获得 18 点护体" },
+    { name: "万途溺海", damage: 9, hits: 3, weak: 1, note: "急 · 三段潮击并施加 1 层虚弱" },
+  ],
+};
+
+export const BOSS_PHASES = {
+  1: {
+    threshold: 0.5,
+    name: "灯芯噬主",
+    line: "第七盏灯熄灭外壳，露出以历代试炼者命火编成的灯芯。",
+    shield: 8,
+    moves: [
+      { name: "旧火认主", damage: 11, weak: 1, note: "二相·序 · 命火辨认你的气息并施加虚弱" },
+      { name: "七灯同燃", damage: 7, hits: 2, note: "二相·破 · 两段灯火追击，逐层烧穿护盾" },
+      { name: "替灯夺命", damage: 19, drainQi: 1, note: "二相·急 · 重击并压低下一回合灵气" },
+    ],
+  },
+  2: {
+    threshold: 0.5,
+    name: "旧名反噬",
+    line: "鬼灯裂开，二十四年前被抹去的旧名从灯油中一一浮现。",
+    shield: 10,
+    moves: [
+      { name: "百名索债", damage: 12, drainQi: 1, note: "二相·序 · 旧名缠身，下一回合灵气 -1" },
+      { name: "灯骨重书", damage: 7, shield: 16, note: "二相·破 · 攻击并以灯骨重写护体" },
+      { name: "余生尽燃", damage: 10, hits: 2, weak: 2, note: "二相·急 · 两段燃命并施加 2 层虚弱" },
+    ],
+  },
+  3: {
+    threshold: 0.5,
+    name: "阵眼真身",
+    line: "守阵者的甲胄被雷火击碎，阵眼中显出被困百年的第一位替灯人。",
+    shield: 12,
+    moves: [
+      { name: "阵眼锁脉", damage: 12, weak: 2, note: "二相·序 · 雷纹锁脉并施加 2 层虚弱" },
+      { name: "五雷贯阵", damage: 5, hits: 4, note: "二相·破 · 四段雷击连续拆解护盾" },
+      { name: "以身覆劫", damage: 23, shield: 12, note: "二相·急 · 阵眼重击并重建雷壁" },
+    ],
+  },
+  4: {
+    threshold: 0.5,
+    name: "万梦醒转",
+    line: "黑莲被撕开一道缝，全城被收走的噩梦同时在城主体内醒来。",
+    shield: 10,
+    moves: [
+      { name: "噩梦归巢", damage: 13, drawPenalty: 1, note: "二相·序 · 梦潮回涌，下一回合少抽 1 张牌" },
+      { name: "千影缝身", damage: 6, shield: 18, heal: 6, note: "二相·破 · 攻击、护体并恢复生命" },
+      { name: "满城惊醒", damage: 22, weak: 2, note: "二相·急 · 全城噩梦爆发并施加 2 层虚弱" },
+    ],
+  },
+  5: {
+    threshold: 0.5,
+    name: "执笔真君",
+    line: "守门人的法相褪去，真正握笔的人从命册背面走了出来。",
+    shield: 14,
+    moves: [
+      { name: "倒写因果", damage: 14, drainQi: 1, note: "二相·序 · 倒写灵脉，下一回合灵气 -1" },
+      { name: "抹去此刻", damage: 9, curse: true, shield: 14, note: "二相·破 · 写入心魔并获得 14 点护体" },
+      { name: "诸命归笔", damage: 27, weak: 2, note: "二相·急 · 执笔裁定并施加 2 层虚弱" },
+    ],
+  },
+  6: {
+    threshold: 0.55,
+    name: "月蚀开眼",
+    line: "归墟海面倒悬的月亮睁开眼睛，所有未曾选择的道路开始要求一个结局。",
+    shield: 16,
+    moves: [
+      { name: "无月潮汐", damage: 15, drawPenalty: 1, note: "二相·序 · 无月潮卷走一张下回合手牌" },
+      { name: "沉没万象", damage: 8, curse: true, shield: 20, note: "二相·破 · 未行之路化为心魔并筑起潮壁" },
+      { name: "众生回望", damage: 10, hits: 3, drainQi: 1, note: "二相·急 · 三段回望并压低下一回合灵气" },
+    ],
+  },
 };
 
 export const ENCOUNTER_ENEMIES = {
@@ -317,6 +391,11 @@ export const ENCOUNTER_ENEMIES = {
     1: { name: "旧命残影", hp: 64, max: 64, art: "/enemy_rogue_cultivator.png", archetype: "改写者", trait: "未行之路", counter: "残影会把命册缺页写入牌堆。尽快结束战斗，或准备净心与额外抽牌降低污染。" },
     2: { name: "执笔者遗念", hp: 88, max: 88, art: "/enemy_xuanyin_guide.png", archetype: "封锁者", trait: "删名断章", counter: "它交替削减灵气、污染牌堆并施加虚弱。低费循环和净心是稳定突破口。" },
     3: { name: "守门真君", hp: 128, max: 128, art: "/enemy_thunder_pool_guardian.png", archetype: "命册执笔", trait: "天门定命", counter: "最终考验同时覆盖灵气、牌堆与生命。不要只依赖单一爆发回合，准备可持续的完整构筑。" },
+  },
+  6: {
+    1: { name: "逐月溺魂", hp: 72, max: 72, art: "/enemy_xuanyin_guide.png", archetype: "追忆者", trait: "未行之潮", counter: "它会削减抽牌并把未选择的道路化为攻击。当前回合尽量完成联动，不要过度依赖下一手。" },
+    2: { name: "归墟摆渡使", hp: 98, max: 98, art: "/enemy_black_cult_deacon.png", archetype: "渡劫者", trait: "借命行舟", counter: "摆渡使以护体拖延，再用多段潮击收割。持续伤害和集中爆发能阻止它反复沉舟再起。" },
+    3: { name: "月蚀司命", hp: 148, max: 148, art: "/enemy_thunder_pool_guardian.png", archetype: "归墟天官", trait: "万途求终", counter: "首相削减抽牌并积累潮壁；半血后月蚀开眼，心魔与多段潮击同时出现。保留净心、抽牌和完整防线。" },
   },
 };
 
@@ -379,6 +458,18 @@ export const ENCOUNTER_MOVE_PATTERNS = {
       { name: "墨锁灵台", damage: 9, drainQi: 1, note: "封锁 · 下一回合灵气 -1" },
       { name: "删去一行", damage: 6, curse: true, shield: 10, note: "改写 · 写入命册缺页并获得 10 点护体" },
       { name: "断章落款", damage: 17, weak: 2, note: "落款 · 重击并施加 2 层虚弱" },
+    ],
+  },
+  6: {
+    1: [
+      { name: "拾取旧影", damage: 10, drawPenalty: 1, note: "追忆 · 下一回合少抽 1 张牌" },
+      { name: "潮下藏身", damage: 5, shield: 10, note: "潜潮 · 轻击并获得 10 点护体" },
+      { name: "未路扑杀", damage: 18, note: "决意 · 以一条未曾选择的道路发动重击" },
+    ],
+    2: [
+      { name: "舟灯借命", damage: 11, drainQi: 1, note: "借命 · 下一回合灵气 -1" },
+      { name: "沉舟作盾", damage: 6, shield: 16, heal: 5, note: "回航 · 攻击、护体并恢复生命" },
+      { name: "三渡归墟", damage: 7, hits: 3, weak: 1, note: "送行 · 三段潮击并施加虚弱" },
     ],
   },
 };
@@ -484,6 +575,16 @@ export const CHAPTERS = [
     summary: "你终于抵达信中所说的天门，也终于知道师姐为何不愿回来。",
     status: "locked",
   },
+  {
+    id: 6,
+    name: "月沉归墟",
+    region: "归墟月海",
+    level: "推荐 40 级",
+    art: "/bg_spirit_rift.png",
+    boss: "月蚀司命",
+    summary: "命册不再替众生决定道路后，被删去的万千可能却化作月潮，从归墟倒灌人间。",
+    status: "locked",
+  },
 ];
 
 export const STORY_SCENES = [
@@ -505,6 +606,18 @@ export const STORY_SCENES = [
     text: "最后一个名字，是我的。墨迹还没有干。",
     art: "/ui/bg_act1_valley.png",
   },
+  {
+    speaker: "沈砚秋",
+    role: "藏在血书背面的留声",
+    text: "若陆观说他从未见过我，便问他左手为何少了半截小指。那是替我熄第一盏灯时留下的。",
+    art: "/bg_spirit_rift.png",
+  },
+  {
+    speaker: "陆观",
+    role: "终于收起伞的守门人",
+    text: "雨亭之后没有回头路。你若仍要追她，先记住：山里最像人的东西，往往最早忘了自己的名字。",
+    art: "/bg_soul_shrine.png",
+  },
 ];
 
 export const CHAPTER_STORIES = {
@@ -513,22 +626,100 @@ export const CHAPTER_STORIES = {
     { speaker: "纸灯童子", role: "玄阴山道的引路人", text: "灯上写着谁的名字，谁就必须替上一盏灯走完余下的路。", art: "/ui/bg_act2_mountain.png" },
     { speaker: "陆观", role: "守门人", text: "二十四年前的名册也多出过一个名字。那个人，后来成了你的师父。", art: "/bg_soul_shrine.png" },
     { speaker: "你", role: "循灯而行的外门弟子", text: "师姐不是失踪。她在沿着师父当年留下的路线，逐盏熄灯。", art: "/bg_spirit_rift.png" },
+    { speaker: "纸灯童子", role: "从未长大的替灯人", text: "你师父熄到第六盏便停了。他说最后一盏里关着的不是鬼，是青岚谷不敢承认的旧账。", art: "/ui/bg_act2_mountain.png" },
+    { speaker: "你", role: "提灯上山的人", text: "那便把灯给我。我不替谁走余生，只借它照清是谁在写名字。", art: "/bg_soul_shrine.png" },
   ],
   3: [
     { speaker: "雷池守阵者", role: "被困阵中的旧日执念", text: "每一道筑基雷劫，都在替命册挑选一个能够承受改写的人。", art: "/ui/bg_act3_thunder.png" },
     { speaker: "沈砚秋", role: "隔着雷云传来的声音", text: "我没有让你来救我。我只想让你亲眼看看，青岚谷用什么换来了百年安稳。", art: "/bg_thunder_pool.png" },
     { speaker: "你", role: "即将筑基的修士", text: "若筑基本身就是一道锁，那我今日要破的便不是境界，而是这座阵。", art: "/ui/bg_act3_thunder.png" },
+    { speaker: "第一替灯人", role: "阵眼深处的残魂", text: "破阵会放回被改写的劫数，守阵则要继续献上后来者。你们口中的安稳，从来有人替你们受着。", art: "/bg_spirit_rift.png" },
+    { speaker: "沈砚秋", role: "在阵外等待的人", text: "别替青岚谷赎罪。让每一个知道真相的人，自己决定还要不要住在这份安稳里。", art: "/bg_thunder_pool.png" },
   ],
   4: [
     { speaker: "无灯城主", role: "没有影子的城主", text: "城里的人把梦交给黑莲，换来不再害怕的夜晚。你凭什么说他们错了？", art: "/bg_dark_forge.png" },
     { speaker: "沈砚秋", role: "黑莲教通缉的叛徒", text: "他们收走的不是噩梦，是人在命册之外做出选择的能力。", art: "/bg_market_stall.png" },
     { speaker: "你", role: "带着影子入城的人", text: "今夜之后，这座城可以继续害怕，但必须重新学会做梦。", art: "/bg_dark_forge.png" },
+    { speaker: "茶楼女童", role: "第一个重新做梦的人", text: "我梦见城外有海。城主说无灯城外什么都没有，可我的影子一直朝那个方向走。", art: "/bg_soul_shrine.png" },
+    { speaker: "无灯城主", role: "黑莲契约的第一个签名者", text: "若你真要归还梦境，就先答应我：当他们再次害怕时，你不能转身说这是自由应付的代价。", art: "/bg_dark_forge.png" },
   ],
   5: [
     { speaker: "守门真君", role: "太虚天门的最后看守", text: "命册并非牢笼。没有它，凡人的一生连被天地记住的资格都没有。", art: "/bg_secret_realm.png" },
     { speaker: "沈砚秋", role: "命册缺页上的无名者", text: "修复它，我会从所有人的记忆里消失；焚毁它，天下修士都将失去既定前路。", art: "/bg_spirit_rift.png" },
     { speaker: "你", role: "执笔者", text: "我不替天下人选择去路。我只在命册最后写下：此后诸命，由己。", art: "/bg_secret_realm.png" },
+    { speaker: "初代执笔者", role: "藏在纸背的旧声", text: "我们最初只想记住死者。后来有人发现，被写下的未来比被记住的过去更容易统治。", art: "/bg_soul_shrine.png" },
+    { speaker: "沈砚秋", role: "站在门外的无名者", text: "落笔吧。无论你选哪一种，我都要亲眼看着你承担它，而不是把代价交给下一页的人。", art: "/bg_spirit_rift.png" },
   ],
+  6: [
+    { speaker: "沈砚秋", role: "新命册的第一位守页人", text: "天门之后，所有人都开始梦见自己没走过的路。昨夜起，那些路开始从梦里爬出来。", art: "/bg_spirit_rift.png" },
+    { speaker: "归墟摆渡使", role: "在月海上等候千年的船夫", text: "命册替众生舍弃的可能，都沉在归墟。如今你放开了闸，它们自然要回来讨一个名字。", art: "/bg_secret_realm.png" },
+    { speaker: "你", role: "不再握笔的执笔者", text: "自由不是让所有可能同时发生。人可以后悔，却仍要承认自己真正走过的那一条路。", art: "/ui/bg_act3_thunder.png" },
+    { speaker: "月蚀司命", role: "归墟中最后一位旧天官", text: "既然选择必然舍弃，你所谓的自由与命册有何不同？至少旧册替他们承担了后悔。", art: "/bg_dark_forge.png" },
+    { speaker: "沈砚秋", role: "与你并肩走到月海尽头的人", text: "不同在于，这一次没有人替别人落笔。走吧，把归墟还给那些愿意回望、也愿意继续走的人。", art: "/bg_spirit_rift.png" },
+  ],
+};
+
+export const CHAPTER_STORY_CHOICES = {
+  1: {
+    1: [
+      { label: "追问第二十四人的身份", value: "相信守门人", consequence: "获得 6 灵石；陆观会公开旧名册", effect: { stones: 6 } },
+      { label: "隐瞒师姐来信", value: "隐瞒血书", consequence: "获得 1 份清神粉；独自保守血书", effect: { consumables: { clarity: 1 } } },
+    ],
+    3: [
+      { label: "在雨亭留下回信", value: "留下回信", consequence: "恢复 8 生命；让沈砚秋知道你仍在追赶", effect: { heal: 8 } },
+      { label: "抹去归谷暗号", value: "抹去暗号", consequence: "灵石 +10；下一名敌人获得 5 护体", effect: { stones: 10, enemyShield: 5 } },
+    ],
+  },
+  2: {
+    1: [
+      { label: "接过写有自己名字的灯", value: "接受引灯", consequence: "失去 6 生命；获得一张净心术法", effect: { hpLoss: 6, addKeywordCard: "净心" } },
+      { label: "先寻找师父留下的旧灯", value: "追查旧案", consequence: "获得 10 灵石；优先调查师父旧路", effect: { stones: 10 } },
+    ],
+    3: [
+      { label: "替童子补完余生", value: "替灯偿愿", consequence: "恢复 10 生命；清神粉 +1", effect: { heal: 10, consumables: { clarity: 1 } } },
+      { label: "拒绝替任何人走路", value: "拒绝替命", consequence: "灵气上限 +1；失去 8 生命", effect: { maxQi: 1, hpLoss: 8 } },
+    ],
+  },
+  3: {
+    1: [
+      { label: "借雷劫强行破阵", value: "破阵", consequence: "本局灵气上限 +1", effect: { maxQi: 1 } },
+      { label: "先寻找沈砚秋的阵眼", value: "寻人", consequence: "恢复 14 生命", effect: { heal: 14 } },
+    ],
+    3: [
+      { label: "公开阵法真相", value: "公示雷阵", consequence: "获得 14 灵石；下一战敌人护体 +8", effect: { stones: 14, enemyShield: 8 } },
+      { label: "先救出阵中残魂", value: "释放残魂", consequence: "精研一张基础牌；失去 6 生命", effect: { refineOne: true, hpLoss: 6 } },
+    ],
+  },
+  4: {
+    1: [
+      { label: "唤醒城中人的噩梦", value: "归还梦境", consequence: "获得阴雷子与清神粉", effect: { consumables: { thunder: 1, clarity: 1 } } },
+      { label: "夺取黑莲保存的影子", value: "夺回影子", consequence: "获得 16 灵石", effect: { stones: 16 } },
+    ],
+    3: [
+      { label: "答应陪城民度过首夜", value: "守望首夜", consequence: "恢复 12 生命；石肤符 +1", effect: { heal: 12, consumables: { skin: 1 } } },
+      { label: "立刻斩断黑莲契约", value: "强断契约", consequence: "精研一张基础牌；下一战敌人护体 +10", effect: { refineOne: true, enemyShield: 10 } },
+    ],
+  },
+  5: {
+    1: [
+      { label: "让命册保留所有旧名", value: "修复命册", consequence: "生命完全恢复", effect: { fullHeal: true } },
+      { label: "在最后一页写下新的规则", value: "重写命册", consequence: "牌组中可精研术法全部化为真解", effect: { refineAll: true } },
+    ],
+    3: [
+      { label: "保留纸背的罪证", value: "保留罪证", consequence: "获得 20 灵石；将一份清神粉带入末战", effect: { stones: 20, consumables: { clarity: 1 } } },
+      { label: "焚去执笔者的姓名", value: "焚去执笔者", consequence: "灵气上限 +1；失去 10 生命", effect: { maxQi: 1, hpLoss: 10 } },
+    ],
+  },
+  6: {
+    1: [
+      { label: "让未行之路回到梦中", value: "安放可能", consequence: "恢复 12 生命；清神粉 +1", effect: { heal: 12, consumables: { clarity: 1 } } },
+      { label: "把所有可能刻成新卷", value: "收录可能", consequence: "获得一张稀有职业牌；失去 8 生命", effect: { addRarityCard: "稀有", hpLoss: 8 } },
+    ],
+    3: [
+      { label: "承认选择必然带来遗憾", value: "承担遗憾", consequence: "精研一张基础牌；恢复 6 生命", effect: { refineOne: true, heal: 6 } },
+      { label: "要求司命归还所有道路", value: "索回万途", consequence: "灵气上限 +1；末战敌人护体 +12", effect: { maxQi: 1, enemyShield: 12 } },
+    ],
+  },
 };
 
 export const CHAPTER_ROUTE_COPY = {
@@ -556,6 +747,11 @@ export const CHAPTER_ROUTE_COPY = {
     title: "天门无月",
     beats: ["天门展示命册最初的用途。", "旧日看守与无名者各执一词。", "三种结局正在笔下成形。", "命册最后一页等待落笔。"],
     clue: "修复 · 焚毁 · 重写",
+  },
+  6: {
+    title: "月沉归墟",
+    beats: ["未行之路从梦中倒灌。", "逐月溺魂与月海遗舟同时出现。", "摆渡使守着归墟最深处的旧约。", "倒悬之月睁开了眼睛。"],
+    clue: "未行之路 · 归墟旧约 · 自由之后的责任",
   },
 };
 
@@ -614,6 +810,17 @@ export const CHAPTER_INVESTIGATIONS = {
       { boss: "守门真君承认命册能够被重写，只是不愿交出执笔权。" },
     ],
     conclusion: "命册可以保存来路，但不应替任何人决定去处。",
+  },
+  6: {
+    objective: "阻止未行之路吞没真实发生的人生",
+    opening: "命册放开的万千可能正在归墟月海凝成一场倒灌人间的月潮。",
+    routes: [
+      { story: "摆渡使承认归墟收容的是所有被命册主动舍弃的未来。" },
+      { battle: "逐月溺魂只会重复生者最后悔没有选择的那条路。", event: "月海遗舟保存着沈砚秋本可回到青岚谷的另一种人生。" },
+      { elite: "归墟摆渡使曾奉命把危险的可能永远沉入海底。", market: "月下浮市的货物来自已经消失、却仍被人怀念的未来。" },
+      { boss: "月蚀司命并非要毁灭自由，而是试图替众生再次承担选择后的遗憾。" },
+    ],
+    conclusion: "自由并不保证无悔；它要求每个人承认自己的选择，也允许人带着遗憾继续前行。",
   },
 };
 
@@ -684,6 +891,18 @@ export const CHAPTER_ROUTES = {
     ],
     [{ id: "boss", kind: "首领", name: "命册末页", desc: "守门真君等待你决定天下人的前路。", art: "/bg_secret_realm.png" }],
   ],
+  6: [
+    [{ id: "story", kind: "剧情", name: "月海渡口", desc: "摆渡使要你先说出此生最后悔没有走的路。", art: "/bg_spirit_rift.png" }],
+    [
+      { id: "battle", kind: "战斗", name: "逐月潮滩", desc: "未行之路从潮水中长出人的形状。", art: "/bg_secret_realm.png" },
+      { id: "event", kind: "奇遇", name: "月海遗舟", desc: "一艘空船载着沈砚秋本可拥有的人生。", art: "/bg_soul_shrine.png" },
+    ],
+    [
+      { id: "elite", kind: "精英", name: "归墟摆渡台", desc: "老船夫要求你证明选择不是另一种残酷。", art: "/bg_dark_forge.png" },
+      { id: "market", kind: "坊市", name: "月下浮市", desc: "这里出售已经消失、却仍被人怀念的未来。", art: "/bg_market_stall.png" },
+    ],
+    [{ id: "boss", kind: "首领", name: "倒悬月宫", desc: "月蚀司命要把所有道路重新收回唯一的天命。", art: "/bg_spirit_rift.png" }],
+  ],
 };
 
 export const CHAPTER_EVENTS = {
@@ -745,6 +964,81 @@ export const CHAPTER_EVENTS = {
       { id: "copy-rule", label: "抄录最初的记名法", title: "灵气上限 +1 · 敌方护体 +8", detail: "灵气上限已满时改为聚气散 +2，旧日规则仍会追来。", tone: "权能代价", effect: { maxQi: 1, maxQiFallbackConsumables: { spirit: 2 }, enemyShield: 8 }, revealsClue: true },
       { id: "take-relic", label: "取走无名者遗物", title: "传说职业牌 · 生命 -12", detail: "遗物承载一门完整传承，却要求你分担无名者被遗忘的痛苦。", tone: "终局豪赌", effect: { cardRarity: "传说", hpLoss: 12 }, revealsClue: true },
       { id: "leave", label: "合上仍在低语的书", title: "无收益 · 无风险", detail: "不惊动守门真君，也无法证明记录与支配并非同一件事。", tone: "谨慎离开", effect: {}, revealsClue: false },
+    ],
+  },
+  6: {
+    eyebrow: "归墟异闻",
+    name: "月海遗舟",
+    description: "船舱里摆着两套餐具、一封没有寄出的家书，以及沈砚秋从未穿过的青岚内门衣。",
+    art: "/bg_spirit_rift.png",
+    options: [
+      { id: "read-letter", label: "读完未寄出的家书", title: "稀有职业牌 · 生命 -8", detail: "从另一种人生里带回一门术法，也承受那份从未发生的离别。", tone: "遗憾换术", effect: { cardRarity: "稀有", hpLoss: 8 }, revealsClue: true },
+      { id: "moor-boat", label: "把遗舟系回渡口", title: "恢复 14 · 清神粉 +1", detail: "让这段可能停在可以被看见的地方，而不是继续追逐生者。", tone: "安放旧路", effect: { heal: 14, consumables: { clarity: 1 } }, revealsClue: true },
+      { id: "take-moon-keel", label: "拆下沉月龙骨", title: "灵石 +28 · 敌方护体 +12", detail: "浮市愿付高价收购，失去船骨的月潮会依附最终首领。", tone: "高收益代价", effect: { stones: 28, enemyShield: 12 }, revealsClue: true },
+      { id: "leave", label: "让遗舟继续漂流", title: "无收益 · 无风险", detail: "不触碰沈砚秋未曾拥有的人生，也无法确认归墟为何保存这些可能。", tone: "谨慎离开", effect: {}, revealsClue: false },
+    ],
+  },
+};
+
+export const CHAPTER_ROUTE_STORIES = {
+  1: {
+    eyebrow: "途中剧情 · 雨亭",
+    name: "血书背面的旧伤",
+    description: "陆观按住左手残指，终于承认三年前曾替沈砚秋熄灭第一盏灯，也亲手放她离开山门。",
+    art: "/bg_soul_shrine.png",
+    options: [
+      { id: "trust-lu", label: "听完陆观的旧案", title: "恢复 10 点生命", detail: "在雨亭暂歇，也确认沈砚秋并非孤身背叛山门。", tone: "人物信任", effect: { heal: 10 }, revealsClue: true },
+      { id: "take-token", label: "取走他的守门令", title: "灵石 +12 · 敌方护体 +5", detail: "守门令能换取资粮，但失去令牌的山门禁制会落到下一名追兵身上。", tone: "信物换资粮", effect: { stones: 12, enemyShield: 5 }, revealsClue: true },
+    ],
+  },
+  2: {
+    eyebrow: "途中剧情 · 旧亭",
+    name: "纸灯童子的第七年",
+    description: "童子每七年才醒一次。他已经等了你师父四次，却仍把那句“我会回来”当成今天刚听见的话。",
+    art: "/ui/bg_act2_mountain.png",
+    options: [
+      { id: "finish-message", label: "替师父说完告别", title: "恢复 12 点生命", detail: "童子终于放下旧灯，也把熄灯次序完整告诉你。", tone: "偿还旧诺", effect: { heal: 12 }, revealsClue: true },
+      { id: "borrow-flame", label: "借走一缕旧灯火", title: "清神粉 +1 · 生命 -4", detail: "灯火能烧去纸名，也会带走一小段属于你的寿数。", tone: "净心代价", effect: { consumables: { clarity: 1 }, hpLoss: 4 }, revealsClue: true },
+    ],
+  },
+  3: {
+    eyebrow: "途中剧情 · 雷纹",
+    name: "第一替灯人的姓名",
+    description: "阵眼没有留下英雄名讳，只有一句反复被雷火擦去的话：我也曾以为，牺牲我便能结束牺牲。",
+    art: "/bg_thunder_pool.png",
+    options: [
+      { id: "carve-name", label: "把无名者刻回阵碑", title: "精研一张基础牌 · 生命 -6", detail: "以自身雷痕补全姓名，也从旧阵裂口中悟出一门真解。", tone: "记名换力", effect: { refine: 1, hpLoss: 6 }, revealsClue: true },
+      { id: "break-tablet", label: "击碎替灯阵碑", title: "灵气上限 +1 · 敌方护体 +8", detail: "阵法不再能借碑续转，但残余雷壁会依附下一名守阵者。", tone: "破阵代价", effect: { maxQi: 1, enemyShield: 8 }, revealsClue: true },
+    ],
+  },
+  4: {
+    eyebrow: "途中剧情 · 城门",
+    name: "第一个归来的影子",
+    description: "守卫的影子从城墙上剥落，指着城外。它不会说话，却在地上写下一句：我替他害怕了二十年。",
+    art: "/bg_dark_forge.png",
+    options: [
+      { id: "return-shadow", label: "把影子还给守卫", title: "恢复 8 · 石肤符 +1", detail: "守卫第一次因恐惧发抖，也第一次真心为你打开城门。", tone: "归还感受", effect: { heal: 8, consumables: { skin: 1 } }, revealsClue: true },
+      { id: "follow-shadow", label: "跟随影子潜入梦坊", title: "稀有职业牌 · 生命 -6", detail: "影子教会你绕过黑莲耳目，也让一段陌生噩梦留在体内。", tone: "潜行换术", effect: { cardRarity: "稀有", hpLoss: 6 }, revealsClue: true },
+    ],
+  },
+  5: {
+    eyebrow: "途中剧情 · 天门",
+    name: "命册的第一行字",
+    description: "第一行并非天条，只是一个凡人写下的愿望：愿所有无人收殓者，至少有名字可以回家。",
+    art: "/bg_secret_realm.png",
+    options: [
+      { id: "preserve-first-line", label: "保留最初的愿望", title: "恢复 14 点生命", detail: "你保留命册记录来路的能力，但拒绝让它继续命令未来。", tone: "守住初衷", effect: { heal: 14 }, revealsClue: true },
+      { id: "copy-first-line", label: "将第一行抄入自己的卷册", title: "传说职业牌 · 生命 -10", detail: "把记名权带入自身道途，也承担所有无名者留下的重量。", tone: "传承豪赌", effect: { cardRarity: "传说", hpLoss: 10 }, revealsClue: true },
+    ],
+  },
+  6: {
+    eyebrow: "途中剧情 · 月海",
+    name: "沈砚秋没有回谷的人生",
+    description: "月潮映出她留在无灯城、成为一名普通医者的未来。那里的她不认识你，却过着平静而完整的一生。",
+    art: "/bg_spirit_rift.png",
+    options: [
+      { id: "bless-other-life", label: "向那段人生道别", title: "恢复 14 · 清神粉 +1", detail: "承认未发生的人生也值得被祝福，然后让它安静沉回月海。", tone: "安放遗憾", effect: { heal: 14, consumables: { clarity: 1 } }, revealsClue: true },
+      { id: "take-remedy", label: "记下另一个她的药方", title: "稀有职业牌 · 生命 -8", detail: "带回从未存在过的医术，也承受两个沈砚秋互相遗忘的痛楚。", tone: "可能换术", effect: { cardRarity: "稀有", hpLoss: 8 }, revealsClue: true },
     ],
   },
 };
@@ -814,6 +1108,19 @@ export const CHAPTER_MARKETS = {
     refineCost: 7,
     treasureCost: 22,
     special: { id: "rewrite", label: "交换一页命数", title: "8 灵石 · 精研一张基础牌", detail: "若已无可精研术法，则返还费用并获得 1 份聚气散。", cost: "8 灵石" },
+  },
+  6: {
+    eyebrow: "归墟浮市",
+    name: "月下浮市",
+    description: "摊位随潮汐出现，只出售那些在另一种人生里本该属于你的东西。",
+    stall: "未行秘卷",
+    stockNote: "偏向净心、抽牌与终局循环",
+    bias: "afterlife",
+    cardPrice: 3,
+    removeCost: 4,
+    refineCost: 8,
+    treasureCost: 24,
+    special: { id: "moon-debt", label: "偿还一段未行之路", title: "忘却一张牌 · 恢复 16 生命", detail: "从牌组中忘却最高费用的非心魔牌；若牌组过薄则改为获得清神粉。", cost: "一张术法" },
   },
 };
 
