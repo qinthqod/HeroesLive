@@ -447,6 +447,88 @@ export function resolveBossChoiceResponse(chapter, choices = []) {
   return choice ? { choice, ...responses[choice] } : null;
 }
 
+export const CHAPTER_BOSS_PRELUDES = {
+  1: {
+    eyebrow: "首领前夜 · 山门石阶",
+    name: "第七盏灯等候点燃",
+    art: "/ui/bg_act1_valley.png",
+    setting: "雨势忽然停了。二十三盏弟子灯依次熄灭，唯独山门最高处那一盏，正用与你相同的命火呼吸。",
+    beats: [
+      { speaker: "陆观", text: "别看灯罩。它会把你最想救回的人映在里面，然后问你愿不愿意替她留下。" },
+      { speaker: "第七盏灯", text: "名册从未写错。它只是比你更早知道，谁会为了另一个人走进火里。" },
+      { speaker: "你", text: "若一条路只能靠替人赴死维持，那写错的不是名字，是这座山门。" },
+    ],
+  },
+  2: {
+    eyebrow: "首领前夜 · 玄阴灯冢",
+    name: "旧名在灯油中苏醒",
+    art: "/ui/bg_act2_mountain.png",
+    setting: "整条山道的鬼灯同时转向你。灯油里浮起二十四年前的名字，最后一个正缓慢长成你的笔迹。",
+    beats: [
+      { speaker: "纸灯童子", text: "我替每一盏灯记得它原来的主人，可他们走完别人的余生后，就没人记得自己了。" },
+      { speaker: "写名鬼灯", text: "人只要继续活着，替谁活又有什么分别？名字不过是让牺牲显得体面。" },
+      { speaker: "你", text: "余生不是空路，不能因为前人没走完，就把后来者钉在同一个终点。" },
+    ],
+  },
+  3: {
+    eyebrow: "首领前夜 · 雷池阵眼",
+    name: "百年安稳开始崩裂",
+    art: "/ui/bg_act3_thunder.png",
+    setting: "雷云压到触手可及。每一道阵纹都亮着一个被删去的姓名，而守阵者站在所有姓名中央。",
+    beats: [
+      { speaker: "沈砚秋", text: "这座阵不是为了挡雷，是为了让所有人相信，牺牲少数便能换来永远安稳。" },
+      { speaker: "雷池守阵者", text: "谷中百年无人流离、无人受劫。若真相会毁掉这一切，你仍要让他们知道吗？" },
+      { speaker: "你", text: "用不知道换来的安稳，只是把恐惧藏进下一代人的雷劫。" },
+    ],
+  },
+  4: {
+    eyebrow: "首领前夜 · 照夜莲台",
+    name: "全城的噩梦一同回家",
+    art: "/bg_dark_forge.png",
+    setting: "黑莲每合拢一片花瓣，城中便少一声哭泣。莲台之下，无数影子却在替主人无声尖叫。",
+    beats: [
+      { speaker: "茶楼女童", text: "城主说没有噩梦的人才会幸福。可我已经想不起，自己为什么想画一片海。" },
+      { speaker: "无影城主", text: "我只是替他们收走无法承受的东西。自由若只带来痛苦，失去它又有何妨？" },
+      { speaker: "你", text: "害怕、后悔和想离开，都不该由另一个人替他们保管。" },
+    ],
+  },
+  5: {
+    eyebrow: "首领前夜 · 命册末页",
+    name: "真正的执笔者走出纸背",
+    art: "/bg_secret_realm.png",
+    setting: "天门之后没有仙境，只有一张铺满天地的旧纸。众生的道路被墨线牵引，汇向守门真君手中的笔。",
+    beats: [
+      { speaker: "沈砚秋", text: "走到这里才发现，所谓天命不过是有人比所有人更早拿到了笔。" },
+      { speaker: "守门真君", text: "没有命册，选择会制造战争、背叛与无数悔恨。你真愿意把这些还给众生？" },
+      { speaker: "你", text: "代替所有人活得正确，不是慈悲。那只是把天下变成你一个人的人生。" },
+    ],
+  },
+  6: {
+    eyebrow: "首领前夜 · 倒悬月宫",
+    name: "所有未行之路要求结局",
+    art: "/bg_spirit_rift.png",
+    setting: "归墟海面升到天空，倒悬之月从潮水里睁眼。每个人未曾选择的人生都站在月光中，等待取代现实。",
+    beats: [
+      { speaker: "归墟摆渡使", text: "司命替众生收容遗憾太久，久到那些可能忘了自己从未真正发生。" },
+      { speaker: "月蚀司命", text: "你归还自由，却把后悔也归还给他们。既然众生承受不起，我便再次替他们只留一条路。" },
+      { speaker: "你", text: "自由从来不是拥有所有道路，而是亲自走过一条，并承认其他道路已经远去。" },
+    ],
+  },
+};
+
+export function resolveBossPrelude(chapter, choices = []) {
+  const prelude = CHAPTER_BOSS_PRELUDES[chapter];
+  const response = resolveBossChoiceResponse(chapter, choices);
+  if (!prelude) return null;
+  return {
+    ...prelude,
+    choice: response?.choice || "",
+    beats: response
+      ? [...prelude.beats, { speaker: ENCOUNTER_ENEMIES[chapter]?.[3]?.name || "首领", text: response.line }]
+      : prelude.beats,
+  };
+}
+
 export const ENCOUNTER_ENEMIES = {
   1: {
     1: { name: "野狼妖影", hp: 34, max: 34, art: "/enemy_wolf_shadow.png", archetype: "伏击者", trait: "闻血追猎", counter: "它会先试探、再蓄势扑杀；趁蓄势回合进攻，或为扑杀预留护盾。" },
@@ -835,31 +917,43 @@ export const CHAPTER_ROUTE_COPY = {
     title: "雨入青岚",
     beats: ["血书把你引向雨亭。", "妖影与药香同时出现。", "山门前只剩一次整备。", "第七盏灯在雨中亮起。"],
     clue: "名册多出一人 · 第七盏灯 · 师姐的血书",
+    storyConsequence: "陆观将坦白沈砚秋离开山门的旧案",
+    bossConsequence: "第七盏灯会认出你的命火与雨亭选择",
   },
   2: {
     title: "灯照玄阴",
     beats: ["纸灯童子提起旧日替灯人。", "阴魂与镇魂古龛分立两侧。", "鬼市中有人售卖旧名册。", "写着你名字的灯正在等候。"],
     clue: "替灯人 · 二十四年前的名册 · 师父的旧路",
+    storyConsequence: "纸灯童子将说出师父未完成的告别",
+    bossConsequence: "写名鬼灯会以你对替命的态度重写转相",
   },
   3: {
     title: "雷云问心",
     beats: ["雷纹正在辨认你的血脉。", "洗雷池与问心石阶同时开启。", "守阵执念透露阵法用途。", "筑基雷劫化作最后一道锁。"],
     clue: "改写之阵 · 青岚百年安稳 · 筑基之锁",
+    storyConsequence: "第一替灯人的姓名将重新进入阵碑",
+    bossConsequence: "守阵者会回应你如何处置雷阵真相",
   },
   4: {
     title: "黑莲照夜",
     beats: ["城门守卫没有影子。", "鬼市与梦坊藏着不同答案。", "黑莲台开始收拢全城影子。", "无灯城必须重新学会做梦。"],
     clue: "被收走的梦 · 黑莲契约 · 无影城主",
+    storyConsequence: "第一道归来的影子将揭开城民真实愿望",
+    bossConsequence: "无影城主会借全城噩梦回应你的选择",
   },
   5: {
     title: "天门无月",
     beats: ["天门展示命册最初的用途。", "旧日看守与无名者各执一词。", "三种结局正在笔下成形。", "命册最后一页等待落笔。"],
     clue: "修复 · 焚毁 · 重写",
+    storyConsequence: "命册第一行将揭示记录与支配的分界",
+    bossConsequence: "真正执笔者会依据罪证与姓名现身",
   },
   6: {
     title: "月沉归墟",
     beats: ["未行之路从梦中倒灌。", "逐月溺魂与月海遗舟同时出现。", "摆渡使守着归墟最深处的旧约。", "倒悬之月睁开了眼睛。"],
     clue: "未行之路 · 归墟旧约 · 自由之后的责任",
+    storyConsequence: "沈砚秋未曾拥有的人生将在月海显形",
+    bossConsequence: "月蚀司命会回应你如何面对遗憾与万途",
   },
 };
 

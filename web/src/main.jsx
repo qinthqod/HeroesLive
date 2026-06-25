@@ -27,6 +27,7 @@ import {
   TREASURES,
   getProfession,
   resolveBossChoiceResponse,
+  resolveBossPrelude,
 } from "./gameData";
 import { analyzeDeck, currentBuildState, generateRewardChoices, rewardFit, rewardRecipeTarget } from "./deckStrategy";
 import { createPendingClue, settlePendingClue } from "./investigationState";
@@ -1909,6 +1910,7 @@ function App() {
           stones={stones}
           enterCombat={enterCombat}
           setScreen={setScreen}
+          openBossPrelude={() => changeScreen("bossPrelude")}
           openMarket={() => {
             const key = `${selectedChapter}:${routeProgress}`;
             setMarketVisit((value) => value.key === key ? value : { key, sold: [], specialUsed: false, treasureBought: false });
@@ -1931,6 +1933,18 @@ function App() {
           onChooseNode={(node, clue) => {
             setRunChronicle((value) => [...value.slice(-5), `路线 · ${node.name}`]);
             setPendingClue(createPendingClue(clue, node, routeProgress));
+          }}
+        />
+      )}
+      {screen === "bossPrelude" && (
+        <BossPreludeScreen
+          chapter={selectedChapter}
+          choices={runChoices}
+          clues={runClues}
+          onBegin={() => {
+            const prelude = resolveBossPrelude(selectedChapter, runChoices);
+            setRunChronicle((value) => [...value.slice(-5), `首领前夜 · ${prelude?.name || ENCOUNTER_ENEMIES[selectedChapter][3].name}`]);
+            enterCombat(3);
           }}
         />
       )}
@@ -2541,7 +2555,7 @@ function RunNotebook({ notebook, compact = false, className = "" }) {
   );
 }
 
-function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, pendingClue, profile, treasures, deck, origin, runMode, runSeed, runTrial, onChooseNode }) {
+function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openBossPrelude, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, pendingClue, profile, treasures, deck, origin, runMode, runSeed, runTrial, onChooseNode }) {
   const chapterRoutes = CHAPTER_ROUTES[chapter] || ROUTE_ROWS;
   const baseChoices = chapterRoutes[Math.min(routeProgress, chapterRoutes.length - 1)];
   const currentChoices = [
@@ -2554,19 +2568,20 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
   const build = currentBuildState(deck, origin);
   const notebook = createRunNotebook({ screen: "map", chapter, stage, routeProgress, hp, maxHp, stones, deck, origin: getProfession(origin), clues, pendingClue, profile });
   const routeMeta = {
-    story: { risk: "无战斗", reward: "剧情线索", consequence: choices.includes("相信守门人") ? "陆观愿意透露名册旧案" : "陆观仍在试探你的来意" },
+    story: { risk: "无战斗", reward: "剧情线索", consequence: chapterCopy.storyConsequence },
     battle: { risk: "危险 · 低", reward: "职业卡牌", consequence: "稳定补强牌组" },
     event: { risk: "危险 · 未知", reward: "恢复 / 悟道", consequence: "可能留下本局印记" },
     elite: { risk: "危险 · 高", reward: "稀有牌 / 法宝", consequence: "首领前最后试炼" },
     market: { risk: `持有 ${stones} 灵石`, reward: "购牌 / 删牌", consequence: "牺牲经济换稳定性" },
     rest: { risk: "无战斗", reward: "恢复 / 精研 / 小物", consequence: "放弃战利，稳定血线" },
     training: { risk: "无战斗", reward: "灵气 / 精研 / 压缩", consequence: "永久改变本局牌组节奏" },
-    boss: { risk: "首领战", reward: "章节突破", consequence: "揭开第七盏灯真相" },
+    boss: { risk: "首领战", reward: "章节突破", consequence: chapterCopy.bossConsequence },
   };
   const chooseNode = (node) => {
     const clue = investigation?.routes?.[routeProgress]?.[node.id];
     onChooseNode(node, clue);
-    if (["battle", "elite", "boss"].includes(node.id)) enterCombat(Math.min(3, routeProgress || 1));
+    if (node.id === "boss") openBossPrelude();
+    else if (["battle", "elite"].includes(node.id)) enterCombat(Math.min(3, routeProgress || 1));
     else if (node.id === "event" || node.id === "story") setScreen("event");
     else if (node.id === "rest") openRest();
     else if (node.id === "training") openTraining();
@@ -2626,6 +2641,54 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
         {chronicle.slice(-3).map((entry, index) => <p key={`${entry}-${index}`}>{entry}</p>)}
       </aside>}
       <TreasureStrip treasures={treasures} />
+    </section>
+  );
+}
+
+function BossPreludeScreen({ chapter, choices, clues, onBegin }) {
+  const prelude = resolveBossPrelude(chapter, choices);
+  const [beatIndex, setBeatIndex] = useState(0);
+  const startingRef = useRef(false);
+  const boss = ENCOUNTER_ENEMIES[chapter][3];
+  const beats = prelude?.beats || [];
+  const beat = beats[Math.min(beatIndex, Math.max(0, beats.length - 1))];
+  const isLast = beatIndex >= beats.length - 1;
+  const advance = () => {
+    if (!isLast) {
+      setBeatIndex((value) => value + 1);
+      return;
+    }
+    if (startingRef.current) return;
+    startingRef.current = true;
+    onBegin();
+  };
+  if (!prelude || !beat) return null;
+  return (
+    <section className="boss-prelude screen-content">
+      <div className="boss-prelude-art"><img src={prelude.art} alt="" /><div /></div>
+      <div className="boss-prelude-copy">
+        <span className="section-index">{prelude.eyebrow}</span>
+        <h1>{prelude.name}</h1>
+        <p className="boss-prelude-setting">{prelude.setting}</p>
+        <article className="boss-prelude-dialogue" key={`${chapter}-${beatIndex}`}>
+          <small>{beat.speaker}</small>
+          <strong>{beat.text}</strong>
+        </article>
+        <div className="boss-prelude-progress" aria-label={`对白 ${beatIndex + 1}/${beats.length}`}>
+          {beats.map((_, index) => <i key={index} className={index <= beatIndex ? "active" : ""} />)}
+        </div>
+        <button className="boss-prelude-action" onClick={advance}>
+          <span>{isLast ? `迎战 · ${boss.name}` : "继续听下去"}</span><b>›</b>
+        </button>
+      </div>
+      <aside className="boss-prelude-dossier">
+        <span>首领敌情</span>
+        <strong>{boss.name}</strong>
+        <small>{boss.archetype} · {boss.trait}</small>
+        <p>{boss.counter}</p>
+        <div><em>调查证据</em><b>{clues.length}/5</b></div>
+        {prelude.choice && <div className="boss-prelude-choice"><em>将被回应的抉择</em><b>{prelude.choice}</b></div>}
+      </aside>
     </section>
   );
 }

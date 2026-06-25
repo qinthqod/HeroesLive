@@ -6,6 +6,7 @@ import {
   ENCOUNTER_ENEMIES,
   ENCOUNTER_MOVE_PATTERNS,
   CHAPTERS,
+  CHAPTER_BOSS_PRELUDES,
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
   CHAPTER_STORIES,
@@ -24,6 +25,7 @@ import {
   STORY_SCENES,
   TREASURES,
   resolveBossChoiceResponse,
+  resolveBossPrelude,
 } from "../src/gameData.js";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -101,9 +103,18 @@ for (const chapter of CHAPTERS) {
   expect(Object.values(bossResponses).some((response) => response.playerShield > 0), `${chapter.name} 至少需要一种守护型首领回应`);
   expect(Object.values(bossResponses).some((response) => response.bossShieldDelta < 0), `${chapter.name} 至少需要一种破局型首领回应`);
   expect(Object.keys(bossResponses).every((choice) => resolveBossChoiceResponse(chapter.id, ["无关选择", choice])?.choice === choice), `${chapter.name} 首领回应解析失败`);
+  const prelude = CHAPTER_BOSS_PRELUDES[chapter.id];
+  expect(Boolean(prelude?.eyebrow && prelude?.name && prelude?.setting && prelude?.art), `${chapter.name} 缺少首领前夜场景`);
+  expect(prelude?.beats?.length === 3, `${chapter.name} 首领前夜必须包含三段序破急对白`);
+  expect(prelude?.beats?.every((beat) => beat.speaker && beat.text), `${chapter.name} 首领前夜对白缺少角色或文本`);
+  for (const choice of Object.keys(bossResponses)) {
+    const resolvedPrelude = resolveBossPrelude(chapter.id, [choice]);
+    expect(resolvedPrelude?.choice === choice && resolvedPrelude?.beats?.length === 4, `${chapter.name} 首领前夜未接入抉择「${choice}」`);
+  }
   expect(epilogues.every((epilogue) => epilogue.id && epilogue.title && epilogue.text && epilogue.character && availableChoices.has(epilogue.choice)), `${chapter.name} 人物后记未正确绑定剧情抉择`);
   expect((CHAPTER_ROUTE_COPY[chapter.id]?.beats || []).length === 4, `${chapter.name} 需要 4 层路线叙事`);
   expect(Boolean(CHAPTER_ROUTE_COPY[chapter.id]?.clue), `${chapter.name} 缺少章节线索`);
+  expect(Boolean(CHAPTER_ROUTE_COPY[chapter.id]?.storyConsequence && CHAPTER_ROUTE_COPY[chapter.id]?.bossConsequence), `${chapter.name} 路线卡缺少章节专属剧情后果`);
   expect((CHAPTER_ROUTES[chapter.id] || []).length === 4, `${chapter.name} 需要 4 层独立路线`);
   const investigation = CHAPTER_INVESTIGATIONS[chapter.id];
   expect(Boolean(investigation?.objective && investigation?.opening && investigation?.conclusion), `${chapter.name} 缺少调查目标、开场线索或结论`);
