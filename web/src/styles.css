@@ -200,6 +200,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .enemy-title h1 { margin: 4px 0; font-family: "STKaiti", serif; font-size: 31px; font-weight: 400; color: #eadcb8; text-shadow: 0 3px 12px #000; }
 .boss-phase { position: absolute; z-index: 5; top: 10.5%; left: 50%; display: flex; gap: 8px; align-items: center; transform: translateX(-50%); white-space: nowrap; }
 .boss-phase small { padding: 2px 7px; border: 1px solid rgba(216,168,72,.45); border-radius: 10px; background: rgba(18,16,10,.82); color: #e7c46f; font-size: 8px; letter-spacing: .08em; }
+.boss-phase em { padding: 2px 7px; border: 1px solid rgba(116,159,139,.34); border-radius: 10px; background: rgba(10,30,24,.78); color: #9fcdb8; font-size: 8px; font-style: normal; letter-spacing: .04em; }
 .boss-phase span { max-width: 360px; overflow: hidden; color: #71867b; font-size: 7px; text-overflow: ellipsis; }
 .boss-phase.phase-2 small { border-color: rgba(197,74,53,.65); background: rgba(62,17,14,.88); color: #ffb083; box-shadow: 0 0 18px rgba(180,52,33,.22); }
 .boss-phase + .enemy-health { top: 14%; }
@@ -747,7 +748,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .enemy-stage { inset: 4% 4% 27% 4%; }
   .enemy-title { top: 3%; width: 280px; }
   .enemy-title h1 { font-size: 25px; }
-  .boss-phase { top: 10.2%; max-width: 310px; }
+  .boss-phase { top: 10.2%; max-width: 360px; }
   .boss-phase span { display: none; }
   .enemy-health { top: 11%; width: 220px; }
   .intent { top: 14%; }

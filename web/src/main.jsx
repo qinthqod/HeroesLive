@@ -26,6 +26,7 @@ import {
   ROUTE_ROWS,
   TREASURES,
   getProfession,
+  resolveBossChoiceResponse,
 } from "./gameData";
 import { analyzeDeck, currentBuildState, generateRewardChoices, rewardFit, rewardRecipeTarget } from "./deckStrategy";
 import { createPendingClue, settlePendingClue } from "./investigationState";
@@ -1009,28 +1010,39 @@ function App() {
       setEnemyShield(enemyShieldRef.current);
     }
     if (phaseShift) {
+      const choiceResponse = resolveBossChoiceResponse(selectedChapter, runChoices);
+      const phaseShield = Math.max(0, (phaseData.shield || 0) + (choiceResponse?.bossShieldDelta || 0));
       const phaseMoves = phaseData.moves.map((move) => ({
         ...move,
         damage: move.damage ? move.damage + (runTrial?.modifier?.enemyDamageBonus || 0) : move.damage,
       }));
-      enemyShieldRef.current += phaseData.shield || 0;
+      enemyShieldRef.current += phaseShield;
       setEnemyShield(enemyShieldRef.current);
+      if (choiceResponse?.playerShield) setShield((value) => value + choiceResponse.playerShield);
+      const phaseLine = choiceResponse?.line || phaseData.line;
       setEnemy((value) => ({
         ...value,
         hp: nextHp,
         phase: 2,
         phaseName: `第二相 · ${phaseData.name}`,
-        phaseLine: phaseData.line,
+        phaseLine,
+        choiceEcho: choiceResponse?.choice || "",
         moves: phaseMoves,
         moveIndex: 0,
         intent: intentLabel(phaseMoves[0]),
       }));
-      setTriggerFx({ card: phaseData.name, combo: "首领转相", effects: [phaseData.line, `护体 +${phaseData.shield || 0}`] });
+      const responseEffects = [
+        phaseLine,
+        `首领护体 +${phaseShield}`,
+        choiceResponse?.effect,
+      ].filter(Boolean);
+      setTriggerFx({ card: phaseData.name, combo: choiceResponse ? `回应抉择 · ${choiceResponse.choice}` : "首领转相", effects: responseEffects });
       later(() => setTriggerFx(null), 2100);
     } else {
       setEnemy((value) => ({ ...value, hp: nextHp }));
     }
-    setLog(`${source}，造成 ${dealt} 点伤害${blocked ? `，其中 ${blocked} 点被护体抵消` : ""}。${phaseShift ? ` ${phaseData.line}` : ""}`);
+    const choiceResponse = phaseShift ? resolveBossChoiceResponse(selectedChapter, runChoices) : null;
+    setLog(`${source}，造成 ${dealt} 点伤害${blocked ? `，其中 ${blocked} 点被护体抵消` : ""}。${phaseShift ? ` ${choiceResponse?.line || phaseData.line}${choiceResponse ? ` 首领回应了你的抉择「${choiceResponse.choice}」。` : ""}` : ""}`);
   }
 
   function useConsumable(kind) {
@@ -3004,7 +3016,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
       </aside>
       <div className={`enemy-stage ${combatFx?.phase === "impact" && combatFx.damage > 0 ? "enemy-impact" : ""} ${combatFx?.phase === "enemy-turn" ? "enemy-lunge" : ""}`}>
         <div className="enemy-title"><span>第 {chapter} 章 · {stage === 1 ? "普通战" : stage === 2 ? "精英战" : "首领战"} · 第 {combatTurn} 回合</span><h1>{enemy.name}</h1></div>
-        {stage === 3 && <div className={`boss-phase phase-${enemy.phase || 1}`}><small>{enemy.phaseName || "第一相 · 守序"}</small><span>{enemy.phaseLine}</span></div>}
+        {stage === 3 && <div className={`boss-phase phase-${enemy.phase || 1}`}><small>{enemy.phaseName || "第一相 · 守序"}</small>{enemy.choiceEcho && <em>回应 · {enemy.choiceEcho}</em>}<span>{enemy.phaseLine}</span></div>}
         <div className="enemy-health"><span style={{ width: `${hpPercent}%` }} /><strong>{enemy.hp}/{enemy.max}</strong></div>
         <div className={`intent ${guideStep === 0 ? "guide-focus" : ""}`}><small>当前招式</small><strong>{enemy.intent}</strong><b>{currentEnemyMove.note}</b><em>下一式 · {intentLabel(enemy.moves[(enemy.moveIndex + 1) % enemy.moves.length])}</em></div>
         <div className="enemy-readout">

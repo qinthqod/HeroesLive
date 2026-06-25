@@ -366,6 +366,87 @@ export const BOSS_PHASES = {
   },
 };
 
+export const BOSS_CHOICE_RESPONSES = {
+  1: {
+    留下回信: {
+      line: "第七盏灯读出了雨亭回信。远处一盏无名灯亮起，替你挡住扑来的旧火。",
+      playerShield: 6,
+      effect: "沈砚秋的回信化为 6 点护盾",
+    },
+    抹去暗号: {
+      line: "灯芯找不到被抹去的归谷暗号，追索旧路的火焰因此缺了一角。",
+      bossShieldDelta: -4,
+      effect: "暗号断路，首领转相护体 -4",
+    },
+  },
+  2: {
+    替灯偿愿: {
+      line: "纸灯童子的余愿越过玄阴山，在你身前结成一圈不再替命的暖光。",
+      playerShield: 7,
+      effect: "被偿还的余愿化为 7 点护盾",
+    },
+    拒绝替命: {
+      line: "你拒绝接过任何人的余生，鬼灯失去可供燃烧的新名字，灯骨骤然暗淡。",
+      bossShieldDelta: -5,
+      effect: "替命契约失效，首领转相护体 -5",
+    },
+  },
+  3: {
+    公示雷阵: {
+      line: "雷阵真相已传遍青岚谷，众人的质问沿阵纹回响，震裂守阵者的雷壁。",
+      bossShieldDelta: -6,
+      effect: "公开的真相击穿阵壁，首领转相护体 -6",
+    },
+    释放残魂: {
+      line: "被释放的残魂逐一报出姓名，百道微光环绕你，替你承受阵眼反噬。",
+      playerShield: 8,
+      effect: "百年残魂守望，获得 8 点护盾",
+    },
+  },
+  4: {
+    守望首夜: {
+      line: "无灯城民没有再次沉睡。他们彻夜点起的微火穿过梦境，护住你的清醒。",
+      playerShield: 9,
+      effect: "全城守夜的微火化为 9 点护盾",
+    },
+    强断契约: {
+      line: "黑莲契约早已被你斩断，城主体内的梦茧无法闭合，莲甲片片剥落。",
+      bossShieldDelta: -6,
+      effect: "断契余势撕开莲甲，首领转相护体 -6",
+    },
+  },
+  5: {
+    保留罪证: {
+      line: "纸背罪证在命火中显形，历代被删去的名字同时指认真正的执笔者。",
+      bossShieldDelta: -7,
+      effect: "罪证揭露真身，首领转相护体 -7",
+    },
+    焚去执笔者: {
+      line: "天门已不再承认执笔者的姓名。无主的命火回到你身边，结成护心屏障。",
+      playerShield: 10,
+      effect: "无主命火归还，获得 10 点护盾",
+    },
+  },
+  6: {
+    承担遗憾: {
+      line: "你承认每次选择都会留下遗憾。未行之路不再索命，只在身后汇成月色。",
+      playerShield: 12,
+      effect: "被承认的遗憾化为 12 点护盾",
+    },
+    索回万途: {
+      line: "万途已经被你索回，月蚀司命无法再独占任何结局，归墟潮壁随之崩塌。",
+      bossShieldDelta: -8,
+      effect: "万途夺权，首领转相护体 -8",
+    },
+  },
+};
+
+export function resolveBossChoiceResponse(chapter, choices = []) {
+  const responses = BOSS_CHOICE_RESPONSES[chapter] || {};
+  const choice = [...choices].reverse().find((value) => responses[value]);
+  return choice ? { choice, ...responses[choice] } : null;
+}
+
 export const ENCOUNTER_ENEMIES = {
   1: {
     1: { name: "野狼妖影", hp: 34, max: 34, art: "/enemy_wolf_shadow.png", archetype: "伏击者", trait: "闻血追猎", counter: "它会先试探、再蓄势扑杀；趁蓄势回合进攻，或为扑杀预留护盾。" },

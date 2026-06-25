@@ -2,6 +2,7 @@ import {
   ALL_CARDS,
   BOSS_MOVE_PATTERNS,
   BOSS_PHASES,
+  BOSS_CHOICE_RESPONSES,
   ENCOUNTER_ENEMIES,
   ENCOUNTER_MOVE_PATTERNS,
   CHAPTERS,
@@ -22,6 +23,7 @@ import {
   ROUTE_ROWS,
   STORY_SCENES,
   TREASURES,
+  resolveBossChoiceResponse,
 } from "../src/gameData.js";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -92,6 +94,13 @@ for (const chapter of CHAPTERS) {
   const epilogues = CHAPTER_EPILOGUES[chapter.id] || [];
   expect(epilogues.length === 2, `${chapter.name} 必须具有两个可收集人物后记`);
   const availableChoices = new Set(Object.values(storyChoices).flat().map((choice) => choice.value));
+  const bossResponses = BOSS_CHOICE_RESPONSES[chapter.id] || {};
+  expect(Object.keys(bossResponses).length === 2, `${chapter.name} 首领必须回应两种关键剧情抉择`);
+  expect(Object.entries(bossResponses).every(([choice, response]) => availableChoices.has(choice) && response.line && response.effect), `${chapter.name} 首领回应未绑定有效抉择或缺少叙事反馈`);
+  expect(Object.values(bossResponses).every((response) => Number.isFinite(response.playerShield || 0) && Number.isFinite(response.bossShieldDelta || 0)), `${chapter.name} 首领回应数值非法`);
+  expect(Object.values(bossResponses).some((response) => response.playerShield > 0), `${chapter.name} 至少需要一种守护型首领回应`);
+  expect(Object.values(bossResponses).some((response) => response.bossShieldDelta < 0), `${chapter.name} 至少需要一种破局型首领回应`);
+  expect(Object.keys(bossResponses).every((choice) => resolveBossChoiceResponse(chapter.id, ["无关选择", choice])?.choice === choice), `${chapter.name} 首领回应解析失败`);
   expect(epilogues.every((epilogue) => epilogue.id && epilogue.title && epilogue.text && epilogue.character && availableChoices.has(epilogue.choice)), `${chapter.name} 人物后记未正确绑定剧情抉择`);
   expect((CHAPTER_ROUTE_COPY[chapter.id]?.beats || []).length === 4, `${chapter.name} 需要 4 层路线叙事`);
   expect(Boolean(CHAPTER_ROUTE_COPY[chapter.id]?.clue), `${chapter.name} 缺少章节线索`);

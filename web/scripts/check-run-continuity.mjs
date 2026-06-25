@@ -78,6 +78,7 @@ for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite"
 }
 expect(source.includes("CHAPTER_STORY_CHOICES") && source.includes("effect.refineAll") && source.includes("effect.addRarityCard"), "扩展剧情抉择必须由数据驱动并接入真实局内后果");
 expect(source.includes("BOSS_PHASES[selectedChapter]") && source.includes("phaseShift"), "章节首领必须在半血后进入独立二阶段");
+expect(source.includes("resolveBossChoiceResponse(selectedChapter, runChoices)") && source.includes("choiceEcho"), "首领转相必须识别并展示本局关键剧情抉择");
 expect(source.includes("resolveChapterEpilogue") && source.includes("unlockedEpilogues") && source.includes("summary-epilogue"), "章节抉择必须生成可持久化人物后记并在结算页回应");
 expect(source.includes("completedNodes") && source.includes("chapter-1-scene-"), "章节剧情节点必须形成跨局完成进度");
 expect(source.includes("firstChapterScenes >= CHAPTER_STORIES[1].length") && source.includes("shen-handbook-1") && source.includes("unlockHandbook ? 8 : 0"), "第一章五幕剧情完成后必须一次性解锁手札并奖励悟道");
