@@ -11,6 +11,7 @@ import {
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
   CHAPTER_STORIES,
+  CHAPTER_TRANSITIONS,
   CHAPTER_STORY_CHOICES,
   CHAPTER_EPILOGUES,
   CHAPTER_INVESTIGATIONS,
@@ -2103,7 +2104,7 @@ function App() {
         />
       )}
       {screen === "reward" && <RewardScreen stage={stage} chapter={selectedChapter} routeProgress={routeProgress} origin={origin} hp={hp} maxHp={maxHp} deck={runDeck} treasures={treasures} stones={stones} clues={runClues} pendingClue={pendingClue} profile={profile} randomSeed={runSeed} setStones={setStones} claimReward={claimReward} skipReward={skipReward} />}
-      {screen === "summary" && <SummaryScreen chapter={selectedChapter} hp={hp} maxHp={maxHp} stones={stones} treasures={treasures} deck={runDeck} setScreen={setScreen} profile={profile} runChoices={runChoices} runChronicle={runChronicle} runClues={runClues} runStats={runStats} runMode={runMode} runSeed={runSeed} runTrial={runTrial} />}
+      {screen === "summary" && <SummaryScreen chapter={selectedChapter} origin={origin} hp={hp} maxHp={maxHp} stones={stones} treasures={treasures} deck={runDeck} profile={profile} runChoices={runChoices} runChronicle={runChronicle} runClues={runClues} runStats={runStats} runMode={runMode} runSeed={runSeed} runTrial={runTrial} onHome={() => changeScreen("home")} onContinue={(nextChapter, nextOrigin) => beginRun(nextChapter, { origin: nextOrigin })} />}
       {screen === "defeat" && (
         <DefeatScreen
           chapter={selectedChapter}
@@ -3377,7 +3378,7 @@ function TreasureStrip({ treasures, compact = false }) {
   );
 }
 
-function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen, profile, runChoices, runChronicle, runClues, runStats, runMode, runSeed, runTrial }) {
+function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, profile, runChoices, runChronicle, runClues, runStats, runMode, runSeed, runTrial, onHome, onContinue }) {
   const evaluation = evaluateRun(runStats, hp, maxHp);
   const baseEnding = {
     1: ["雨停山门，灯灭其一。", "你带着第二十四人的线索走入内门，师姐的名字仍在血书上发亮。"],
@@ -3398,6 +3399,9 @@ function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen,
   const archive = profile.investigationArchive?.[String(chapter)] || [];
   const archiveTotal = investigationEvidence(chapter).length;
   const archiveComplete = archiveTotal > 0 && archive.length === archiveTotal;
+  const transition = CHAPTER_TRANSITIONS[chapter];
+  const canContinue = runMode === "story" && chapter < CHAPTERS.length;
+  const nextChapter = canContinue ? CHAPTERS[chapter] : null;
   return (
     <section className="summary-screen screen-content">
       <div className="summary-seal"><span>{evaluation.grade}</span><small>{evaluation.score} 分 · {evaluation.title}</small></div>
@@ -3428,7 +3432,14 @@ function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen,
         <small>{archiveComplete ? `宗卷圆满奖励：悟道 +${INVESTIGATION_COMPLETION_REWARD.spirit} · 灵玉 +${INVESTIGATION_COMPLETION_REWARD.jade}` : "已获证据会永久保留，重返本章可选择另一条路线。"}</small>
       </div>}
       {runChronicle.length > 0 && <div className="summary-chronicle"><span>本章命途</span>{runChronicle.slice(-4).map((entry, index) => <small key={`${entry}-${index}`}>{entry}</small>)}</div>}
-      <button className="primary-cta summary-action" onClick={() => setScreen("home")}><span>返回山门</span></button>
+      {transition && <section className={`chapter-transition ${canContinue ? "continuable" : "complete"}`}>
+        <div><span>{transition.eyebrow}</span><strong>{transition.title}</strong><p>{transition.text}</p><small>{transition.speaker}</small></div>
+        <aside><small>{canContinue ? "下一章目标" : "后续云游"}</small><b>{transition.hook}</b>{nextChapter && <em>{nextChapter.region} · {nextChapter.level} · 同一道途重新起牌</em>}</aside>
+      </section>}
+      <div className="summary-actions">
+        {canContinue && <button className="primary-cta summary-action summary-continue" onClick={() => onContinue(chapter + 1, origin)}><span>沿此线索继续 · 第 {chapter + 1} 章</span></button>}
+        <button className={`primary-cta summary-action ${canContinue ? "secondary" : ""}`} onClick={onHome}><span>{chapter === CHAPTERS.length && runMode === "story" ? "主线归档 · 返回山门" : "返回山门"}</span></button>
+      </div>
     </section>
   );
 }

@@ -9,6 +9,7 @@ import {
   ENCOUNTER_MOVE_PATTERNS,
   CHAPTERS,
   CHAPTER_BOSS_PRELUDES,
+  CHAPTER_TRANSITIONS,
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
   CHAPTER_STORIES,
@@ -52,6 +53,8 @@ expect(Object.keys(BOSS_MOVE_PATTERNS).length === CHAPTERS.length, "每章必须
 expect(Object.keys(BOSS_PHASES).length === CHAPTERS.length, "每章首领必须拥有独立二阶段");
 const bossMoveNames = [];
 for (const chapter of CHAPTERS) {
+  const transition = CHAPTER_TRANSITIONS[chapter.id];
+  expect(Boolean(transition?.eyebrow && transition?.title && transition?.text && transition?.speaker && transition?.hook), `${chapter.name} 缺少章末悬念或后续目标`);
   const moves = BOSS_MOVE_PATTERNS[chapter.id] || [];
   expect(moves.length === 3, `${chapter.name} 首领必须具有序/破/急三式`);
   expect(moves.every((move) => move.name && move.note && Number.isFinite(move.damage)), `${chapter.name} 首领招式缺少名称、说明或伤害`);

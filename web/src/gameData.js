@@ -928,7 +928,7 @@ export const CHAPTERS = [
     region: "青岚谷",
     level: "推荐 1 级",
     art: "/ui/bg_act1_valley.png",
-    boss: "野狼妖影",
+    boss: "第七盏灯",
     summary: "外门试炼当夜，失踪多年的师姐从雨中送来一封染血的信。",
     status: "available",
   },
@@ -938,7 +938,7 @@ export const CHAPTERS = [
     region: "玄阴山道",
     level: "推荐 8 级",
     art: "/ui/bg_act2_mountain.png",
-    boss: "玄阴引路鬼",
+    boss: "写名鬼灯",
     summary: "山道每隔七年便会多出一盏灯，而今年的灯上写着你的名字。",
     status: "locked",
   },
@@ -958,7 +958,7 @@ export const CHAPTERS = [
     region: "无灯城",
     level: "推荐 24 级",
     art: "/bg_dark_forge.png",
-    boss: "黑莲教执灯人",
+    boss: "无影城主",
     summary: "城中无人做梦，所有人的影子却在午夜聚向同一座莲台。",
     status: "locked",
   },
@@ -983,6 +983,15 @@ export const CHAPTERS = [
     status: "locked",
   },
 ];
+
+export const CHAPTER_TRANSITIONS = {
+  1: { eyebrow: "下一卷 · 灯照玄阴", title: "雨停以后，一盏写着你名字的灯顺流而来。", text: "第七盏灯熄灭时，灯芯吐出一枚玄阴山路引。沈砚秋没有现身，只在背面写道：师父当年也来过这里。", speaker: "沈砚秋留下的第二封信", hook: "沿旧路追查替灯人与师父失踪真相" },
+  2: { eyebrow: "下一卷 · 雷云问心", title: "所有旧名都指向同一座筑基雷池。", text: "鬼灯熄灭后，二十四个名字化作雷纹爬上你的手臂。师父失败的熄灯次序，原来只是破阵法的前半段。", speaker: "纸灯童子交出的旧路引", hook: "进入雷池，证明筑基雷劫是一座改命阵" },
+  3: { eyebrow: "下一卷 · 黑莲照夜", title: "雷阵崩裂，远方却有一座城失去了梦。", text: "第一替灯人的残魂散去前，指向一朵在夜色中盛开的黑莲。它正把命册之外的想象，从所有人心中逐一收走。", speaker: "沈砚秋抄下的最后一个名字", hook: "赶往无灯城，阻止黑莲收拢众生的选择" },
+  4: { eyebrow: "下一卷 · 天门无月", title: "黑莲花心藏着一页从天门撕下的旧纸。", text: "无影城主承认，收梦契约只是命册规则在人间的倒影。真正握笔的人仍站在太虚天门后，等待你交还所有名字。", speaker: "城主恢复的第一场噩梦", hook: "抵达太虚天门，决定命册应记录还是支配" },
+  5: { eyebrow: "终卷 · 月沉归墟", title: "命册放开万途，未行之路却开始倒灌人间。", text: "自由并没有让遗憾消失。每一条被舍弃的可能都沉入归墟月海，如今它们要回来取代真正发生的人生。", speaker: "新命册出现的第一道裂痕", hook: "前往归墟，承担自由之后最后的代价" },
+  6: { eyebrow: "主线第一部 · 已结卷", title: "归墟仍在，但月潮不会再替任何人选择。", text: "青岚谷、玄阴山、无灯城与天门都开始学习一种更困难的生活：允许错误、承认遗憾，也不把自己的道路交给别人书写。", speaker: "《青岚夜行·命册残卷》", hook: "重返章节补全调查宗卷、人物后记与职业构筑" },
+};
 
 export const STORY_SCENES = [
   {

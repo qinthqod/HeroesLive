@@ -84,6 +84,8 @@ expect(source.includes("\"encounterPrelude\", \"bossPrelude\"") && source.includ
 expect(source.includes("seenEncounters") && source.includes("再次遭遇时跳过第一段对白"), "重复遭遇必须缩短登场流程");
 expect(source.includes("resolveBattleAftermath(chapter, stage)") && source.includes("battle-aftermath") && source.includes("战利来源"), "普通与精英奖励页必须承接敌人余波、证据和战利来源");
 expect(source.includes("resolveChapterEpilogue") && source.includes("unlockedEpilogues") && source.includes("summary-epilogue"), "章节抉择必须生成可持久化人物后记并在结算页回应");
+expect(source.includes("CHAPTER_TRANSITIONS[chapter]") && source.includes("沿此线索继续") && source.includes("beginRun(nextChapter"), "主线结算必须提供章节桥梁与同职业连续远征");
+expect(source.includes("runMode === \"story\" && chapter < CHAPTERS.length"), "每日试炼、挑战复刻和终章不得错误进入下一章");
 expect(source.includes("completedNodes") && source.includes("chapter-1-scene-"), "章节剧情节点必须形成跨局完成进度");
 expect(source.includes("firstChapterScenes >= CHAPTER_STORIES[1].length") && source.includes("shen-handbook-1") && source.includes("unlockHandbook ? 8 : 0"), "第一章五幕剧情完成后必须一次性解锁手札并奖励悟道");
 expect(source.includes("lore-scrolls") && source.includes("人物手札"), "异闻录必须展示已解锁与未解锁人物手札");
