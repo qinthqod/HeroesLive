@@ -80,6 +80,8 @@ expect(source.includes("CHAPTER_STORY_CHOICES") && source.includes("effect.refin
 expect(source.includes("BOSS_PHASES[selectedChapter]") && source.includes("phaseShift"), "章节首领必须在半血后进入独立二阶段");
 expect(source.includes("resolveBossChoiceResponse(selectedChapter, runChoices)") && source.includes("choiceEcho"), "首领转相必须识别并展示本局关键剧情抉择");
 expect(source.includes("screen === \"bossPrelude\"") && source.includes("resolveBossPrelude(selectedChapter, runChoices)") && source.includes("enterCombat(3)"), "首领战前必须经过可恢复的章节高潮场景");
+expect(source.includes("\"encounterPrelude\", \"bossPrelude\"") && source.includes("pendingEncounterStage"), "普通、精英与首领登场节点必须进入自动存档并恢复目标阶段");
+expect(source.includes("seenEncounters") && source.includes("再次遭遇时跳过第一段对白"), "重复遭遇必须缩短登场流程");
 expect(source.includes("resolveChapterEpilogue") && source.includes("unlockedEpilogues") && source.includes("summary-epilogue"), "章节抉择必须生成可持久化人物后记并在结算页回应");
 expect(source.includes("completedNodes") && source.includes("chapter-1-scene-"), "章节剧情节点必须形成跨局完成进度");
 expect(source.includes("firstChapterScenes >= CHAPTER_STORIES[1].length") && source.includes("shen-handbook-1") && source.includes("unlockHandbook ? 8 : 0"), "第一章五幕剧情完成后必须一次性解锁手札并奖励悟道");

@@ -4,6 +4,7 @@ import {
   BOSS_PHASES,
   BOSS_CHOICE_RESPONSES,
   ENCOUNTER_ENEMIES,
+  ENCOUNTER_PRELUDES,
   ENCOUNTER_MOVE_PATTERNS,
   CHAPTERS,
   CHAPTER_BOSS_PRELUDES,
@@ -26,6 +27,7 @@ import {
   TREASURES,
   resolveBossChoiceResponse,
   resolveBossPrelude,
+  resolveEncounterPrelude,
 } from "../src/gameData.js";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -75,6 +77,10 @@ for (const chapter of CHAPTERS) {
     expect(moves.every((move) => move.name && move.note && Number.isFinite(move.damage)), `${chapter.name} 第 ${stage} 战招式缺少名称、说明或伤害`);
     expect(moves.some((move) => move.shield || move.heal || move.weak || move.drainQi || move.drawPenalty || move.curse || move.hits), `${chapter.name} 第 ${stage} 战缺少可辨识机制`);
     encounterMoveNames.push(...moves.map((move) => move.name));
+    const prelude = ENCOUNTER_PRELUDES[chapter.id]?.[stage];
+    expect(Boolean(prelude?.eyebrow && prelude?.title && prelude?.setting && prelude?.lesson), `${chapter.name} 第 ${stage} 战缺少独立遭遇登场`);
+    expect(prelude?.beats?.length === 2 && prelude.beats.every((beat) => beat.speaker && beat.text), `${chapter.name} 第 ${stage} 战登场对白不完整`);
+    expect(resolveEncounterPrelude(chapter.id, stage)?.enemy?.name === enemies[stage].name, `${chapter.name} 第 ${stage} 战登场未绑定正确敌人`);
   }
 }
 expect(new Set(encounterMoveNames).size === encounterMoveNames.length, "十场普通与精英战的招式名称必须保持唯一");

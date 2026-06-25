@@ -28,6 +28,7 @@ import {
   getProfession,
   resolveBossChoiceResponse,
   resolveBossPrelude,
+  resolveEncounterPrelude,
 } from "./gameData";
 import { analyzeDeck, currentBuildState, generateRewardChoices, rewardFit, rewardRecipeTarget } from "./deckStrategy";
 import { createPendingClue, settlePendingClue } from "./investigationState";
@@ -200,6 +201,22 @@ function intentLabel(move) {
   return `${move.name}${parts.length ? ` · ${parts.join(" · ")}` : ""}`;
 }
 
+function runLocationLabel(run) {
+  if (!run) return "";
+  if (run.screen === "combat") return `战斗 · 第 ${run.combatTurn || 1} 回合`;
+  if (run.screen === "encounterPrelude") return `${run.pendingEncounterStage === 2 ? "精英" : "普通"}遭遇 · 敌情侦察`;
+  if (run.screen === "bossPrelude") return "首领前夜 · 最终对峙";
+  return {
+    story: "章节开场",
+    map: "命途地图",
+    event: "途中异闻",
+    market: "坊市整备",
+    rest: "调息休整",
+    training: "修炼推演",
+    reward: "战利抉择",
+  }[run.screen] || run.screen;
+}
+
 const FATE_CURSE = {
   id: "enemy-curse-missing-page",
   job: "curse",
@@ -352,6 +369,7 @@ function App() {
   const [runTrial, setRunTrial] = useState(null);
   const [storyIndex, setStoryIndex] = useState(initialStory);
   const [routeProgress, setRouteProgress] = useState(0);
+  const [pendingEncounterStage, setPendingEncounterStage] = useState(initialStage);
   const [runChoices, setRunChoices] = useState(debugRunChoices);
   const [runChronicle, setRunChronicle] = useState([]);
   const [runClues, setRunClues] = useState(() => {
@@ -405,6 +423,7 @@ function App() {
       equippedTitle: "云游录",
       completedDailyTrials: [],
       tutorialFlags: {},
+      seenEncounters: [],
       feedback: { sound: true, haptics: true, volume: 0.55 },
     };
     return {
@@ -433,6 +452,7 @@ function App() {
         : (base.chapterFailures || {}),
       recentRuns: base.recentRuns || [],
       tutorialFlags: base.tutorialFlags || {},
+      seenEncounters: base.seenEncounters || [],
       feedback: { sound: true, haptics: true, volume: 0.55, ...(base.feedback || {}) },
       ...(debugArchiveCount ? {
         investigationArchive: {
@@ -590,7 +610,7 @@ function App() {
     });
   }, [runDeck]);
   useEffect(() => {
-    if (!["story", "map", "event", "market", "rest", "training", "combat", "reward"].includes(screen)) return;
+    if (!["story", "map", "event", "market", "rest", "training", "encounterPrelude", "bossPrelude", "combat", "reward"].includes(screen)) return;
     const snapshot = {
       version: 3,
       origin,
@@ -607,6 +627,7 @@ function App() {
       treasures: treasures.map((treasure) => treasure.id),
       storyIndex,
       routeProgress,
+      pendingEncounterStage,
       runChoices,
       runChronicle,
       runClues,
@@ -639,7 +660,7 @@ function App() {
     };
     window.localStorage.setItem("qinglan-run-v1", JSON.stringify(snapshot));
     setSavedRun(snapshot);
-  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, runChoices, runChronicle, runClues, pendingClue, nextEnemyShield, marketVisit, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log, runMode, runSeed, runTrial]);
+  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, pendingEncounterStage, runChoices, runChronicle, runClues, pendingClue, nextEnemyShield, marketVisit, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log, runMode, runSeed, runTrial]);
   useEffect(() => {
     if (screen === "combat" && enemy.hp <= 0 && !combatResolved.current) {
       finishCombat("敌影溃散");
@@ -744,6 +765,7 @@ function App() {
     setTreasures(masteryTreasure ? [masteryTreasure] : []);
     setStoryIndex(0);
     setRouteProgress(0);
+    setPendingEncounterStage(1);
     setRunChoices([]);
     setRunClues([]);
     setPendingClue(null);
@@ -794,6 +816,7 @@ function App() {
     setTreasures((savedRun.treasures || []).map((id) => TREASURES.find((treasure) => treasure.id === id)).filter(Boolean));
     setStoryIndex(savedRun.storyIndex || 0);
     setRouteProgress(savedRun.routeProgress || 0);
+    setPendingEncounterStage(savedRun.pendingEncounterStage || savedRun.stage || 1);
     setRunChoices(savedRun.runChoices || []);
     setRunChronicle(savedRun.runChronicle || []);
     setRunClues(savedRun.runClues || []);
@@ -1910,6 +1933,10 @@ function App() {
           stones={stones}
           enterCombat={enterCombat}
           setScreen={setScreen}
+          openEncounterPrelude={(nextStage) => {
+            setPendingEncounterStage(nextStage);
+            changeScreen("encounterPrelude");
+          }}
           openBossPrelude={() => changeScreen("bossPrelude")}
           openMarket={() => {
             const key = `${selectedChapter}:${routeProgress}`;
@@ -1933,6 +1960,22 @@ function App() {
           onChooseNode={(node, clue) => {
             setRunChronicle((value) => [...value.slice(-5), `路线 · ${node.name}`]);
             setPendingClue(createPendingClue(clue, node, routeProgress));
+          }}
+        />
+      )}
+      {screen === "encounterPrelude" && (
+        <EncounterPreludeScreen
+          chapter={selectedChapter}
+          stage={pendingEncounterStage}
+          seen={(profile.seenEncounters || []).includes(`${selectedChapter}:${pendingEncounterStage}`)}
+          onBegin={() => {
+            const prelude = resolveEncounterPrelude(selectedChapter, pendingEncounterStage);
+            setProfile((value) => ({
+              ...value,
+              seenEncounters: [...new Set([...(value.seenEncounters || []), `${selectedChapter}:${pendingEncounterStage}`])],
+            }));
+            setRunChronicle((value) => [...value.slice(-5), `遭遇 · ${prelude?.enemy.name || "敌影"}`]);
+            enterCombat(pendingEncounterStage);
           }}
         />
       )}
@@ -2555,7 +2598,7 @@ function RunNotebook({ notebook, compact = false, className = "" }) {
   );
 }
 
-function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openBossPrelude, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, pendingClue, profile, treasures, deck, origin, runMode, runSeed, runTrial, onChooseNode }) {
+function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openEncounterPrelude, openBossPrelude, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, pendingClue, profile, treasures, deck, origin, runMode, runSeed, runTrial, onChooseNode }) {
   const chapterRoutes = CHAPTER_ROUTES[chapter] || ROUTE_ROWS;
   const baseChoices = chapterRoutes[Math.min(routeProgress, chapterRoutes.length - 1)];
   const currentChoices = [
@@ -2581,7 +2624,7 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
     const clue = investigation?.routes?.[routeProgress]?.[node.id];
     onChooseNode(node, clue);
     if (node.id === "boss") openBossPrelude();
-    else if (["battle", "elite"].includes(node.id)) enterCombat(Math.min(3, routeProgress || 1));
+    else if (["battle", "elite"].includes(node.id)) openEncounterPrelude(node.id === "elite" ? 2 : 1);
     else if (node.id === "event" || node.id === "story") setScreen("event");
     else if (node.id === "rest") openRest();
     else if (node.id === "training") openTraining();
@@ -2641,6 +2684,47 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
         {chronicle.slice(-3).map((entry, index) => <p key={`${entry}-${index}`}>{entry}</p>)}
       </aside>}
       <TreasureStrip treasures={treasures} />
+    </section>
+  );
+}
+
+function EncounterPreludeScreen({ chapter, stage, seen, onBegin }) {
+  const prelude = resolveEncounterPrelude(chapter, stage);
+  const [beatIndex, setBeatIndex] = useState(seen ? 1 : 0);
+  const startingRef = useRef(false);
+  if (!prelude) return null;
+  const beat = prelude.beats[Math.min(beatIndex, prelude.beats.length - 1)];
+  const isLast = beatIndex >= prelude.beats.length - 1;
+  const advance = () => {
+    if (!isLast) {
+      setBeatIndex((value) => value + 1);
+      return;
+    }
+    if (startingRef.current) return;
+    startingRef.current = true;
+    onBegin();
+  };
+  return (
+    <section className={`encounter-prelude stage-${stage} screen-content`}>
+      <div className="encounter-prelude-art"><img src={prelude.enemy.art} alt={prelude.enemy.name} /></div>
+      <div className="encounter-prelude-vignette" />
+      <div className="encounter-prelude-copy">
+        <span className="section-index">{prelude.eyebrow}</span>
+        <h1>{prelude.title}</h1>
+        <p>{prelude.setting}</p>
+        <article key={`${chapter}-${stage}-${beatIndex}`}>
+          <small>{beat.speaker}</small>
+          <strong>{beat.text}</strong>
+        </article>
+        <div className="encounter-prelude-lesson"><small>{stage === 1 ? "本章机制" : "精英考核"}</small><b>{prelude.lesson}</b></div>
+        <button onClick={advance}><span>{isLast ? `迎战 · ${prelude.enemy.name}` : "观察敌人"}</span><b>›</b></button>
+        {seen && <em className="encounter-seen">已调查 · 再次遭遇时跳过第一段对白</em>}
+      </div>
+      <aside>
+        <span>{prelude.enemy.archetype}</span>
+        <strong>{prelude.enemy.trait}</strong>
+        <p>{prelude.enemy.counter}</p>
+      </aside>
     </section>
   );
 }
@@ -3499,7 +3583,7 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
           </div>
           {savedRun ? <>
             <div className="save-summary-grid">
-              <div><small>当前位置</small><strong>{savedRun.screen === "combat" ? `战斗 · 第 ${savedRun.combatTurn || 1} 回合` : savedRun.screen}</strong></div>
+              <div><small>当前位置</small><strong>{runLocationLabel(savedRun)}</strong></div>
               <div><small>章节 / 路线</small><strong>{savedRun.selectedChapter} / {savedRun.routeProgress + 1}</strong></div>
               <div><small>生命 / 灵气</small><strong>{savedRun.hp} / {savedRun.qi ?? savedRun.maxQi}</strong></div>
               <div><small>牌组 / 法宝</small><strong>{savedRun.deck?.length || 0} / {savedRun.treasures?.length || 0}</strong></div>

@@ -19,8 +19,10 @@ for (const chapter of Object.keys(CHAPTER_BOSS_PRELUDES).map(Number)) {
     await page.locator(".boss-prelude").waitFor();
     const title = await page.locator(".boss-prelude-copy h1").innerText();
     const echo = await page.locator(".boss-prelude-choice").innerText();
+    const savedPrelude = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-run-v1") || "null"));
     if (title !== CHAPTER_BOSS_PRELUDES[chapter].name) throw new Error(`场景标题为「${title}」`);
     if (!echo.includes(choice)) throw new Error(`未显示抉择「${choice}」`);
+    if (savedPrelude?.screen !== "bossPrelude") throw new Error("首领前夜未写入自动存档");
 
     for (let beat = 0; beat < 4; beat += 1) {
       const action = page.locator(".boss-prelude-action");
