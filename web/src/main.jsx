@@ -294,6 +294,12 @@ function App() {
   const debugCard = import.meta.env.DEV
     ? ALL_CARDS.find((card) => card.id === query.get("card") || card.baseName === query.get("card"))
     : null;
+  const debugLastCard = import.meta.env.DEV
+    ? ALL_CARDS.find((card) => card.id === query.get("lastCard") || card.baseName === query.get("lastCard"))
+    : null;
+  const debugPlayedCard = import.meta.env.DEV
+    ? ALL_CARDS.find((card) => card.id === query.get("playedCard") || card.baseName === query.get("playedCard"))
+    : null;
   const debugNumber = (key, fallback = 0) => import.meta.env.DEV ? Math.max(0, Number(query.get(key)) || fallback) : fallback;
   const debugAutoplay = import.meta.env.DEV && query.get("autoplay") === "1";
   const debugAutoClick = import.meta.env.DEV && query.get("autoclick") === "1";
@@ -508,8 +514,8 @@ function App() {
   const firstSkillUsed = useRef(false);
   const enemyShieldRef = useRef(0);
   const enemyHpRef = useRef(enemy.hp);
-  const playedThisTurnRef = useRef([]);
-  const lastPlayedCardRef = useRef(null);
+  const playedThisTurnRef = useRef(debugPlayedCard ? [debugPlayedCard] : []);
+  const lastPlayedCardRef = useRef(debugLastCard);
   const rewardClaimedRef = useRef(false);
   const maxHp = 72 + (profile.talentLevels.meridian || 0) * 4;
   const startingStones = 18 + (profile.talentLevels.mind || 0) * 2;
@@ -1070,6 +1076,12 @@ function App() {
     const base = card.baseName || card.name.replace("·真解", "");
     if (base === "药炉温养") return jobState.cold > 0 && jobState.heat > 0;
     if (base === "玄雷敕令") return jobState.seals > 0;
+    if (base === "彼岸回响") return Boolean(lastPlayedCardRef.current);
+    if (base === "无常索命") return hand.length > 1;
+    if (base === "黄泉引路") return discardPile.length > 0;
+    if (base === "魂火焚身") return jobState.lamps > 0;
+    if (base === "忘川照影") return playedThisTurnRef.current.length > 0;
+    if (base === "百鬼夜行") return discardPile.length > 0;
     return true;
   }
 
@@ -1122,7 +1134,7 @@ function App() {
       无常索命: [hand.some((item) => item !== card && item.type === "心魔"), "可弃掉心魔并追加伤害"],
       渡厄咒: [jobState.lamps > 0, `魂灯强化治疗 · 当前 ${jobState.lamps}`],
       借命灯: [jobState.lamps > 0, "已有魂灯，免除自伤"],
-      黄泉引路: [discardPile.length > 0, `弃牌堆可召回 ${Math.min(2, discardPile.length)} 张`],
+      黄泉引路: [discardPile.length > 0, `弃牌堆可召回 ${Math.min(2, discardPile.length, Math.max(0, 8 - hand.length))} 张`],
       魂火焚身: [jobState.lamps > 0, `可熄灭 ${jobState.lamps} 盏魂灯`],
       忘川照影: [playedThisTurnRef.current.length > 0, playedThisTurnRef.current[0] ? `复制「${playedThisTurnRef.current[0].name}」` : "本回合尚未出牌"],
       百鬼夜行: [discardPile.length > 0, `弃牌堆有 ${new Set(discardPile.map((item) => item.baseName || item.name)).size} 种牌`],
@@ -1417,8 +1429,12 @@ function App() {
     if (origin === "sword" && edge >= 3 && card.type === "攻击") damage += 3;
     const kind = damage > 0 ? (/燃|火/.test(card.name) ? "fire" : "attack") : resolution.shield > 0 ? "guard" : resolution.heal > 0 ? "heal" : "spirit";
     const remainingHand = hand.filter((_, cardIndex) => cardIndex !== index);
-    const otherDiscarded = resolution.discardOther && remainingHand.length ? remainingHand[remainingHand.length - 1] : null;
-    const handAfterDiscard = otherDiscarded ? remainingHand.slice(0, -1) : remainingHand;
+    const curseDiscardIndex = remainingHand.findIndex((item) => item.type === "心魔");
+    const otherDiscardIndex = resolution.discardOther && remainingHand.length
+      ? (curseDiscardIndex >= 0 ? curseDiscardIndex : remainingHand.length - 1)
+      : -1;
+    const otherDiscarded = otherDiscardIndex >= 0 ? remainingHand[otherDiscardIndex] : null;
+    const handAfterDiscard = otherDiscarded ? remainingHand.filter((_, handIndex) => handIndex !== otherDiscardIndex) : remainingHand;
     const purged = resolution.removeCurse
       ? purgeCurses({ hand: handAfterDiscard, discardPile, drawPile }, resolution.removeCurse)
       : { hand: handAfterDiscard, discardPile, drawPile, removed: [] };
@@ -1491,9 +1507,10 @@ function App() {
         setHand((value) => value.length < 7 ? [...value, copied] : value);
       }
       if (resolution.returnDiscard > 0) {
-        const returned = discardPile.slice(-resolution.returnDiscard);
+        const returnCapacity = Math.max(0, 7 - handAfterDiscard.length);
+        const returned = discardPile.slice(-Math.min(resolution.returnDiscard, returnCapacity));
         setDiscardPile((value) => value.slice(0, Math.max(0, value.length - returned.length)));
-        setHand((value) => [...value, ...returned].slice(0, 7));
+        setHand((value) => [...value, ...returned]);
         const spellCount = returned.filter((item) => item.type === "术法").length;
         if (spellCount) setJobState((value) => ({ ...value, lamps: Math.min(8, value.lamps + spellCount) }));
       }
@@ -2945,7 +2962,11 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
     alchemy: { icon: "/ui/icons/hp.png", label: "药性", value: `${jobState.cold}寒/${jobState.heat}热` },
     beast: { icon: "/ui/icons/treasure.png", label: "灵契", value: `${jobState.activeBeast || "归巢"}·${jobState.contracts.length}契·${moonPhaseLabel(moonPhase)}` },
     artificer: { icon: "/ui/icons/shield.png", label: "机巧", value: `${jobState.cunning} · 雀${copperCount}/枢${thunderCount}` },
-    soul: { icon: "/ui/icons/curse.png", label: "魂灯", value: jobState.lamps },
+    soul: {
+      icon: "/ui/icons/curse.png",
+      label: "魂灯",
+      value: `${jobState.lamps}灯/${new Set(discardPile.map((item) => item.baseName || item.name)).size}忆`,
+    },
   }[origin.id];
   const build = currentBuildState(deck, origin.id);
   const notebook = createRunNotebook({ screen: "combat", chapter, stage, routeProgress, hp, maxHp, stones, deck, origin, clues, pendingClue, profile, enemy });

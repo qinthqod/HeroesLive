@@ -73,6 +73,11 @@ expect(runtimeSource.includes("base === \"玄雷敕令\"") && runtimeSource.incl
 expect(runtimeSource.includes("(jobState.symbolCardsPlayed + 1)") && runtimeSource.includes("base === \"雷火连符\""), "雷火连符必须把自身计入追加段数");
 expect(runtimeSource.includes("(enemyBurn + r.burn) * jobState.burnMultiplier"), "阴火符即时结算必须读取本回合燃烧倍率");
 expect(runtimeSource.includes("drawn.some((card) => card.type === \"术法\")"), "赤篆连书奖励必须依据实际抽到的牌");
+expect(runtimeSource.includes("base === \"彼岸回响\"") && runtimeSource.includes("lastPlayedCardRef.current"), "彼岸回响缺少上一张牌时不得空放");
+expect(runtimeSource.includes("curseDiscardIndex >= 0 ? curseDiscardIndex"), "无常索命必须优先献祭手牌中的心魔");
+expect(runtimeSource.includes("returnCapacity") && runtimeSource.includes("Math.min(resolution.returnDiscard, returnCapacity)"), "黄泉引路不得移除超出手牌容量的弃牌");
+expect(runtimeSource.includes("base === \"魂火焚身\"") && runtimeSource.includes("jobState.lamps > 0"), "魂火焚身缺少魂灯时不得空放");
+expect(runtimeSource.match(/damage \+= treasureValue\(treasures, "firstAttackDamage"\)/g)?.length === 1, "首张攻击法宝伤害不得重复结算");
 
 if (failures.length) {
   console.error(`Card runtime check failed (${failures.length})`);
