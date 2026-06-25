@@ -26,6 +26,7 @@
     "smoke:boss-choice": "node scripts/smoke-boss-choice-responses.mjs",
     "smoke:boss-prelude": "node scripts/smoke-boss-preludes.mjs",
     "smoke:encounter-prelude": "node scripts/smoke-encounter-preludes.mjs",
+    "smoke:aftermath": "node scripts/smoke-battle-aftermaths.mjs",
     "smoke:story": "node scripts/smoke-story-lore.mjs",
     "smoke:epilogue": "node scripts/smoke-epilogue-branches.mjs",
     "smoke:event": "node scripts/smoke-event-consequences.mjs"

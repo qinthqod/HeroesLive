@@ -3,6 +3,7 @@ import {
   BOSS_MOVE_PATTERNS,
   BOSS_PHASES,
   BOSS_CHOICE_RESPONSES,
+  BATTLE_AFTERMATHS,
   ENCOUNTER_ENEMIES,
   ENCOUNTER_PRELUDES,
   ENCOUNTER_MOVE_PATTERNS,
@@ -27,6 +28,7 @@ import {
   TREASURES,
   resolveBossChoiceResponse,
   resolveBossPrelude,
+  resolveBattleAftermath,
   resolveEncounterPrelude,
 } from "../src/gameData.js";
 import { existsSync } from "node:fs";
@@ -81,6 +83,9 @@ for (const chapter of CHAPTERS) {
     expect(Boolean(prelude?.eyebrow && prelude?.title && prelude?.setting && prelude?.lesson), `${chapter.name} 第 ${stage} 战缺少独立遭遇登场`);
     expect(prelude?.beats?.length === 2 && prelude.beats.every((beat) => beat.speaker && beat.text), `${chapter.name} 第 ${stage} 战登场对白不完整`);
     expect(resolveEncounterPrelude(chapter.id, stage)?.enemy?.name === enemies[stage].name, `${chapter.name} 第 ${stage} 战登场未绑定正确敌人`);
+    const aftermath = BATTLE_AFTERMATHS[chapter.id]?.[stage];
+    expect(Boolean(aftermath?.title && aftermath?.narration && aftermath?.finalWords && aftermath?.rewardSource), `${chapter.name} 第 ${stage} 战缺少胜利余波或战利来源`);
+    expect(resolveBattleAftermath(chapter.id, stage)?.enemy?.name === enemies[stage].name, `${chapter.name} 第 ${stage} 战余波未绑定正确敌人`);
   }
 }
 expect(new Set(encounterMoveNames).size === encounterMoveNames.length, "十场普通与精英战的招式名称必须保持唯一");

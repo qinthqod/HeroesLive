@@ -28,6 +28,7 @@ import {
   getProfession,
   resolveBossChoiceResponse,
   resolveBossPrelude,
+  resolveBattleAftermath,
   resolveEncounterPrelude,
 } from "./gameData";
 import { analyzeDeck, currentBuildState, generateRewardChoices, rewardFit, rewardRecipeTarget } from "./deckStrategy";
@@ -3292,6 +3293,7 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
   const investigation = CHAPTER_INVESTIGATIONS[chapter];
   const bossClue = investigation?.routes?.at(-1)?.boss;
   const isBossReward = stage >= 3;
+  const aftermath = !isBossReward ? resolveBattleAftermath(chapter, stage) : null;
   const notebook = createRunNotebook({ screen: "reward", chapter, stage, routeProgress, hp, maxHp, stones, deck, origin: profession, clues, pendingClue, profile });
   const buildDirection = useMemo(() => rewardRecipeTarget(profession, stage, deck), [profession, stage, deck]);
   const rewards = useMemo(() => {
@@ -3314,6 +3316,21 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
       <span className="section-index">{isBossReward ? `章末 · ${chapterData?.boss}已败` : "战利 · 择一"}</span>
       <h1>{isBossReward ? "胜者执卷，真相落印" : "妖影散尽，灵光未灭"}</h1>
       <p>{isBossReward ? investigation?.conclusion : "至少一张战利会推进当前最接近的流派，其余保留补强与转型空间。"}</p>
+      {aftermath && <div className="battle-aftermath">
+        <img src={aftermath.enemy.art} alt="" />
+        <div className="aftermath-copy">
+          <small>战斗余波 · {aftermath.enemy.name}</small>
+          <strong>{aftermath.title}</strong>
+          <p>{aftermath.narration}</p>
+          <blockquote>“{aftermath.finalWords}”</blockquote>
+        </div>
+        <aside>
+          <span>带回证据</span>
+          <b>{clues.at(-1) || "敌影消散前留下了新的调查方向"}</b>
+          <small>战利来源</small>
+          <em>{aftermath.rewardSource}</em>
+        </aside>
+      </div>}
       {isBossReward && bossClue && <div className="boss-revelation">
         <img src={chapterData?.art} alt="" />
         <div>

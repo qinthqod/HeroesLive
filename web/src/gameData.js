@@ -703,6 +703,99 @@ export function resolveEncounterPrelude(chapter, stage) {
   return prelude && enemy ? { ...prelude, enemy } : null;
 }
 
+export const BATTLE_AFTERMATHS = {
+  1: {
+    1: {
+      title: "妖影倒下后，名牌仍在发热",
+      narration: "野狼形体散入雨雾，泥地却留下一个外门弟子跪守山门的旧影。它并非闯入者，而是被留在试炼中的守灯人。",
+      finalWords: "第二十四人……不是第一次。",
+      rewardSource: "从断裂名牌与妖影残留的试炼记忆中凝成",
+    },
+    2: {
+      title: "双剑折断，断碑露出新刻痕",
+      narration: "巡山妖失去竹雾掩护后恢复片刻清醒。它用最后一截剑锋，替你圈出了碑上反复被凿除的位置。",
+      finalWords: "山门从来知道，多出来的是谁。",
+      rewardSource: "由两柄旧剑与历代巡山术式重组而成",
+    },
+  },
+  2: {
+    1: {
+      title: "无面灯侍想起了自己的名字",
+      narration: "灯罩碎裂时，一张被灯油泡烂的路引落在地上。上面不是你的姓名，而是二十四年前失踪的第一位替灯人。",
+      finalWords: "我借走的……原来一直是自己。",
+      rewardSource: "从熄灭灯绳与未尽余生中析出",
+    },
+    2: {
+      title: "旧名石墙从中间裂开",
+      narration: "长老背后的断碑倒下，露出师父曾试图熄灭全部鬼灯的次序。山门旧案第一次拥有完整的起点。",
+      finalWords: "规矩若停，旧名便会回来索债。",
+      rewardSource: "由镇魂碑文与护灯禁术残页凝成",
+    },
+  },
+  3: {
+    1: {
+      title: "劫影消散，只剩一次失败的选择",
+      narration: "雷火没有留下尸骸，只在石面烧出一个反复举手又放下的人影。阵法复制的不是修士，而是他们屈服的瞬间。",
+      finalWords: "接受安排……便不会再痛。",
+      rewardSource: "从残余雷痕与失败筑基法中淬出",
+    },
+    2: {
+      title: "第三问之后，石阶不再出声",
+      narration: "劫使的面具裂成三片，每片背面都写着同一句答案：牺牲少数是因为他们从未被允许回答。",
+      finalWords: "若所有人都知道，青岚还会选择安稳吗？",
+      rewardSource: "由三重雷罚与问心阵理推演而成",
+    },
+  },
+  4: {
+    1: {
+      title: "游魂吐出一枚没有画完的梦",
+      narration: "噩梦散去后，长街上浮现一片歪斜海岸。那是茶楼女童被黑莲收走前，最后一次想象城外的模样。",
+      finalWords: "我只是……替他们保管害怕。",
+      rewardSource: "从归还的梦片与游魂本能中化出",
+    },
+    2: {
+      title: "梦茧破裂，全城影子同时坠地",
+      narration: "织梦师的针线断开，数百段噩梦沿街寻找主人。黑莲并未吞噬痛苦，只把它缝成维持契约的养料。",
+      finalWords: "他们醒来以后，会恨你把梦还回去。",
+      rewardSource: "由断裂影线与黑莲织梦术拆解而成",
+    },
+  },
+  5: {
+    1: {
+      title: "另一个你没有化作灰烬",
+      narration: "旧命残影退回缺页，只留下它曾走过的完整记忆。未行之路不会消失，但也没有资格取代已经发生的人生。",
+      finalWords: "别忘了，我也曾可能是真的。",
+      rewardSource: "从未选道途与命册缺页的缝隙中取得",
+    },
+    2: {
+      title: "三张命册同时失去墨色",
+      narration: "执笔者遗念倒下后，封锁灵气、污染牌堆与改写意志的规则显出同源笔迹——真正执笔者从未离开天门。",
+      finalWords: "笔还在纸背。你击败的只是一个念头。",
+      rewardSource: "由褪色墨律与旧执笔传承重写而成",
+    },
+  },
+  6: {
+    1: {
+      title: "溺魂变回一段无人走过的月光",
+      narration: "它最后一次化成沈砚秋留在青岚谷的模样，却没有再向你伸手。可能被看见之后，终于承认自己并非现实。",
+      finalWords: "请替我记得……然后继续走。",
+      rewardSource: "从退潮月光与未行记忆中凝结",
+    },
+    2: {
+      title: "摆渡船沉下去，船夫留在岸上",
+      narration: "万千被压入船底的余生随潮散开。摆渡使第一次不再替司命划船，而是亲眼看着每条道路回到选择者面前。",
+      finalWords: "若他们再次后悔，这一次便由他们自己渡。",
+      rewardSource: "由沉月船骨与归墟渡法重铸而成",
+    },
+  },
+};
+
+export function resolveBattleAftermath(chapter, stage) {
+  const aftermath = BATTLE_AFTERMATHS[chapter]?.[stage];
+  const enemy = ENCOUNTER_ENEMIES[chapter]?.[stage];
+  return aftermath && enemy ? { ...aftermath, enemy } : null;
+}
+
 export const ENCOUNTER_MOVE_PATTERNS = {
   1: {
     1: [
