@@ -11,6 +11,7 @@ import {
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
   CHAPTER_STORIES,
+  CHAPTER_HOME_STATES,
   CHAPTER_TRANSITIONS,
   CHAPTER_STORY_CHOICES,
   CHAPTER_EPILOGUES,
@@ -2166,25 +2167,30 @@ function ChallengeGoalCard({ goal, claimProgressReward, compact = false }) {
 }
 
 function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resumeRun, claimProgressReward, dailyTrial }) {
-  const firstChapterProgress = Math.min(3, (profile.completedNodes || []).filter((node) => node.startsWith("chapter-1-scene-")).length);
-  const handbookUnlocked = (profile.unlockedLore || []).includes("shen-handbook-1");
+  const mainComplete = (profile.unlockedEndings || []).includes("chapter_6_ending");
+  const currentChapterId = mainComplete ? CHAPTERS.length : Math.min(CHAPTERS.length, Math.max(1, profile.chapter || 1));
+  const currentChapter = CHAPTERS[currentChapterId - 1];
+  const worldState = CHAPTER_HOME_STATES[mainComplete ? "complete" : currentChapterId];
+  const currentInvestigation = CHAPTER_INVESTIGATIONS[currentChapterId];
+  const archiveFound = profile.investigationArchive?.[String(currentChapterId)]?.length || 0;
+  const archiveTotal = investigationEvidence(currentChapterId).length;
   const goals = nextProgressGoals(profile, 2);
   const latestRun = profile.recentRuns?.[0];
   return (
     <section className="mobile-shell home-screen screen-content">
       <div className={`home-hero ${savedRun ? "has-save" : ""}`}>
-        <img src="/ui/bg_title_shrine.png" alt="" />
+        <img src={currentChapter.art} alt="" />
         <div className="home-shade" />
         <MobileTopBar title="青岚夜行" subtitle={`${profile.equippedTitle || "云游录"} · 第七夜`} profile={profile} />
         <div className="home-player">
-          <span className="section-index">当前境界 · 炼气七层</span>
-          <h1>命册有缺，<br />此夜无归。</h1>
-          <p>师姐留下的血书正在褪色。第七盏灯亮起之前，你必须进入青岚谷。</p>
+          <span className="section-index">{worldState.kicker}</span>
+          <h1>{worldState.title.split("\n").map((line, index) => <React.Fragment key={line}>{line}{index === 0 && <br />}</React.Fragment>)}</h1>
+          <p>{worldState.text}</p>
         </div>
         <button className="chapter-continue" onClick={beginRun}>
-          <small>{savedRun ? `自动存档 · 第 ${savedRun.selectedChapter} 章` : "主线 · 新的云游"}</small>
-          <strong>{savedRun ? CHAPTERS[savedRun.selectedChapter - 1]?.name : "雨入青岚"}</strong>
-          <span>{savedRun ? "重新选择道途 →" : "开始调查 →"}</span>
+          <small>{savedRun ? `另有自动存档 · 第 ${savedRun.selectedChapter} 章` : mainComplete ? "主线已结 · 自由重访" : `当前主线 · 第 ${currentChapterId} 章`}</small>
+          <strong>{savedRun ? CHAPTERS[savedRun.selectedChapter - 1]?.name : currentChapter.name}</strong>
+          <span>{savedRun ? "重新选择云游 →" : mainComplete ? "选择旧卷 →" : "选择道途 →"}</span>
         </button>
         {savedRun && <button className="run-resume" onClick={resumeRun}><span>{savedRun.screen === "combat" ? "继续当前战斗" : "继续上次云游"}</span><small>{savedRun.screen === "combat" ? `第 ${savedRun.combatTurn || 1} 回合 · 敌人 ${savedRun.enemy?.hp ?? "?"}/${savedRun.enemy?.max ?? "?"}` : `路线 ${savedRun.routeProgress + 1}/4`} · {getProfession(savedRun.origin).short} · 生命 {savedRun.hp}</small></button>}
       </div>
@@ -2201,9 +2207,9 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resume
           <button onClick={() => setScreen("growth")}><img src="/ui/insights/open_meridians.png" alt="" /><span><strong>悟道树</strong><small>永久成长</small></span></button>
           <button onClick={() => setOverlay("codex")}><img src="/ui/treasures/spirit_lamp.png" alt="" /><span><strong>异闻录</strong><small>人物与线索</small></span></button>
         </div>
-        <article className={`daily-thread ${handbookUnlocked ? "completed" : ""}`} onClick={() => handbookUnlocked && setOverlay("codex")}>
-          <div><span className="section-index">{handbookUnlocked ? "异闻已解" : "今夜异闻"}</span><h2>谁点亮了第七盏灯？</h2><p>{handbookUnlocked ? "《砚秋手札·雨亭残页》已收入异闻录 · 获得 8 悟道" : "完成第一章的三个剧情节点，解锁沈砚秋的旧日手札。"}</p></div>
-          <strong>{handbookUnlocked ? "已收录" : `${firstChapterProgress}/3`}</strong>
+        <article className={`daily-thread ${archiveFound === archiveTotal ? "completed" : ""}`} onClick={() => archiveFound === archiveTotal ? setOverlay("codex") : setScreen("chapters")}>
+          <div><span className="section-index">{mainComplete ? "宗卷补完" : "当前调查"}</span><h2>{currentInvestigation.objective}</h2><p>{archiveFound === archiveTotal ? "本章全部分支证据已收入异闻宗卷。" : `${currentInvestigation.opening} · 重返不同路线可补全分支证据。`}</p></div>
+          <strong>{archiveFound}/{archiveTotal}</strong>
         </article>
         <button className={`daily-trial-card ${dailyRewardStatus(profile, dailyTrial).claimed ? "completed" : ""}`} onClick={() => setScreen("daily")}>
           <span className="daily-trial-moon"><img src="/ui/treasures/spirit_lamp.png" alt="" /></span>
@@ -2325,6 +2331,7 @@ function DailyTrialScreen({ trial, profile, savedRun, onBack, onResume, onStart 
 }
 
 function ChapterScreen({ profile, onBack, onChoose }) {
+  const mainComplete = (profile.unlockedEndings || []).includes("chapter_6_ending");
   return (
     <section className="mobile-shell chapter-screen screen-content">
       <MobileTopBar title="云游录" subtitle={`${CHAPTERS.length} 卷主线 · 逐章解锁`} onBack={onBack} profile={profile} />
@@ -2336,15 +2343,18 @@ function ChapterScreen({ profile, onBack, onChoose }) {
       <div className="chapter-list">
         {CHAPTERS.map((chapter, index) => {
           const unlocked = index === 0 || profile.chapter > index;
+          const completed = (profile.unlockedEndings || []).some((ending) => ending === `chapter_${chapter.id}_ending` || (chapter.id === 5 && ["restore_fate", "rewrite_fate"].includes(ending)));
+          const current = unlocked && !completed && chapter.id === Math.min(CHAPTERS.length, profile.chapter || 1);
           return (
-            <button key={chapter.id} className={`chapter-card ${unlocked ? "" : "locked"}`} disabled={!unlocked} onClick={() => onChoose(chapter.id)}>
+            <button key={chapter.id} className={`chapter-card ${unlocked ? "" : "locked"} ${completed ? "completed" : ""} ${current ? "current" : ""}`} disabled={!unlocked} onClick={() => onChoose(chapter.id)}>
               <img src={chapter.art} alt="" />
               <div className="chapter-card-shade" />
-              <span className="chapter-number">卷 {String(chapter.id).padStart(2, "0")}</span>
-              <div><small>{chapter.region} · {chapter.level}</small><h2>{chapter.name}</h2><p>{chapter.summary}</p><strong>{unlocked ? `首领 · ${chapter.boss}` : "完成前章后解锁"}</strong></div>
+              <span className="chapter-number">{completed ? "已结卷" : current ? "当前主线" : `卷 ${String(chapter.id).padStart(2, "0")}`}</span>
+              <div><small>{chapter.region} · {chapter.level}</small><h2>{chapter.name}</h2><p>{chapter.summary}</p><strong>{!unlocked ? "完成前章后解锁" : completed ? `可重访 · 首领 ${chapter.boss}` : `继续主线 · 首领 ${chapter.boss}`}</strong></div>
             </button>
           );
         })}
+        {mainComplete && <div className="chapter-main-complete"><span>命册残卷 · 第一部完成</span><strong>所有篇章已开放自由重访</strong><p>另一条路线、另一种抉择和另一门道途仍会留下不同证据与后记。</p></div>}
       </div>
     </section>
   );

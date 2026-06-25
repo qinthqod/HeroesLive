@@ -1269,6 +1269,16 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .chapter-card p { margin: 0 0 9px; color: #99a79f; font-size: 10px; line-height: 1.55; }
 .chapter-card strong { color: #d2ae65; font-size: 9px; font-weight: 400; }
 .chapter-card.locked { filter: grayscale(.9) brightness(.55); cursor: not-allowed; }
+.chapter-card.current { border-color: rgba(226,177,69,.68); box-shadow: 0 15px 35px rgba(0,0,0,.35), inset 3px 0 #d0a448; }
+.chapter-card.current .chapter-number { color: #f1c969; }
+.chapter-card.completed { border-color: rgba(105,164,134,.38); }
+.chapter-card.completed .chapter-number { color: #91c4a8; }
+.chapter-card.completed > img { filter: brightness(.5) saturate(.58); }
+.chapter-main-complete { padding: 16px 17px; border: 1px solid rgba(111,160,135,.28); border-left: 2px solid #71a086; background: linear-gradient(110deg, rgba(12,47,34,.5), rgba(5,19,14,.82)); }
+.chapter-main-complete span, .chapter-main-complete strong { display: block; }
+.chapter-main-complete span { color: #79a28d; font-size: 8px; letter-spacing: .12em; }
+.chapter-main-complete strong { margin-top: 5px; color: #d6c89e; font-family: "STKaiti", serif; font-size: 17px; font-weight: 400; }
+.chapter-main-complete p { margin: 5px 0 0; color: #788c81; font-size: 9px; line-height: 1.55; }
 
 .class-screen { padding-bottom: 32px; }
 .class-focus { position: relative; height: 310px; overflow: hidden; border-block: 1px solid color-mix(in srgb, var(--job-color) 55%, transparent); }

@@ -9,6 +9,7 @@ import {
   ENCOUNTER_MOVE_PATTERNS,
   CHAPTERS,
   CHAPTER_BOSS_PRELUDES,
+  CHAPTER_HOME_STATES,
   CHAPTER_TRANSITIONS,
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
@@ -44,6 +45,11 @@ expect(PROFESSIONS.length >= 6, "至少需要 6 个职业");
 expect(ALL_CARDS.length >= 120, "至少需要 120 张职业卡牌");
 expect(DECK_RECIPES.length >= 100, "至少需要 100 套构筑配方");
 expect(CHAPTERS.length >= 6, "扩展版至少需要 6 章主线");
+expect(CHAPTERS.every((chapter) => {
+  const state = CHAPTER_HOME_STATES[chapter.id];
+  return state?.kicker && state?.title && state?.text;
+}), "每章必须具有独立山门世界状态");
+expect(Boolean(CHAPTER_HOME_STATES.complete?.kicker && CHAPTER_HOME_STATES.complete?.title && CHAPTER_HOME_STATES.complete?.text), "主线完成后必须具有终局山门状态");
 expect(ROUTE_ROWS.length >= 4, "章节路线至少需要 4 层");
 expect(STORY_SCENES.length >= 5, "第一章至少需要 5 个剧情场景");
 expect(TREASURES.length >= 10, "局内法宝池至少需要 10 件");
