@@ -12,6 +12,7 @@ import {
   CHAPTER_ROUTES,
   CHAPTER_STORIES,
   CHAPTER_STORY_CHOICES,
+  CHAPTER_EPILOGUES,
   CHAPTER_INVESTIGATIONS,
   CHAPTER_EVENTS,
   CHAPTER_ROUTE_STORIES,
@@ -265,6 +266,11 @@ function evaluateRun(stats, hp, maxHp) {
   return { score, grade, title };
 }
 
+function resolveChapterEpilogue(chapter, choices) {
+  const variants = CHAPTER_EPILOGUES[chapter] || [];
+  return [...variants].reverse().find((epilogue) => choices.includes(epilogue.choice)) || variants[0] || null;
+}
+
 function App() {
   const query = new URLSearchParams(window.location.search);
   const initialScreen = query.get("screen") || "home";
@@ -282,6 +288,9 @@ function App() {
     ? query.get("overlay")
     : null;
   const debugChoice = import.meta.env.DEV ? query.get("choice") : null;
+  const debugRunChoices = import.meta.env.DEV
+    ? (query.get("runChoices") || "").split(",").map((choice) => choice.trim()).filter(Boolean)
+    : [];
   const debugCard = import.meta.env.DEV
     ? ALL_CARDS.find((card) => card.id === query.get("card") || card.baseName === query.get("card"))
     : null;
@@ -335,7 +344,7 @@ function App() {
   const [runTrial, setRunTrial] = useState(null);
   const [storyIndex, setStoryIndex] = useState(initialStory);
   const [routeProgress, setRouteProgress] = useState(0);
-  const [runChoices, setRunChoices] = useState([]);
+  const [runChoices, setRunChoices] = useState(debugRunChoices);
   const [runChronicle, setRunChronicle] = useState([]);
   const [runClues, setRunClues] = useState(() => {
     if (!debugClueCount) return [];
@@ -378,6 +387,7 @@ function App() {
       discoveredTreasures: [],
       discoveredCards: defaultDiscoveredCards(),
       unlockedEndings: [],
+      unlockedEpilogues: [],
       investigationArchive: {},
       investigationRewards: [],
       chapterFailures: {},
@@ -403,6 +413,7 @@ function App() {
       discoveredTreasures: base.discoveredTreasures || [],
       discoveredCards: base.discoveredCards || defaultDiscoveredCards(),
       unlockedEndings: base.unlockedEndings || [],
+      unlockedEpilogues: base.unlockedEpilogues || [],
       investigationArchive: base.investigationArchive || {},
       investigationRewards: base.investigationRewards || [],
       claimedProgressGoals: base.claimedProgressGoals || [],
@@ -1707,6 +1718,7 @@ function App() {
       const endingId = selectedChapter === 5
         ? (runChoices.includes("重写命册") ? "rewrite_fate" : "restore_fate")
         : `chapter_${selectedChapter}_ending`;
+      const epilogue = resolveChapterEpilogue(selectedChapter, runChoices);
       const evaluation = evaluateRun({ ...runStats, combatsWon: Math.max(runStats.combatsWon, 3) }, hp, maxHp);
       setProfile((value) => {
         const archived = mergeInvestigationArchive(value, selectedChapter, runClues).profile;
@@ -1724,12 +1736,16 @@ function App() {
           treasures: treasures.length + (treasure ? 1 : 0),
           clues: runClues.length,
           ending: endingId,
+          epilogue: epilogue?.id || "",
         };
         let completedProfile = {
           ...archived,
           chapter: Math.max(Math.min(CHAPTERS.length, selectedChapter + 1), value.chapter),
           jade: archived.jade + 120,
           unlockedEndings: [...new Set([...(value.unlockedEndings || []), endingId])],
+          unlockedEpilogues: epilogue
+            ? [...new Set([...(value.unlockedEpilogues || []), epilogue.id])]
+            : (value.unlockedEpilogues || []),
           chapterFailures: { ...(archived.chapterFailures || {}), [selectedChapter]: 0 },
           recentRuns: [runRecord, ...(archived.recentRuns || [])].slice(0, 6),
         };
@@ -3179,6 +3195,7 @@ function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen,
       ? ["末页新书，诸命由己。", "你没有修复旧日秩序，而是在命册末页写下新的规则：从今以后，名字只能记录选择，不能替任何人决定前路。"]
       : ["旧册重明，无名归卷。", "你修复命册，却保留了所有被抹去的旧名。天地重新记住他们，也永远留下了篡改命数的罪证。"]
     : baseEnding;
+  const epilogue = resolveChapterEpilogue(chapter, runChoices);
   const investigation = CHAPTER_INVESTIGATIONS[chapter];
   const investigationComplete = runClues.length >= 4;
   const archive = profile.investigationArchive?.[String(chapter)] || [];
@@ -3188,6 +3205,12 @@ function SummaryScreen({ chapter, hp, maxHp, stones, treasures, deck, setScreen,
     <section className="summary-screen screen-content">
       <div className="summary-seal"><span>{evaluation.grade}</span><small>{evaluation.score} 分 · {evaluation.title}</small></div>
       <div className="summary-copy"><span className="section-index">{runMode === "daily" ? `今日试炼 · ${runTrial?.modifier?.name}` : `第 ${chapter} 章 · 已完成`}</span><h1>{endings[0]}</h1><p>{endings[1]}</p><small className="run-seed-note">种子 {runSeed}</small>{chapter === 5 && <small className="ending-unlocked">新结局已收入异闻录 · {runChoices.includes("重写命册") ? "诸命由己" : "旧名归卷"}</small>}</div>
+      {epilogue && <div className="summary-epilogue">
+        <span>人物后记 · {epilogue.character}</span>
+        <strong>{epilogue.title}</strong>
+        <p>{epilogue.text}</p>
+        <small>源于本局抉择「{epilogue.choice}」· 已收入异闻录</small>
+      </div>}
       <div className="summary-stats">
         <div><small>余命</small><strong>{hp}/{maxHp}</strong></div>
         <div><small>战斗 / 回合</small><strong>{runStats.combatsWon} / {runStats.turns}</strong></div>
@@ -3297,7 +3320,7 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
             <div><small>已收录术法</small><strong>{profile.discoveredCards?.length || 0}/{ALL_CARDS.length}</strong></div>
             <div><small>已见法宝</small><strong>{profile.discoveredTreasures?.length || 0}/{TREASURES.length}</strong></div>
             <div><small>剧情印记</small><strong>{profile.choices?.length || 0}</strong></div>
-            <div><small>结局卷</small><strong>{profile.unlockedEndings?.length || 0}/6</strong></div>
+            <div><small>结局卷</small><strong>{profile.unlockedEndings?.length || 0}/7</strong></div>
           </div>
           <h3 className="codex-heading">调查宗卷</h3>
           <h3 className="codex-heading">挑战卷</h3>
@@ -3339,7 +3362,7 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
           <div className="lore-scrolls">
             {(profile.unlockedLore || []).includes("shen-handbook-1")
               ? <article><span>沈砚秋 · 雨亭残页</span><strong>“第七盏灯不是为亡者而点。它在等一个仍然活着、却已经被命册写完的人。”</strong><small>完成第一章五幕剧情后收录</small></article>
-              : <article className="locked"><span>未解手札</span><strong>完成第一章三个剧情节点后显现。</strong><small>进度 {(profile.completedNodes || []).filter((node) => node.startsWith("chapter-1-scene-")).length}/3</small></article>}
+              : <article className="locked"><span>未解手札</span><strong>完成第一章五幕剧情后显现。</strong><small>进度 {(profile.completedNodes || []).filter((node) => node.startsWith("chapter-1-scene-")).length}/5</small></article>}
           </div>
           <h3 className="codex-heading">结局卷轴</h3>
           <div className="codex-marks">{profile.unlockedEndings?.length ? profile.unlockedEndings.map((ending) => <span key={ending}>{{
@@ -3347,9 +3370,21 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
             chapter_2_ending: "旧名重现",
             chapter_3_ending: "雷阵已破",
             chapter_4_ending: "万梦归城",
+            chapter_6_ending: "月潮退去",
             restore_fate: "旧名归卷",
             rewrite_fate: "诸命由己",
           }[ending] || ending}</span>) : <p>完成章节后，结局会被永久收入此卷。</p>}</div>
+          <h3 className="codex-heading">人物后记</h3>
+          <div className="epilogue-scrolls">
+            {Object.values(CHAPTER_EPILOGUES).flat().map((epilogue) => {
+              const unlocked = (profile.unlockedEpilogues || []).includes(epilogue.id);
+              return <article className={unlocked ? "" : "locked"} key={epilogue.id}>
+                <span>{unlocked ? epilogue.character : "未解后记"}</span>
+                <strong>{unlocked ? epilogue.title : "另一种抉择仍未走完"}</strong>
+                <p>{unlocked ? epilogue.text : `在章节中作出与「${epilogue.choice}」相关的选择并完成云游。`}</p>
+              </article>;
+            })}
+          </div>
         </>}
         {type === "settings" && <div className="save-management">
           <div className="feedback-settings">

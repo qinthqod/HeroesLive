@@ -55,6 +55,12 @@ const incompleteClaim = claimProgressGoal(sampleProfile, "hundred_cards");
 expect(!incompleteClaim.claimed && incompleteClaim.reason === "incomplete", "未完成挑战不可提前领取");
 const prioritized = nextProgressGoals(completedProfile, 1);
 expect(prioritized[0]?.id === "first_truth" && prioritized[0]?.claimable, "首页应优先显示待领取挑战");
+const duplicateFateProfile = {
+  ...sampleProfile,
+  unlockedEndings: ["chapter_1_ending", "chapter_2_ending", "chapter_3_ending", "restore_fate", "rewrite_fate"],
+};
+const fivePaths = progressSummaries(duplicateFateProfile).find((goal) => goal.id === "five_paths");
+expect(fivePaths.current === 4, "第五章两个结局不得被误算成两个已完成章节");
 
 if (failures.length) {
   console.error(`Progress goal check failed (${failures.length})`);

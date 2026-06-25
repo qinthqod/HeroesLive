@@ -297,6 +297,12 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .summary-copy { width: 520px; }
 .summary-copy p { color: #99a89f; line-height: 1.8; }
 .ending-unlocked { display: inline-block; margin-top: 12px; padding: 7px 10px; border-left: 2px solid var(--amber); background: rgba(72,48,14,.34); color: #d3b76b; }
+.summary-epilogue { width: 650px; margin-top: 20px; padding: 14px 17px; border: 1px solid rgba(213,174,83,.3); border-radius: 2px 14px 2px 14px; background: linear-gradient(120deg, rgba(64,44,14,.3), rgba(5,20,15,.8)); }
+.summary-epilogue span, .summary-epilogue strong, .summary-epilogue small { display: block; }
+.summary-epilogue span { color: #a98f55; font-size: 8px; letter-spacing: .14em; }
+.summary-epilogue strong { margin-top: 5px; color: #e2d09c; font-family: "STKaiti", serif; font-size: 19px; font-weight: 400; }
+.summary-epilogue p { margin: 6px 0 8px; color: #91a198; font-size: 10px; line-height: 1.65; }
+.summary-epilogue small { color: #6d8076; font-size: 7px; }
 .summary-stats { display: flex; gap: 1px; width: 650px; margin-top: 42px; background: rgba(162,190,170,.2); }
 .summary-stats div { flex: 1; display: flex; flex-direction: column; padding: 18px 24px; background: rgba(5,16,13,.88); }
 .summary-stats small { color: #6f8378; }
@@ -448,6 +454,13 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .lore-scrolls strong { margin-top: 8px; color: #cec6ab; font-family: "STKaiti", serif; font-size: 15px; font-weight: 400; line-height: 1.65; }
 .lore-scrolls small { margin-top: 8px; color: #6f8378; font-size: 8px; }
 .lore-scrolls article.locked { border-color: rgba(120,149,132,.16); background: rgba(4,16,12,.62); filter: grayscale(.6); opacity: .58; }
+.epilogue-scrolls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.epilogue-scrolls article { min-height: 116px; padding: 12px 13px; border: 1px solid rgba(205,161,65,.24); background: linear-gradient(135deg, rgba(67,44,13,.28), rgba(5,19,14,.76)); }
+.epilogue-scrolls span, .epilogue-scrolls strong { display: block; }
+.epilogue-scrolls span { color: #a98d51; font-size: 8px; letter-spacing: .08em; }
+.epilogue-scrolls strong { margin-top: 5px; color: #d7c79c; font-family: "STKaiti", serif; font-size: 15px; font-weight: 400; }
+.epilogue-scrolls p { margin: 7px 0 0; color: #788b81; font-size: 8px; line-height: 1.55; }
+.epilogue-scrolls article.locked { border-color: rgba(120,149,132,.14); background: rgba(4,16,12,.55); opacity: .5; }
 .save-management { position: relative; z-index: 1; margin-top: 20px; }
 .settings-overlay { width: min(640px, calc(100vw - 32px)) !important; max-height: 88vh; overflow-x: hidden; overflow-y: auto; }
 .feedback-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 16px; }
@@ -793,7 +806,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .reward-cards .game-card { width: calc((100vw - 56px) / 3); max-width: 124px; height: 238px; }
   .summary-screen { height: auto; min-height: 100%; padding: 92px 24px 50px; }
   .screen-summary .summary-screen { width: 100vw; max-width: 100vw; overflow-x: hidden; }
-  .summary-copy, .summary-stats, .summary-chronicle, .summary-rewards, .summary-daily { width: 100%; }
+  .summary-copy, .summary-epilogue, .summary-stats, .summary-chronicle, .summary-rewards, .summary-daily { width: 100%; }
   .summary-copy h1 { max-width: 100%; font-size: 38px; line-height: 1.12; overflow-wrap: anywhere; }
   .summary-copy p { max-width: 100%; font-size: 12px; overflow-wrap: anywhere; }
   .summary-stats { display: grid; grid-template-columns: 1fr 1fr; margin-top: 28px; }
@@ -812,6 +825,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .defeat-diagnosis div { min-height: 60px; }
   .defeat-actions button { flex: 1; min-width: 0; }
   .overlay > article { width: calc(100% - 32px); padding: 42px 26px; }
+  .epilogue-scrolls { grid-template-columns: 1fr; }
   .deck-overlay { max-height: 88vh; overflow-y: auto; }
   .codex-overlay { max-height: 88vh; }
   .challenge-goal-reward { align-items: flex-end; }

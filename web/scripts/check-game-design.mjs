@@ -9,6 +9,7 @@ import {
   CHAPTER_ROUTES,
   CHAPTER_STORIES,
   CHAPTER_STORY_CHOICES,
+  CHAPTER_EPILOGUES,
   CHAPTER_INVESTIGATIONS,
   CHAPTER_EVENTS,
   CHAPTER_ROUTE_STORIES,
@@ -88,6 +89,10 @@ for (const chapter of CHAPTERS) {
   const storyChoices = CHAPTER_STORY_CHOICES[chapter.id] || {};
   expect(Object.keys(storyChoices).length >= 2, `${chapter.name} 至少需要两次剧情抉择`);
   expect(Object.values(storyChoices).every((choices) => choices.length === 2 && choices.every((choice) => choice.label && choice.value && choice.consequence && choice.effect)), `${chapter.name} 剧情抉择缺少标签、后果或可执行效果`);
+  const epilogues = CHAPTER_EPILOGUES[chapter.id] || [];
+  expect(epilogues.length === 2, `${chapter.name} 必须具有两个可收集人物后记`);
+  const availableChoices = new Set(Object.values(storyChoices).flat().map((choice) => choice.value));
+  expect(epilogues.every((epilogue) => epilogue.id && epilogue.title && epilogue.text && epilogue.character && availableChoices.has(epilogue.choice)), `${chapter.name} 人物后记未正确绑定剧情抉择`);
   expect((CHAPTER_ROUTE_COPY[chapter.id]?.beats || []).length === 4, `${chapter.name} 需要 4 层路线叙事`);
   expect(Boolean(CHAPTER_ROUTE_COPY[chapter.id]?.clue), `${chapter.name} 缺少章节线索`);
   expect((CHAPTER_ROUTES[chapter.id] || []).length === 4, `${chapter.name} 需要 4 层独立路线`);

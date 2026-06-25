@@ -722,6 +722,33 @@ export const CHAPTER_STORY_CHOICES = {
   },
 };
 
+export const CHAPTER_EPILOGUES = {
+  1: [
+    { id: "rain_reply", choice: "留下回信", title: "雨亭有信，归人未归。", text: "三日后，雨亭石缝里多了一行新字：我看见了。继续走，不必等我。陆观从此每夜替你留一盏不写姓名的灯。", character: "沈砚秋 / 陆观" },
+    { id: "rain_erased", choice: "抹去暗号", title: "暗号已去，追兵失路。", text: "沈砚秋再没有回应雨亭。你保住了她的行踪，也第一次明白：保护一个人，有时意味着接受她暂时不会回头。", character: "沈砚秋" },
+  ],
+  2: [
+    { id: "lantern_farewell", choice: "替灯偿愿", title: "童子长大了一夜。", text: "纸灯童子听完师父未说出口的告别，终于在天亮前长成白发老人。他把空灯交给你，说余生虽短，至少如今属于自己。", character: "纸灯童子" },
+    { id: "lantern_refusal", choice: "拒绝替命", title: "旧灯无人再接。", text: "你把写着自己名字的灯留在旧亭。后来每个上山的人都能看见它，却再没有谁被迫接过前人的余生。", character: "替灯人" },
+  ],
+  3: [
+    { id: "thunder_truth", choice: "公示雷阵", title: "青岚谷第一次听见雷声。", text: "真相公开后，有人离谷，有人留下修补旧阵。安稳不再理所当然，却第一次成为所有人共同作出的选择。", character: "青岚谷众人" },
+    { id: "thunder_souls", choice: "释放残魂", title: "雷池多了许多名字。", text: "阵中残魂散去前，各自说出被夺走的姓名。沈砚秋将它们逐一抄下，答应往后不再让任何牺牲只剩一个数字。", character: "第一替灯人" },
+  ],
+  4: [
+    { id: "dream_vigil", choice: "守望首夜", title: "无灯城彻夜未眠。", text: "噩梦归来的第一夜，你和城民围坐到天明。恐惧没有吞没城市，反而让许多人第一次开口讲出自己真正想离开的理由。", character: "无灯城众人" },
+    { id: "dream_severed", choice: "强断契约", title: "黑莲一夜凋尽。", text: "契约被强行斩断，城中哭声持续了七日。第八日，茶楼女童在城门画下一片海——那是无灯城第一幅没人规定该画什么的画。", character: "茶楼女童" },
+  ],
+  5: [
+    { id: "fate_evidence", choice: "保留罪证", title: "纸背仍有旧墨。", text: "你把历代执笔者的罪证留在命册背面。后来每一位守页人接任前，都必须先读完那些被删去的名字。", character: "新命册守页人" },
+    { id: "fate_burned", choice: "焚去执笔者", title: "天门不再记得主人。", text: "执笔者的姓名化为灰烬，天门从此只认来路，不认权位。沈砚秋笑你烧得太干净，却亲手把第一捧灰撒向人间。", character: "沈砚秋" },
+  ],
+  6: [
+    { id: "moon_regret", choice: "承担遗憾", title: "月海留下可以回望的岸。", text: "归墟没有消失。人们偶尔仍会梦见未行之路，但醒来后能够带着遗憾继续生活。沈砚秋在渡口立下一块无字碑，纪念所有没有发生的人生。", character: "沈砚秋 / 归墟摆渡使" },
+    { id: "moon_all_paths", choice: "索回万途", title: "万途归来，众生自择。", text: "你要求司命归还所有可能，却也关闭了让可能冒充现实的月门。从此每个人都能想象另一条路，但必须亲自决定何时放下它。", character: "月蚀司命" },
+  ],
+};
+
 export const CHAPTER_ROUTE_COPY = {
   1: {
     title: "雨入青岚",

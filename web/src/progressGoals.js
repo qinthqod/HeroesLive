@@ -3,6 +3,16 @@ import { investigationEvidence } from "./investigationArchive.js";
 
 const gradeRank = { 丁: 1, 丙: 2, 乙: 3, 乙上: 4, 甲: 5, 甲上: 6 };
 
+function completedStoryChapters(profile) {
+  const chapters = new Set();
+  for (const ending of profile.unlockedEndings || []) {
+    const chapter = String(ending).match(/^chapter_(\d+)_ending$/)?.[1];
+    if (chapter) chapters.add(Number(chapter));
+    if (ending === "restore_fate" || ending === "rewrite_fate") chapters.add(5);
+  }
+  return chapters;
+}
+
 export const PROGRESS_GOALS = [
   {
     id: "first_truth",
@@ -18,7 +28,7 @@ export const PROGRESS_GOALS = [
     hook: "完成五章主线，抵达天门末页。",
     target: 5,
     reward: { jade: 260, spirit: 8, xp: 60, epithet: "五卷归人" },
-    metric: (profile) => Math.min(5, profile.unlockedEndings?.filter((id) => id.startsWith("chapter_") || id.includes("fate")).length || 0),
+    metric: (profile) => Math.min(5, completedStoryChapters(profile).size),
   },
   {
     id: "sixth_tide",
