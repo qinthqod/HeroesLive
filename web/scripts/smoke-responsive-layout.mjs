@@ -28,6 +28,7 @@ const layoutSnapshot = async (page) => page.evaluate(() => {
   const navBox = nav?.getBoundingClientRect();
   return {
     device: app?.dataset.device,
+    layout: app?.dataset.layout,
     className: app?.className || "",
     width: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
@@ -42,8 +43,11 @@ const layoutSnapshot = async (page) => page.evaluate(() => {
 await run("PC 首页进入桌面模式并使用宽屏壳层", { width: 1366, height: 768 }, "", async (page) => {
   const layout = await layoutSnapshot(page);
   const badgeText = await page.locator(".device-mode-badge").innerText();
+  const panelText = await page.locator(".desktop-mode-panel").innerText();
   if (layout.device !== "desktop" || !layout.className.includes("device-desktop")) throw new Error(`设备模式为 ${layout.device}`);
+  if (layout.layout !== "wide-desktop") throw new Error(`PC 布局标识为 ${layout.layout}`);
   if (!badgeText.includes("PC 版")) throw new Error(`PC 页面没有显示设备判断：${badgeText}`);
+  if (!panelText.includes("PC ADAPTIVE") || !panelText.includes("桌面端原则")) throw new Error("PC 首页没有桌面端专属状态栏");
   if (layout.shellWidth < 1200) throw new Error(`桌面壳层仍像移动端：${layout.shellWidth}px`);
   if (layout.navLeft > 80 || layout.navTop < 80 || layout.navBottomGap === 0) throw new Error("PC 导航没有切换为左侧栏");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 首页横向溢出 ${layout.scrollWidth - layout.width}px`);
@@ -52,6 +56,8 @@ await run("PC 首页进入桌面模式并使用宽屏壳层", { width: 1366, hei
 await run("移动首页保持移动模式和底部导航", { width: 430, height: 932 }, "", async (page) => {
   const layout = await layoutSnapshot(page);
   if (layout.device !== "mobile" || !layout.className.includes("device-mobile")) throw new Error(`设备模式为 ${layout.device}`);
+  if (layout.layout !== "compact-mobile") throw new Error(`移动布局标识为 ${layout.layout}`);
+  if (await page.locator(".desktop-mode-panel").count()) throw new Error("移动首页不应渲染 PC 专属状态栏");
   if (layout.shellWidth > 540) throw new Error(`移动壳层过宽：${layout.shellWidth}px`);
   if (layout.navBottomGap !== 0) throw new Error(`移动导航未贴底：${layout.navBottomGap}px`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动首页横向溢出 ${layout.scrollWidth - layout.width}px`);
@@ -75,12 +81,15 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   const qiBox = await page.locator(".qi-orb").boundingBox();
   const trackerBox = await page.locator(".combat-build-tracker").boundingBox();
   const cardStates = await page.locator(".hand .card-play-state").allTextContents();
+  const controlHints = await page.locator(".desktop-control-hints").innerText();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (layout.layout !== "wide-desktop") throw new Error(`PC 战斗布局标识为 ${layout.layout}`);
   if (!handBox || handBox.width < 760) throw new Error(`PC 手牌区过窄：${handBox?.width}`);
   if (!enemyBox || enemyBox.width < 820) throw new Error(`PC 敌方舞台过窄：${enemyBox?.width}`);
   if (!playerBox || !progressBox || playerBox.right >= enemyBox.x || progressBox.x <= enemyBox.x + enemyBox.width) throw new Error("PC 战斗页没有形成左中右桌面战局");
   if (qiBox && trackerBox && !(trackerBox.y + trackerBox.height < qiBox.y || qiBox.y + qiBox.height < trackerBox.y || trackerBox.x + trackerBox.width < qiBox.x || qiBox.x + qiBox.width < trackerBox.x)) throw new Error("PC 流派目标卡压住了灵气球");
   if (!cardStates.some((text) => /可出|联动|差|需|心魔/.test(text))) throw new Error("PC 战斗页没有显示卡牌即时状态");
+  if (!controlHints.includes("单击卡牌立即出牌") || !controlHints.includes("Space 结束回合")) throw new Error("PC 战斗页缺少桌面操作提示");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 

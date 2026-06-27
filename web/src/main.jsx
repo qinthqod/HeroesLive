@@ -1897,6 +1897,7 @@ function App() {
     <main
       className={`app screen-${screen} device-${deviceMode} transition-${transition}`}
       data-device={deviceMode}
+      data-layout={deviceMode === "desktop" ? "wide-desktop" : "compact-mobile"}
       onScroll={(event) => {
         if (screen === "combat" && event.currentTarget.scrollTop !== 0) {
           event.currentTarget.scrollTop = 0;
@@ -1908,6 +1909,20 @@ function App() {
       <div className="device-mode-badge" aria-hidden="true">
         {deviceMode === "desktop" ? "PC 版 · 横屏战局" : "移动版 · 单手游玩"}
       </div>
+      {deviceMode === "desktop" && ["home", "chapters", "classes", "growth", "collection", "daily", "challenge"].includes(screen) && (
+        <DesktopModePanel
+          screen={screen}
+          profile={profile}
+          chapter={selectedChapter}
+          stage={stage}
+          routeProgress={routeProgress}
+          hp={hp}
+          maxHp={maxHp}
+          stones={stones}
+          deck={runDeck}
+          origin={selectedOrigin}
+        />
+      )}
       {progressNotice && <div className="progress-reward-toast" role="status">
         <small>挑战卷已落印</small>
         <strong>{progressNotice.title}</strong>
@@ -2230,6 +2245,39 @@ function MobileTopBar({ title, subtitle, onBack, profile }) {
       <div><strong>{title}</strong><small>{subtitle}</small></div>
       {profile && <span className="account-level">Lv.{profile.level}</span>}
     </header>
+  );
+}
+
+function DesktopModePanel({ screen, profile, chapter, stage, routeProgress, hp, maxHp, stones, deck, origin }) {
+  const copy = {
+    home: ["山门桌面台", "左侧导航固定，右侧集中查看成长、试炼和长期目标。"],
+    chapters: ["主线卷册", "三列章节卡适合鼠标浏览，锁定、当前和已结卷状态分开呈现。"],
+    classes: ["道途选择", "职业画像与起始牌组并排，方便比较流派与熟练度收益。"],
+    growth: ["悟道树", "宽屏保留更多节点视野，适合规划永久成长路线。"],
+    collection: ["藏经阁", "桌面端提升卡牌和流派图谱的信息密度。"],
+    daily: ["今日试炼", "异兆、路线和首胜奖励集中排布，开局前可快速判断风险。"],
+    challenge: ["挑战复刻", "挑战码输入与历史战绩分区，方便复制和校验。"],
+  }[screen] || ["桌面模式", "当前页面已切换为 PC 宽屏适配。"];
+  const mastery = profile.jobMastery?.[origin] || 0;
+  const build = deck?.length ? currentBuildState(deck, origin) : null;
+  return (
+    <aside className="desktop-mode-panel" aria-label="PC 端适配信息">
+      <span>PC ADAPTIVE</span>
+      <strong>{copy[0]}</strong>
+      <p>{copy[1]}</p>
+      <div className="desktop-mode-stats">
+        <b>第 {chapter} 章 · {stage}/3</b>
+        <b>路线 {routeProgress + 1}/4</b>
+        <b>生命 {hp}/{maxHp}</b>
+        <b>灵石 {stones}</b>
+      </div>
+      <div className="desktop-mode-shortcuts">
+        <small>桌面端原则</small>
+        <em>鼠标单击主操作</em>
+        <em>双侧信息栏</em>
+        <em>{build ? `${build.recipe.name} ${build.progress}/5` : `熟练 ${mastery}/100`}</em>
+      </div>
+    </aside>
   );
 }
 
@@ -3429,6 +3477,12 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
           <button onClick={() => setOverlay("codex")}>图鉴</button>
           <button onClick={() => setOverlay("settings")}>设置</button>
         </nav>
+        <div className="desktop-control-hints" aria-label="PC 战斗操作提示">
+          <small>PC 操作</small>
+          <span>单击卡牌立即出牌</span>
+          <span>Space 结束回合</span>
+          <span>右栏快速查图鉴/地图</span>
+        </div>
       </aside>
       <RunNotebook notebook={notebook} compact className="combat-notebook" />
       <div className={`hand hand-${Math.min(7, hand.length)} ${guideStep === 1 ? "guide-focus" : ""}`}>
