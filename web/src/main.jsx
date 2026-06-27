@@ -45,6 +45,13 @@ import {
 } from "./progressGoals";
 import { createRunNotebook } from "./runNotebook";
 import {
+  TRIBULATION_LEVELS,
+  applyTribulationEnemy,
+  settleTribulationClear,
+  tribulationForLevel,
+  tribulationRewardStatus,
+} from "./tribulation";
+import {
   DAILY_TRIAL_REWARD,
   applyDailyEnemy,
   createRunSeed,
@@ -340,7 +347,8 @@ function App() {
   const hasDebugFailures = import.meta.env.DEV && query.has("failures");
   const debugFailures = hasDebugFailures ? Math.min(3, debugNumber("failures")) : 0;
   const debugResetFailure = import.meta.env.DEV && query.get("resetFailure") === "1";
-  const makeEnemy = (chapter, encounterStage, trial = null) => {
+  const debugTribulationLevel = import.meta.env.DEV ? Math.min(3, debugNumber("tribulation")) : 0;
+  const makeEnemy = (chapter, encounterStage, trial = null, tribulation = null) => {
     const enemyData = { ...ENCOUNTER_ENEMIES[chapter][encounterStage] };
     const moves = buildEnemyMoves(chapter, encounterStage);
     enemyData.moves = moves;
@@ -350,7 +358,7 @@ function App() {
       enemyData.phaseName = "第一相 · 守序";
       enemyData.phaseLine = "首领尚未显露真正形态。";
     }
-    const modified = applyDailyEnemy(enemyData, trial);
+    const modified = applyTribulationEnemy(applyDailyEnemy(enemyData, trial), tribulation);
     modified.intent = intentLabel(modified.moves[modified.moveIndex]);
     if (debugEnemyHp > 0) modified.hp = Math.min(modified.max, debugEnemyHp);
     return modified;
@@ -370,6 +378,7 @@ function App() {
   const [runMode, setRunMode] = useState("story");
   const [runSeed, setRunSeed] = useState(() => createRunSeed());
   const [runTrial, setRunTrial] = useState(null);
+  const [runTribulation, setRunTribulation] = useState(() => tribulationForLevel(debugTribulationLevel));
   const [storyIndex, setStoryIndex] = useState(initialStory);
   const [routeProgress, setRouteProgress] = useState(0);
   const [pendingEncounterStage, setPendingEncounterStage] = useState(initialStage);
@@ -425,6 +434,7 @@ function App() {
       unlockedTitles: [],
       equippedTitle: "云游录",
       completedDailyTrials: [],
+      completedTribulations: [],
       tutorialFlags: {},
       seenEncounters: [],
       feedback: { sound: true, haptics: true, volume: 0.55 },
@@ -450,6 +460,7 @@ function App() {
       unlockedTitles: base.unlockedTitles || [],
       equippedTitle: base.equippedTitle || "云游录",
       completedDailyTrials: base.completedDailyTrials || [],
+      completedTribulations: base.completedTribulations || [],
       chapterFailures: debugResetFailure
         ? { ...(base.chapterFailures || {}), [initialChapter]: 0 }
         : (base.chapterFailures || {}),
@@ -504,7 +515,7 @@ function App() {
   const [stones, setStones] = useState(18);
   const [consumables, setConsumables] = useState({ spirit: 2, skin: 1, clarity: 1, thunder: 1 });
   const [treasures, setTreasures] = useState(debugTreasures);
-  const [enemy, setEnemy] = useState(() => makeEnemy(initialChapter, initialStage));
+  const [enemy, setEnemy] = useState(() => makeEnemy(initialChapter, initialStage, null, tribulationForLevel(debugTribulationLevel)));
   const [runDeck, setRunDeck] = useState(cards[initialOrigin]);
   const initialHandSize = Math.min(7, debugNumber("hand", 5 + treasureValue(debugTreasures, "firstTurnDraw")));
   const debugHandCurseCount = debugNumber("handCurses");
@@ -659,11 +670,12 @@ function App() {
       runMode,
       runSeed,
       runTrial,
+      runTribulation,
       savedAt: Date.now(),
     };
     window.localStorage.setItem("qinglan-run-v1", JSON.stringify(snapshot));
     setSavedRun(snapshot);
-  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, pendingEncounterStage, runChoices, runChronicle, runClues, pendingClue, nextEnemyShield, marketVisit, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log, runMode, runSeed, runTrial]);
+  }, [screen, origin, selectedChapter, stage, hp, qi, shield, edge, playerWeak, stones, maxQi, consumables, treasures, storyIndex, routeProgress, pendingEncounterStage, runChoices, runChronicle, runClues, pendingClue, nextEnemyShield, marketVisit, runStats, runDeck, hand, drawPile, discardPile, exhaustPile, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, combatTurn, jobState, log, runMode, runSeed, runTrial, runTribulation]);
   useEffect(() => {
     if (screen === "combat" && enemy.hp <= 0 && !combatResolved.current) {
       finishCombat("敌影溃散");
@@ -735,12 +747,14 @@ function App() {
   function beginRun(chapterId = selectedChapter, options = {}) {
     const nextMode = options.mode || "story";
     const nextTrial = options.trial || null;
+    const nextTribulation = nextMode === "story" ? tribulationForLevel(options.tribulationLevel || 0) : tribulationForLevel(0);
     const runOrigin = options.origin || origin;
     const nextSeed = options.seed || createRunSeed();
     setOrigin(runOrigin);
     setSelectedChapter(chapterId);
     setRunMode(nextMode);
     setRunTrial(nextTrial);
+    setRunTribulation(nextTribulation);
     setRunSeed(nextSeed);
     const mastery = profile.jobMastery[runOrigin] || 0;
     const retrySupport = retrySupportFor(hasDebugFailures ? debugFailures : (profile.chapterFailures?.[chapterId] || 0));
@@ -781,6 +795,7 @@ function App() {
         : nextMode === "challenge"
           ? [`挑战复刻 · ${nextTrial?.modifier?.name || "标准规则"} · ${nextSeed}`]
           : [`试炼种子 · ${nextSeed}`]),
+      ...(nextTribulation.level ? [`劫数加身 · ${nextTribulation.name} · ${nextTribulation.risk}`] : []),
       ...(inherited.length ? [`道途传承 · ${inherited.join(" / ")}`] : []),
       ...(retrySupport.tier ? [`山门扶助 · ${retrySupport.title} · ${retrySupport.detail}`] : []),
     ]);
@@ -807,6 +822,7 @@ function App() {
     setRunMode(savedRun.runMode || "story");
     setRunSeed(savedRun.runSeed || createRunSeed(savedRun.savedAt || Date.now()));
     setRunTrial(savedRun.runTrial || null);
+    setRunTribulation(tribulationForLevel(savedRun.runTribulation?.level || 0));
     setStage(savedRun.stage || 1);
     setHp(Math.max(1, savedRun.hp || 72));
     setQi(savedRun.qi ?? savedRun.maxQi ?? 3);
@@ -830,7 +846,7 @@ function App() {
     setRunDeck(resumedDeck.length ? resumedDeck : cards[savedRun.origin || "sword"]);
     if (savedRun.screen === "combat" && savedRun.enemy) {
       combatResolved.current = false;
-      const currentEnemy = makeEnemy(savedRun.selectedChapter || 1, savedRun.stage || 1, savedRun.runTrial || null);
+      const currentEnemy = makeEnemy(savedRun.selectedChapter || 1, savedRun.stage || 1, savedRun.runTrial || null, savedRun.runTribulation);
       const savedBossPhase = savedRun.stage === 3 && savedRun.enemy.phase === 2 ? BOSS_PHASES[savedRun.selectedChapter || 1] : null;
       const restoredMoves = savedBossPhase?.moves || currentEnemy.moves;
       const restoredMoveIndex = Math.min(restoredMoves.length - 1, savedRun.enemy.moveIndex || 0);
@@ -963,17 +979,23 @@ function App() {
   function enterCombat(nextStage = stage) {
     combatResolved.current = false;
     setStage(nextStage);
-    const nextEnemy = makeEnemy(selectedChapter, nextStage, runTrial);
+    const nextEnemy = makeEnemy(selectedChapter, nextStage, runTrial, runTribulation);
     setEnemy(nextEnemy);
     setQi(maxQi + treasureValue(treasures, "firstTurnQi") + (nextStage === 1 ? (profile.talentLevels.edge || 0) : 0));
     setEnemyBurn(0);
     setEnemyPoison(0);
     setEnemyWeak(0);
     const trialShield = runTrial?.modifier?.enemyShield || 0;
-    setEnemyShield(nextEnemyShield + trialShield);
-    enemyShieldRef.current = nextEnemyShield + trialShield;
-    if (nextEnemyShield > 0) {
-      setRunChronicle((value) => [...value.slice(-5), `代价兑现 · 敌人获得 ${nextEnemyShield} 点护体`]);
+    const tribulationShield = runTribulation?.enemyShield || 0;
+    setEnemyShield(nextEnemyShield + trialShield + tribulationShield);
+    enemyShieldRef.current = nextEnemyShield + trialShield + tribulationShield;
+    const totalOpeningShield = nextEnemyShield + trialShield + tribulationShield;
+    if (nextEnemyShield > 0 || tribulationShield > 0) {
+      setRunChronicle((value) => [
+        ...value.slice(-5),
+        nextEnemyShield > 0 ? `代价兑现 · 敌人获得 ${nextEnemyShield} 点护体` : "",
+        tribulationShield > 0 ? `劫数压境 · ${runTribulation.name} 附加 ${tribulationShield} 点护体` : "",
+      ].filter(Boolean));
       setNextEnemyShield(0);
     }
     setPlayerWeak(0);
@@ -983,7 +1005,7 @@ function App() {
     lastPlayedCardRef.current = null;
     const latestClue = pendingClue?.text || runClues.at(-1);
     const encounterRead = `敌情「${nextEnemy.trait}」：${nextEnemy.counter}`;
-    setLog(nextEnemyShield > 0 ? `此前的选择化作代价：敌人带着 ${nextEnemyShield} 点护体拦住去路。${encounterRead}` : pendingClue ? `若能胜出，便可查证：${pendingClue.text} ${encounterRead}` : latestClue ? `线索仍在耳边：${latestClue} ${encounterRead}` : encounterRead);
+    setLog(totalOpeningShield > 0 ? `此前的选择与劫数化作压迫：敌人带着 ${totalOpeningShield} 点护体拦住去路。${encounterRead}` : pendingClue ? `若能胜出，便可查证：${pendingClue.text} ${encounterRead}` : latestClue ? `线索仍在耳边：${latestClue} ${encounterRead}` : encounterRead);
     setCombatFx(null);
     setTriggerFx(null);
     setShield(treasureValue(treasures, "startShield"));
@@ -1041,7 +1063,7 @@ function App() {
       const phaseShield = Math.max(0, (phaseData.shield || 0) + (choiceResponse?.bossShieldDelta || 0));
       const phaseMoves = phaseData.moves.map((move) => ({
         ...move,
-        damage: move.damage ? move.damage + (runTrial?.modifier?.enemyDamageBonus || 0) : move.damage,
+        damage: move.damage ? move.damage + (runTrial?.modifier?.enemyDamageBonus || 0) + (runTribulation?.enemyDamageBonus || 0) : move.damage,
       }));
       enemyShieldRef.current += phaseShield;
       setEnemyShield(enemyShieldRef.current);
@@ -1747,13 +1769,17 @@ function App() {
       && runTrial
       && !(profile.completedDailyTrials || []).includes(runTrial.dateKey);
     const dailyBonus = dailyFirstClear ? DAILY_TRIAL_REWARD : { jade: 0, spirit: 0, xp: 0 };
+    const tribulationStatus = stage >= 3 && runMode === "story" && runTribulation?.level
+      ? tribulationRewardStatus(profile, selectedChapter, runTribulation.level)
+      : { claimable: false, reward: { jade: 0, spirit: 0, xp: 0 } };
+    const tribulationBonus = tribulationStatus.claimable ? tribulationStatus.reward : { jade: 0, spirit: 0, xp: 0 };
     feedback("reward");
     setRunStats((value) => ({
       ...value,
       rewardsTaken: value.rewardsTaken + 1,
-      xpGained: value.xpGained + 90 + dailyBonus.xp,
-      spiritGained: value.spiritGained + 4 + dailyBonus.spirit + (archiveResult?.newlyCompleted ? INVESTIGATION_COMPLETION_REWARD.spirit : 0),
-      jadeGained: value.jadeGained + (stage >= 3 ? 120 : 0) + dailyBonus.jade + (archiveResult?.newlyCompleted ? INVESTIGATION_COMPLETION_REWARD.jade : 0),
+      xpGained: value.xpGained + 90 + dailyBonus.xp + tribulationBonus.xp,
+      spiritGained: value.spiritGained + 4 + dailyBonus.spirit + tribulationBonus.spirit + (archiveResult?.newlyCompleted ? INVESTIGATION_COMPLETION_REWARD.spirit : 0),
+      jadeGained: value.jadeGained + (stage >= 3 ? 120 : 0) + dailyBonus.jade + tribulationBonus.jade + (archiveResult?.newlyCompleted ? INVESTIGATION_COMPLETION_REWARD.jade : 0),
     }));
     if (card) setRunDeck((value) => [...value, card]);
     if (treasure) {
@@ -1786,6 +1812,8 @@ function App() {
           seed: runSeed,
           trialName: runTrial?.modifier?.name || "",
           modifierId: runTrial?.modifier?.id || "none",
+          tribulationLevel: runTribulation?.level || 0,
+          tribulationName: runTribulation?.name || "",
           grade: evaluation.grade,
           score: evaluation.score,
           deckSize: runDeck.length + (card ? 1 : 0),
@@ -1806,6 +1834,7 @@ function App() {
           recentRuns: [runRecord, ...(archived.recentRuns || [])].slice(0, 6),
         };
         if (dailyFirstClear) completedProfile = settleDailyTrial(completedProfile, runTrial).profile;
+        if (tribulationStatus.claimable) completedProfile = settleTribulationClear(completedProfile, selectedChapter, runTribulation.level).profile;
         return completedProfile;
       });
       changeScreen("summary");
@@ -1879,8 +1908,8 @@ function App() {
         <ChapterScreen
           profile={profile}
           onBack={() => changeScreen("classes")}
-          onChoose={(chapterId) => {
-            beginRun(chapterId);
+          onChoose={(chapterId, tribulationLevel = 0) => {
+            beginRun(chapterId, { tribulationLevel });
           }}
         />
       )}
@@ -1960,6 +1989,7 @@ function App() {
           runMode={runMode}
           runSeed={runSeed}
           runTrial={runTrial}
+          runTribulation={runTribulation}
           onChooseNode={(node, clue) => {
             setRunChronicle((value) => [...value.slice(-5), `路线 · ${node.name}`]);
             setPendingClue(createPendingClue(clue, node, routeProgress));
@@ -2089,6 +2119,7 @@ function App() {
           combatBusy={combatBusy}
           playerFx={playerFx}
           triggerFx={triggerFx}
+          runTribulation={runTribulation}
           playCard={playCard}
           effectiveCardCost={effectiveCardCost}
           cardRequirementMet={cardRequirementMet}
@@ -2104,8 +2135,8 @@ function App() {
           completeGuide={() => setProfile((value) => ({ ...value, tutorialFlags: { ...value.tutorialFlags, combat: true } }))}
         />
       )}
-      {screen === "reward" && <RewardScreen stage={stage} chapter={selectedChapter} routeProgress={routeProgress} origin={origin} hp={hp} maxHp={maxHp} deck={runDeck} treasures={treasures} stones={stones} clues={runClues} pendingClue={pendingClue} profile={profile} randomSeed={runSeed} setStones={setStones} claimReward={claimReward} skipReward={skipReward} />}
-      {screen === "summary" && <SummaryScreen chapter={selectedChapter} origin={origin} hp={hp} maxHp={maxHp} stones={stones} treasures={treasures} deck={runDeck} profile={profile} runChoices={runChoices} runChronicle={runChronicle} runClues={runClues} runStats={runStats} runMode={runMode} runSeed={runSeed} runTrial={runTrial} onHome={() => changeScreen("home")} onContinue={(nextChapter, nextOrigin) => beginRun(nextChapter, { origin: nextOrigin })} />}
+      {screen === "reward" && <RewardScreen stage={stage} chapter={selectedChapter} routeProgress={routeProgress} origin={origin} hp={hp} maxHp={maxHp} deck={runDeck} treasures={treasures} stones={stones} clues={runClues} pendingClue={pendingClue} profile={profile} randomSeed={runSeed} runTribulation={runTribulation} setStones={setStones} claimReward={claimReward} skipReward={skipReward} />}
+      {screen === "summary" && <SummaryScreen chapter={selectedChapter} origin={origin} hp={hp} maxHp={maxHp} stones={stones} treasures={treasures} deck={runDeck} profile={profile} runChoices={runChoices} runChronicle={runChronicle} runClues={runClues} runStats={runStats} runMode={runMode} runSeed={runSeed} runTrial={runTrial} runTribulation={runTribulation} onHome={() => changeScreen("home")} onContinue={(nextChapter, nextOrigin) => beginRun(nextChapter, { origin: nextOrigin })} />}
       {screen === "defeat" && (
         <DefeatScreen
           chapter={selectedChapter}
@@ -2332,6 +2363,8 @@ function DailyTrialScreen({ trial, profile, savedRun, onBack, onResume, onStart 
 
 function ChapterScreen({ profile, onBack, onChoose }) {
   const mainComplete = (profile.unlockedEndings || []).includes("chapter_6_ending");
+  const [tribulationLevel, setTribulationLevel] = useState(0);
+  const selectedTribulation = mainComplete ? tribulationForLevel(tribulationLevel) : tribulationForLevel(0);
   return (
     <section className="mobile-shell chapter-screen screen-content">
       <MobileTopBar title="云游录" subtitle={`${CHAPTERS.length} 卷主线 · 逐章解锁`} onBack={onBack} profile={profile} />
@@ -2340,17 +2373,38 @@ function ChapterScreen({ profile, onBack, onChoose }) {
         <h1>循灯而行</h1>
         <p>每一章包含剧情抉择、分支路线、精英事件与最终首领。</p>
       </div>
+      {mainComplete && <div className="tribulation-panel" data-testid="tribulation-panel">
+        <div className="tribulation-heading">
+          <span>终局复刷 · 可选劫数</span>
+          <strong>{selectedTribulation.short}</strong>
+          <p>{selectedTribulation.level ? selectedTribulation.risk : "标准难度适合补线索、收集后记与熟悉新职业。"}</p>
+        </div>
+        <div className="tribulation-options">
+          {TRIBULATION_LEVELS.map((item) => {
+            const clearedCount = CHAPTERS.filter((chapter) => tribulationRewardStatus(profile, chapter.id, item.level).claimed).length;
+            return (
+              <button key={item.id} className={selectedTribulation.level === item.level ? "active" : ""} onClick={() => setTribulationLevel(item.level)}>
+                <span>{item.name}</span>
+                <strong>{item.short}</strong>
+                <small>{item.level ? `首破：灵玉 +${item.reward.jade} · 悟道 +${item.reward.spirit}` : "无额外奖励"}</small>
+                {item.level > 0 && <em>{clearedCount}/{CHAPTERS.length} 章已破</em>}
+              </button>
+            );
+          })}
+        </div>
+      </div>}
       <div className="chapter-list">
         {CHAPTERS.map((chapter, index) => {
           const unlocked = index === 0 || profile.chapter > index;
           const completed = (profile.unlockedEndings || []).some((ending) => ending === `chapter_${chapter.id}_ending` || (chapter.id === 5 && ["restore_fate", "rewrite_fate"].includes(ending)));
           const current = unlocked && !completed && chapter.id === Math.min(CHAPTERS.length, profile.chapter || 1);
+          const tribulationStatus = tribulationRewardStatus(profile, chapter.id, selectedTribulation.level);
           return (
-            <button key={chapter.id} className={`chapter-card ${unlocked ? "" : "locked"} ${completed ? "completed" : ""} ${current ? "current" : ""}`} disabled={!unlocked} onClick={() => onChoose(chapter.id)}>
+            <button key={chapter.id} className={`chapter-card ${unlocked ? "" : "locked"} ${completed ? "completed" : ""} ${current ? "current" : ""} ${selectedTribulation.level ? "tribulation-selected" : ""}`} disabled={!unlocked} onClick={() => onChoose(chapter.id, selectedTribulation.level)}>
               <img src={chapter.art} alt="" />
               <div className="chapter-card-shade" />
               <span className="chapter-number">{completed ? "已结卷" : current ? "当前主线" : `卷 ${String(chapter.id).padStart(2, "0")}`}</span>
-              <div><small>{chapter.region} · {chapter.level}</small><h2>{chapter.name}</h2><p>{chapter.summary}</p><strong>{!unlocked ? "完成前章后解锁" : completed ? `可重访 · 首领 ${chapter.boss}` : `继续主线 · 首领 ${chapter.boss}`}</strong></div>
+              <div><small>{chapter.region} · {chapter.level}</small><h2>{chapter.name}</h2><p>{chapter.summary}</p><strong>{!unlocked ? "完成前章后解锁" : selectedTribulation.level ? `${selectedTribulation.name} · ${tribulationStatus.claimed ? "首破已领" : `首破称号「${selectedTribulation.reward.title}」`}` : completed ? `可重访 · 首领 ${chapter.boss}` : `继续主线 · 首领 ${chapter.boss}`}</strong></div>
             </button>
           );
         })}
@@ -2574,12 +2628,15 @@ function TitleScreen({ origin, setOrigin, selectedOrigin, beginRun, setOverlay }
   );
 }
 
-function RunHeader({ stage, chapter, hp, maxHp, stones, runMode, runSeed, runTrial, routeProgress = Math.max(0, stage - 1) }) {
+function RunHeader({ stage, chapter, hp, maxHp, stones, runMode, runSeed, runTrial, runTribulation, routeProgress = Math.max(0, stage - 1) }) {
   const chapterData = CHAPTERS[chapter - 1];
   const routeStep = Math.min(4, routeProgress + 1);
+  const storySubtitle = runTribulation?.level
+    ? `第 ${chapter} 章 · ${chapterData?.region} · ${runTribulation.name} · 路线 ${routeStep}/4`
+    : `第 ${chapter} 章 · ${chapterData?.region} · 路线 ${routeStep}/4`;
   return (
     <header className="run-header">
-      <div className="run-brand"><span className="brand-mark small">青</span><div><strong>{runMode === "daily" ? "今日试炼" : runMode === "challenge" ? "挑战复刻" : "青岚夜行"}</strong><small>{runMode !== "story" ? `${runTrial?.modifier?.name || "标准规则"} · ${runSeed}` : `第 ${chapter} 章 · ${chapterData?.region} · 路线 ${routeStep}/4`}</small></div></div>
+      <div className="run-brand"><span className="brand-mark small">青</span><div><strong>{runMode === "daily" ? "今日试炼" : runMode === "challenge" ? "挑战复刻" : runTribulation?.level ? "劫数云游" : "青岚夜行"}</strong><small>{runMode !== "story" ? `${runTrial?.modifier?.name || "标准规则"} · ${runSeed}` : storySubtitle}</small></div></div>
       <div className="run-progress"><span style={{ width: `${routeStep * 25}%` }} /></div>
       <div className="header-resources"><span><img src="/ui/icons/hp.png" alt="" />{hp}/{maxHp}</span><span><img src="/ui/icons/stones.png" alt="" />{stones}</span></div>
     </header>
@@ -2610,7 +2667,7 @@ function RunNotebook({ notebook, compact = false, className = "" }) {
   );
 }
 
-function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openEncounterPrelude, openBossPrelude, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, pendingClue, profile, treasures, deck, origin, runMode, runSeed, runTrial, onChooseNode }) {
+function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openEncounterPrelude, openBossPrelude, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, pendingClue, profile, treasures, deck, origin, runMode, runSeed, runTrial, runTribulation, onChooseNode }) {
   const chapterRoutes = CHAPTER_ROUTES[chapter] || ROUTE_ROWS;
   const baseChoices = chapterRoutes[Math.min(routeProgress, chapterRoutes.length - 1)];
   const currentChoices = [
@@ -2644,12 +2701,18 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
   };
   return (
     <section className="map-screen campaign-map screen-content">
-      <RunHeader stage={stage} chapter={chapter} hp={hp} maxHp={maxHp} stones={stones} runMode={runMode} runSeed={runSeed} runTrial={runTrial} routeProgress={routeProgress} />
+      <RunHeader stage={stage} chapter={chapter} hp={hp} maxHp={maxHp} stones={stones} runMode={runMode} runSeed={runSeed} runTrial={runTrial} runTribulation={runTribulation} routeProgress={routeProgress} />
       <div className="map-intro">
         <span className="section-index">第 {chapter} 章 · 路线 {routeProgress + 1}/4</span>
         <h1>{chapterCopy.title}</h1>
         <p>选择会改变资源、人物关系与后续剧情。首领在山门尽头等你。</p>
       </div>
+      {runTribulation?.level > 0 && <div className="run-tribulation-strip">
+        <span>{runTribulation.short}</span>
+        <strong>{runTribulation.name}</strong>
+        <p>{runTribulation.risk}</p>
+        <small>本章首破：灵玉 +{runTribulation.reward.jade} · 悟道 +{runTribulation.reward.spirit} · 称号「{runTribulation.reward.title}」</small>
+      </div>}
       {investigation && <div className="investigation-strip">
         <div><small>本章调查</small><strong>{investigation.objective}</strong></div>
         <span>{clues.length}/5</span>
@@ -3116,7 +3179,7 @@ function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingC
   );
 }
 
-function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, playCard, effectiveCardCost, cardRequirementMet, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, moonPhase, useConsumable, setOverlay, showGuide, completeGuide }) {
+function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, runTribulation, playCard, effectiveCardCost, cardRequirementMet, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, moonPhase, useConsumable, setOverlay, showGuide, completeGuide }) {
   const [guideStep, setGuideStep] = useState(showGuide ? 0 : -1);
   const hpPercent = Math.max(0, (enemy.hp / enemy.max) * 100);
   const currentEnemyMove = enemy.moves[enemy.moveIndex || 0];
@@ -3174,7 +3237,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         </div>
       </aside>
       <div className={`enemy-stage ${combatFx?.phase === "impact" && combatFx.damage > 0 ? "enemy-impact" : ""} ${combatFx?.phase === "enemy-turn" ? "enemy-lunge" : ""}`}>
-        <div className="enemy-title"><span>第 {chapter} 章 · {stage === 1 ? "普通战" : stage === 2 ? "精英战" : "首领战"} · 第 {combatTurn} 回合</span><h1>{enemy.name}</h1></div>
+        <div className="enemy-title"><span>第 {chapter} 章 · {stage === 1 ? "普通战" : stage === 2 ? "精英战" : "首领战"} · 第 {combatTurn} 回合{runTribulation?.level ? ` · ${runTribulation.name}` : ""}</span><h1>{enemy.name}</h1>{runTribulation?.level > 0 && <em className="enemy-tribulation-badge">{runTribulation.risk}</em>}</div>
         {stage === 3 && <div className={`boss-phase phase-${enemy.phase || 1}`}><small>{enemy.phaseName || "第一相 · 守序"}</small>{enemy.choiceEcho && <em>回应 · {enemy.choiceEcho}</em>}<span>{enemy.phaseLine}</span></div>}
         <div className="enemy-health"><span style={{ width: `${hpPercent}%` }} /><strong>{enemy.hp}/{enemy.max}</strong></div>
         <div className={`intent ${guideStep === 0 ? "guide-focus" : ""}`}><small>当前招式</small><strong>{enemy.intent}</strong><b>{currentEnemyMove.note}</b><em>下一式 · {intentLabel(enemy.moves[(enemy.moveIndex + 1) % enemy.moves.length])}</em></div>
@@ -3297,13 +3360,16 @@ function Card({ card, index, playable, displayCost = card.cost, comboReady = fal
   );
 }
 
-function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, treasures, stones, clues, pendingClue, profile, randomSeed, setStones, claimReward, skipReward }) {
+function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, treasures, stones, clues, pendingClue, profile, randomSeed, runTribulation, setStones, claimReward, skipReward }) {
   const [rerollCount, setRerollCount] = useState(0);
   const profession = getProfession(origin);
   const chapterData = CHAPTERS[chapter - 1];
   const investigation = CHAPTER_INVESTIGATIONS[chapter];
   const bossClue = investigation?.routes?.at(-1)?.boss;
   const isBossReward = stage >= 3;
+  const tribulationStatus = isBossReward && runTribulation?.level
+    ? tribulationRewardStatus(profile, chapter, runTribulation.level)
+    : null;
   const aftermath = !isBossReward ? resolveBattleAftermath(chapter, stage) : null;
   const notebook = createRunNotebook({ screen: "reward", chapter, stage, routeProgress, hp, maxHp, stones, deck, origin: profession, clues, pendingClue, profile });
   const buildDirection = useMemo(() => rewardRecipeTarget(profession, stage, deck), [profession, stage, deck]);
@@ -3350,6 +3416,12 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
           <p>选择最后一份战利，随后本章将正式结卷。</p>
         </div>
       </div>}
+      {tribulationStatus && <div className={`tribulation-reward ${tribulationStatus.claimed ? "claimed" : ""}`}>
+        <span>{tribulationStatus.claimed ? "劫数已破 · 本章首破奖励已领取" : "劫数首破 · 结卷后发放"}</span>
+        <strong>{runTribulation.name} · {runTribulation.reward.title}</strong>
+        <p>{runTribulation.risk}</p>
+        <small>灵玉 +{runTribulation.reward.jade} · 悟道 +{runTribulation.reward.spirit} · 修为 +{runTribulation.reward.xp}</small>
+      </div>}
       {buildDirection && <div className="reward-build-direction">
         <div><small>当前构筑方向 · {buildDirection.recipe.rank}</small><strong>{buildDirection.recipe.name}</strong></div>
         <span>{buildDirection.progress}/5</span>
@@ -3388,7 +3460,7 @@ function TreasureStrip({ treasures, compact = false }) {
   );
 }
 
-function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, profile, runChoices, runChronicle, runClues, runStats, runMode, runSeed, runTrial, onHome, onContinue }) {
+function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, profile, runChoices, runChronicle, runClues, runStats, runMode, runSeed, runTrial, runTribulation, onHome, onContinue }) {
   const evaluation = evaluateRun(runStats, hp, maxHp);
   const baseEnding = {
     1: ["雨停山门，灯灭其一。", "你带着第二十四人的线索走入内门，师姐的名字仍在血书上发亮。"],
@@ -3412,6 +3484,9 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
   const transition = CHAPTER_TRANSITIONS[chapter];
   const canContinue = runMode === "story" && chapter < CHAPTERS.length;
   const nextChapter = canContinue ? CHAPTERS[chapter] : null;
+  const tribulationStatus = runMode === "story" && runTribulation?.level
+    ? tribulationRewardStatus(profile, chapter, runTribulation.level)
+    : null;
   return (
     <section className="summary-screen screen-content">
       <div className="summary-seal"><span>{evaluation.grade}</span><small>{evaluation.score} 分 · {evaluation.title}</small></div>
@@ -3430,6 +3505,11 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
       </div>
       <div className="summary-rewards"><span>本章所得</span><b>修为 +{runStats.xpGained}</b><b>悟道 +{runStats.spiritGained}</b><b>灵玉 +{runStats.jadeGained}</b><b>灵石结余 {stones}</b></div>
       {runMode === "daily" && <div className="summary-daily"><span>今日试炼已落印</span><strong>{runTrial?.modifier?.name} · {runSeed}</strong><p>同日重复挑战仍可复盘构筑与评阶，但每日首胜资源不会重复发放。</p></div>}
+      {tribulationStatus && <div className="summary-daily summary-tribulation">
+        <span>{tribulationStatus.claimed ? "劫数落印" : "劫数复盘"}</span>
+        <strong>{runTribulation.name} · {runTribulation.reward.title}</strong>
+        <p>{tribulationStatus.claimed ? `本章 ${runTribulation.short} 已完成首破。更高劫数会继续保留清晰风险与独立首破奖励。` : "本章此前已领取过该劫数奖励，本次只记录评分与路线复盘。"}</p>
+      </div>}
       {investigation && <div className={`summary-investigation ${investigationComplete ? "complete" : ""}`}>
         <span>{investigationComplete ? "真相已明" : "疑云未尽"} · 线索 {runClues.length}/5</span>
         <strong>{investigation.objective}</strong>

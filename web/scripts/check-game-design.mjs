@@ -33,6 +33,7 @@ import {
   resolveBattleAftermath,
   resolveEncounterPrelude,
 } from "../src/gameData.js";
+import { TRIBULATION_LEVELS } from "../src/tribulation.js";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -45,6 +46,11 @@ expect(PROFESSIONS.length >= 6, "至少需要 6 个职业");
 expect(ALL_CARDS.length >= 120, "至少需要 120 张职业卡牌");
 expect(DECK_RECIPES.length >= 100, "至少需要 100 套构筑配方");
 expect(CHAPTERS.length >= 6, "扩展版至少需要 6 章主线");
+expect(TRIBULATION_LEVELS.length === 4, "终局劫数必须提供标准、风劫、心劫、命劫四档");
+expect(TRIBULATION_LEVELS[0].level === 0 && TRIBULATION_LEVELS[0].enemyHpMultiplier === 1 && TRIBULATION_LEVELS[0].enemyDamageBonus === 0, "无劫必须保持普通剧情标准数值");
+expect(TRIBULATION_LEVELS.every((item, index, list) => index === 0 || (item.enemyHpMultiplier > list[index - 1].enemyHpMultiplier && item.enemyDamageBonus >= list[index - 1].enemyDamageBonus)), "劫数风险必须随层级清晰递增");
+expect(TRIBULATION_LEVELS.slice(1).every((item) => item.risk && item.reward.jade > 0 && item.reward.spirit > 0 && item.reward.xp > 0 && item.reward.title), "每个高阶劫数都必须声明风险与首破奖励");
+expect(new Set(TRIBULATION_LEVELS.slice(1).map((item) => item.reward.title)).size === TRIBULATION_LEVELS.length - 1, "劫数首破称号必须唯一");
 expect(CHAPTERS.every((chapter) => {
   const state = CHAPTER_HOME_STATES[chapter.id];
   return state?.kicker && state?.title && state?.text;
