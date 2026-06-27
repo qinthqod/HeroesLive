@@ -704,6 +704,73 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .overlay p { color: #9aa99f; line-height: 2; }
 .overlay-close { position: absolute; z-index: 2; top: 18px; right: 18px; border: 0; background: transparent; color: var(--jade); cursor: pointer; }
 .deck-overlay { width: min(900px, 88vw) !important; max-height: 86vh; overflow: hidden; }
+.guide-overlay { width: min(940px, 90vw) !important; max-height: 88vh; overflow-y: auto; }
+.guide-current-run {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  margin: 18px 0 16px;
+  padding: 15px 17px;
+  border: 1px solid rgba(210,165,70,.3);
+  border-radius: 16px 3px 16px 3px;
+  background: linear-gradient(110deg, rgba(72,49,15,.42), rgba(7,26,20,.88));
+}
+.guide-current-run small,
+.guide-current-run strong,
+.guide-current-run p { display: block; }
+.guide-current-run small { color: #b28f4f; font-size: 8px; letter-spacing: .14em; }
+.guide-current-run strong { margin-top: 4px; color: #ead49b; font-family: "STKaiti", serif; font-size: 22px; font-weight: 400; }
+.guide-current-run p { margin: 5px 0 0; color: #8fa399; font-size: 9px; line-height: 1.6; }
+.guide-current-run > span {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border: 1px solid rgba(221,177,76,.42);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(221,177,76,.18), rgba(9,28,21,.92));
+  color: #f0d482;
+  font-family: "STKaiti", serif;
+  font-size: 28px;
+}
+.guide-current-run > span i { color: #849b8e; font-family: "Qinglan Sans", sans-serif; font-size: 9px; font-style: normal; }
+.guide-playbook {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.guide-playbook article {
+  min-height: 228px;
+  display: flex;
+  flex-direction: column;
+  padding: 15px 14px;
+  border: 1px solid rgba(135,166,148,.18);
+  border-radius: 14px 3px 14px 3px;
+  background:
+    radial-gradient(circle at 70% 0, rgba(124,178,151,.1), transparent 34%),
+    rgba(5,19,15,.72);
+}
+.guide-playbook small { color: #87b59d; font-size: 8px; letter-spacing: .14em; }
+.guide-playbook strong { margin-top: 8px; color: #e4d1a2; font-family: "STKaiti", serif; font-size: 19px; font-weight: 400; line-height: 1.25; }
+.guide-playbook p { margin: 8px 0 12px; color: #879990; font-size: 9px; line-height: 1.65; }
+.guide-playbook div { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; }
+.guide-playbook b {
+  padding: 4px 6px;
+  border: 1px solid rgba(205,161,65,.2);
+  background: rgba(72,49,15,.22);
+  color: #bda76d;
+  font-size: 8px;
+  font-weight: 400;
+}
+.guide-rhythm-note {
+  margin-top: 13px;
+  padding: 13px 15px;
+  border-left: 2px solid #7daf93;
+  background: rgba(35,82,60,.16);
+}
+.guide-rhythm-note span { display: block; color: #8fc1a7; font-size: 9px; letter-spacing: .12em; }
+.guide-rhythm-note p { margin: 5px 0 0; color: #92a49a; font-size: 9px; line-height: 1.7; }
 .deck-build-state { display: grid; grid-template-columns: 1fr auto; gap: 7px 16px; margin-top: 15px; padding: 13px 15px; border: 1px solid rgba(210,165,70,.3); background: linear-gradient(110deg, rgba(60,42,14,.46), rgba(7,25,19,.88)); }
 .deck-build-state small, .deck-build-state strong { display: block; }
 .deck-build-state small { color: #9a8452; font-size: 8px; letter-spacing: .08em; }
@@ -1258,6 +1325,11 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .overlay > article { width: calc(100% - 32px); padding: 42px 26px; }
   .epilogue-scrolls { grid-template-columns: 1fr; }
   .deck-overlay { max-height: 88vh; overflow-y: auto; }
+  .guide-overlay { width: calc(100% - 32px) !important; padding: 42px 22px !important; }
+  .guide-current-run { grid-template-columns: 1fr; }
+  .guide-current-run > span { width: 58px; height: 58px; font-size: 24px; }
+  .guide-playbook { grid-template-columns: 1fr; }
+  .guide-playbook article { min-height: 0; }
   .codex-overlay { max-height: 88vh; }
   .challenge-goal-reward { align-items: flex-end; }
   .challenge-scroll .challenge-goal-reward small { white-space: normal; }

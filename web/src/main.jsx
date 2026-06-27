@@ -3904,6 +3904,33 @@ function DefeatScreen({ chapter, stage, deck, treasures, clues, pendingClue, run
   );
 }
 
+const GUIDE_PLAYBOOK = [
+  {
+    label: "壹 · 读局面",
+    title: "先看敌意，再决定攻守",
+    text: "每回合只先判断两件事：当前招式会不会破血线，下一式是否需要提前留护体。",
+    checks: ["当前招式", "下一式预告", "自身生命/护盾"],
+  },
+  {
+    label: "贰 · 选路线",
+    title: "用风险换最缺的资源",
+    text: "血线低走调息，牌组散走修炼，缺核心走战斗或精英，缺稳定性再进坊市。",
+    checks: ["风险", "收益", "后果"],
+  },
+  {
+    label: "叁 · 取战利",
+    title: "补短板优先于稀有度",
+    text: "先补过牌、防护、核心组件，再考虑高稀有牌。不能服务流派的强牌也会拖慢成型。",
+    checks: ["费用曲线", "流派进度", "防护/过牌"],
+  },
+  {
+    label: "肆 · 整牌组",
+    title: "牌组越清晰，抽牌越可靠",
+    text: "每章至少让一个组件成型：删掉低贡献牌，精研常用牌，避免只拿不整理。",
+    checks: ["核心 5 张", "冗余牌", "精研目标"],
+  },
+];
+
 function Overlay({ type, close, deck, origin, profile, setProfile, treasures, savedRun, abandonRun, feedback, claimProgressReward }) {
   const analysis = analyzeDeck(deck);
   const build = currentBuildState(deck, origin);
@@ -3921,9 +3948,33 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
   })[type], [type]);
   return (
     <div className="overlay" onMouseDown={close}>
-      <article className={type === "deck" ? "deck-overlay" : type === "codex" ? "codex-overlay" : ""} onMouseDown={(event) => event.stopPropagation()}>
+      <article className={type === "deck" ? "deck-overlay" : type === "codex" ? "codex-overlay" : type === "guide" ? "guide-overlay" : ""} onMouseDown={(event) => event.stopPropagation()}>
         <button className="overlay-close" onClick={close}>收起</button>
         <span className="section-index">卷册</span><h2>{content[0]}</h2><p>{content[1]}</p>
+        {type === "guide" && <>
+          <section className="guide-current-run">
+            <div>
+              <small>当前牌组提醒</small>
+              <strong>{build ? `${build.recipe.name} · ${build.progress}/5` : `${analysis.total} 张牌 · ${analysis.priorities[0] || "结构健康"}`}</strong>
+              <p>{build?.nextCard ? `下一张核心优先寻找「${build.nextCard.name}」，关键词「${build.nextCard.keyword}」。` : analysis.priorities.join(" · ") || "继续保持低费、过牌与防护的平衡。"}</p>
+            </div>
+            <span>{analysis.total}<i>张</i></span>
+          </section>
+          <section className="guide-playbook" aria-label="试炼札记四步手册">
+            {GUIDE_PLAYBOOK.map((item) => (
+              <article key={item.label}>
+                <small>{item.label}</small>
+                <strong>{item.title}</strong>
+                <p>{item.text}</p>
+                <div>{item.checks.map((check) => <b key={check}>{check}</b>)}</div>
+              </article>
+            ))}
+          </section>
+          <section className="guide-rhythm-note">
+            <span>一局节奏</span>
+            <p>战斗学敌意，路线做取舍，战利补短板，牌组页看成型度。每次只处理一个主要问题，别同时追求伤害、防御、稀有度和剧情全满。</p>
+          </section>
+        </>}
         {type === "deck" && <>
           {build && <div className={`deck-build-state progress-${build.progress}`}>
             <div><small>{build.label} · {build.recipe.rank}</small><strong>{build.recipe.name}</strong><p>{build.recipe.strategy}</p></div>

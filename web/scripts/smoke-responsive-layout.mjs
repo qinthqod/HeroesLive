@@ -63,6 +63,33 @@ await run("移动首页保持移动模式和底部导航", { width: 430, height:
   if (layout.scrollWidth > layout.width) throw new Error(`移动首页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 试炼札记提供四步学习手册", { width: 1366, height: 768 }, "?overlay=guide", async (page) => {
+  await page.locator(".guide-playbook").waitFor();
+  const layout = await layoutSnapshot(page);
+  const guideText = await page.locator(".guide-overlay").innerText();
+  const guideCards = await page.locator(".guide-playbook article").count();
+  const guideRows = await page.locator(".guide-playbook article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (guideCards !== 4) throw new Error(`试炼札记区块数异常：${guideCards}`);
+  for (const phrase of ["读局面", "选路线", "取战利", "整牌组", "当前牌组提醒"]) {
+    if (!guideText.includes(phrase)) throw new Error(`试炼札记缺少 ${phrase}`);
+  }
+  if (guideRows !== 1) throw new Error("PC 试炼札记没有使用四列桌面手册");
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 试炼札记横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动试炼札记单列且不横溢", { width: 430, height: 932 }, "?overlay=guide", async (page) => {
+  await page.locator(".guide-playbook").waitFor();
+  const layout = await layoutSnapshot(page);
+  const guideBox = await page.locator(".guide-overlay").boundingBox();
+  const guideCards = await page.locator(".guide-playbook article").count();
+  const guideRows = await page.locator(".guide-playbook article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  if (guideCards !== 4 || guideRows !== 4) throw new Error(`移动试炼札记未保持四块单列：cards=${guideCards}, rows=${guideRows}`);
+  if (!guideBox || guideBox.width > 402) throw new Error(`移动试炼札记过宽：${guideBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`移动试炼札记横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
 await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, "?screen=chapters", async (page) => {
   await page.locator(".chapter-card").first().waitFor();
   const layout = await layoutSnapshot(page);
