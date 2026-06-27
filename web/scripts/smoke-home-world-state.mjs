@@ -70,6 +70,12 @@ for (const state of states) {
     if (state.complete && currentCount !== 0) throw new Error("终局仍标记当前主线");
     if (completedCount !== state.endings.length) throw new Error(`已结卷数量为 ${completedCount}`);
     if (state.complete && await page.locator(".chapter-main-complete").count() !== 1) throw new Error("终局缺少自由重访说明");
+    const replayGoalCount = await page.locator(".chapter-replay-goals").count();
+    const firstReplayText = await page.locator(".chapter-card").first().innerText();
+    if (replayGoalCount !== CHAPTERS.length) throw new Error(`章节复玩目标数量为 ${replayGoalCount}`);
+    for (const phrase of ["证据", "后记", "劫数", "下一目标"]) {
+      if (!firstReplayText.includes(phrase)) throw new Error(`章节卡缺少复玩字段 ${phrase}`);
+    }
     if (state.complete) await page.screenshot({ path: "/tmp/heroeslive-chapters-complete.png", fullPage: true });
     console.log(`✓ ${state.label} · 山门第 ${state.current} 章状态`);
   } catch (error) {

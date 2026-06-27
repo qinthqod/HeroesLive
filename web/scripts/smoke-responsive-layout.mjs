@@ -93,9 +93,24 @@ await run("移动试炼札记单列且不横溢", { width: 430, height: 932 }, "
 await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, "?screen=chapters", async (page) => {
   await page.locator(".chapter-card").first().waitFor();
   const layout = await layoutSnapshot(page);
+  const firstCardText = await page.locator(".chapter-card").first().innerText();
+  const firstCardBox = await page.locator(".chapter-card").first().boundingBox();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (layout.chapterRows !== 1) throw new Error("前三个章节卡没有排成同一行");
+  if (!firstCardText.includes("证据") || !firstCardText.includes("后记") || !firstCardText.includes("劫数") || !firstCardText.includes("下一目标")) throw new Error("PC 章节卡缺少复玩目标");
+  if (!firstCardBox || firstCardBox.height < 300) throw new Error(`PC 章节卡高度不足以承载目标梯度：${firstCardBox?.height}`);
   if (layout.scrollWidth > layout.width) throw new Error(`PC 章节页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动章节页显示复玩目标且不横溢", { width: 430, height: 932 }, "?screen=chapters", async (page) => {
+  await page.locator(".chapter-card").first().waitFor();
+  const layout = await layoutSnapshot(page);
+  const firstCardText = await page.locator(".chapter-card").first().innerText();
+  const goalBox = await page.locator(".chapter-replay-goals").first().boundingBox();
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  if (!firstCardText.includes("证据") || !firstCardText.includes("后记") || !firstCardText.includes("劫数") || !firstCardText.includes("下一目标")) throw new Error("移动章节卡缺少复玩目标");
+  if (!goalBox || goalBox.width > 390) throw new Error(`移动章节复玩目标过宽：${goalBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`移动章节页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
 await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, "?screen=combat&chapter=6&stage=3&move=0", async (page) => {

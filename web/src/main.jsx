@@ -2500,12 +2500,33 @@ function ChapterScreen({ profile, onBack, onChoose }) {
           const completed = (profile.unlockedEndings || []).some((ending) => ending === `chapter_${chapter.id}_ending` || (chapter.id === 5 && ["restore_fate", "rewrite_fate"].includes(ending)));
           const current = unlocked && !completed && chapter.id === Math.min(CHAPTERS.length, profile.chapter || 1);
           const tribulationStatus = tribulationRewardStatus(profile, chapter.id, selectedTribulation.level);
+          const evidence = investigationEvidence(chapter.id);
+          const foundEvidence = profile.investigationArchive?.[String(chapter.id)]?.length || 0;
+          const epilogues = CHAPTER_EPILOGUES[chapter.id] || [];
+          const foundEpilogues = epilogues.filter((epilogue) => (profile.unlockedEpilogues || []).includes(epilogue.id)).length;
+          const tribulationClears = TRIBULATION_LEVELS.slice(1).filter((item) => tribulationRewardStatus(profile, chapter.id, item.level).claimed).length;
+          const nextTarget = !unlocked
+            ? "完成前章"
+            : foundEvidence < evidence.length
+              ? `补证据 ${foundEvidence}/${evidence.length}`
+              : foundEpilogues < epilogues.length
+                ? `补后记 ${foundEpilogues}/${epilogues.length}`
+                : mainComplete && tribulationClears < TRIBULATION_LEVELS.length - 1
+                  ? `破劫数 ${tribulationClears}/${TRIBULATION_LEVELS.length - 1}`
+                  : completed ? "换职业复盘" : "推进主线";
           return (
             <button key={chapter.id} className={`chapter-card ${unlocked ? "" : "locked"} ${completed ? "completed" : ""} ${current ? "current" : ""} ${selectedTribulation.level ? "tribulation-selected" : ""}`} disabled={!unlocked} onClick={() => onChoose(chapter.id, selectedTribulation.level)}>
               <img src={chapter.art} alt="" />
               <div className="chapter-card-shade" />
               <span className="chapter-number">{completed ? "已结卷" : current ? "当前主线" : `卷 ${String(chapter.id).padStart(2, "0")}`}</span>
-              <div><small>{chapter.region} · {chapter.level}</small><h2>{chapter.name}</h2><p>{chapter.summary}</p><strong>{!unlocked ? "完成前章后解锁" : selectedTribulation.level ? `${selectedTribulation.name} · ${tribulationStatus.claimed ? "首破已领" : `首破称号「${selectedTribulation.reward.title}」`}` : completed ? `可重访 · 首领 ${chapter.boss}` : `继续主线 · 首领 ${chapter.boss}`}</strong></div>
+              <div><small>{chapter.region} · {chapter.level}</small><h2>{chapter.name}</h2><p>{chapter.summary}</p><strong>{!unlocked ? "完成前章后解锁" : selectedTribulation.level ? `${selectedTribulation.name} · ${tribulationStatus.claimed ? "首破已领" : `首破称号「${selectedTribulation.reward.title}」`}` : completed ? `可重访 · 首领 ${chapter.boss}` : `继续主线 · 首领 ${chapter.boss}`}</strong>
+                <div className="chapter-replay-goals" aria-label={`第 ${chapter.id} 章复玩目标`}>
+                  <span className={foundEvidence >= evidence.length ? "done" : ""}><b>证据</b><i>{foundEvidence}/{evidence.length}</i></span>
+                  <span className={foundEpilogues >= epilogues.length ? "done" : ""}><b>后记</b><i>{foundEpilogues}/{epilogues.length}</i></span>
+                  <span className={mainComplete && tribulationClears >= TRIBULATION_LEVELS.length - 1 ? "done" : ""}><b>劫数</b><i>{tribulationClears}/{TRIBULATION_LEVELS.length - 1}</i></span>
+                </div>
+                <em className="chapter-next-target">下一目标 · {nextTarget}</em>
+              </div>
             </button>
           );
         })}

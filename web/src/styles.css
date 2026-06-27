@@ -1745,7 +1745,9 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   margin: 0 auto;
   padding: 0 0 40px;
 }
-.device-desktop .chapter-card { height: 260px; }
+.device-desktop .chapter-card { height: 318px; }
+.device-desktop .chapter-replay-goals span { min-height: 36px; padding: 6px 8px; }
+.device-desktop .chapter-next-target { margin-top: 9px; font-size: 9px; }
 .device-desktop .chapter-main-complete { grid-column: 1 / -1; }
 .device-desktop .class-screen {
   display: grid;
@@ -2154,15 +2156,57 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .chapter-heading h1 { margin: 5px 0; font-family: "STKaiti", serif; font-size: 44px; font-weight: 400; }
 .chapter-heading p { margin: 0; color: #7d9085; font-size: 11px; line-height: 1.7; }
 .chapter-list { display: grid; gap: 13px; padding: 0 18px 38px; }
-.chapter-card { position: relative; height: 210px; overflow: hidden; padding: 0; border: 1px solid rgba(163,191,173,.25); border-radius: 3px 18px 3px 18px; background: #08110f; text-align: left; cursor: pointer; box-shadow: 0 15px 35px rgba(0,0,0,.35); }
+.chapter-card { position: relative; height: 252px; overflow: hidden; padding: 0; border: 1px solid rgba(163,191,173,.25); border-radius: 3px 18px 3px 18px; background: #08110f; text-align: left; cursor: pointer; box-shadow: 0 15px 35px rgba(0,0,0,.35); }
 .chapter-card > img { width: 100%; height: 100%; object-fit: cover; filter: brightness(.62) saturate(.7); transition: .3s; }
 .chapter-card-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4,12,10,.95), rgba(4,12,10,.25) 78%), linear-gradient(0deg, rgba(3,9,8,.86), transparent 65%); }
 .chapter-number { position: absolute; top: 15px; right: 15px; color: #d3ad61; font-size: 10px; letter-spacing: .12em; }
-.chapter-card > div:last-child { position: absolute; left: 18px; right: 68px; bottom: 17px; }
+.chapter-card > div:last-child { position: absolute; left: 18px; right: 18px; bottom: 15px; }
 .chapter-card small { color: #83a395; font-size: 9px; }
 .chapter-card h2 { margin: 4px 0; font-family: "STKaiti", serif; font-size: 28px; font-weight: 400; color: #efe3c4; }
 .chapter-card p { margin: 0 0 9px; color: #99a79f; font-size: 10px; line-height: 1.55; }
 .chapter-card strong { color: #d2ae65; font-size: 9px; font-weight: 400; }
+.chapter-replay-goals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 10px;
+}
+.chapter-replay-goals span {
+  min-height: 31px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 7px;
+  border: 1px solid rgba(130,160,142,.16);
+  background: rgba(4,16,13,.58);
+}
+.chapter-replay-goals b {
+  overflow: hidden;
+  color: #82978c;
+  font-size: 8px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chapter-replay-goals i {
+  color: #d4aa50;
+  font-size: 8px;
+  font-style: normal;
+}
+.chapter-replay-goals span.done {
+  border-color: rgba(116,170,140,.28);
+  background: rgba(25,80,55,.24);
+}
+.chapter-replay-goals span.done i { color: #8bc7a8; }
+.chapter-next-target {
+  display: block;
+  margin-top: 7px;
+  color: #93bba7;
+  font-size: 8px;
+  font-style: normal;
+  letter-spacing: .04em;
+}
 .chapter-card.locked { filter: grayscale(.9) brightness(.55); cursor: not-allowed; }
 .chapter-card.current { border-color: rgba(226,177,69,.68); box-shadow: 0 15px 35px rgba(0,0,0,.35), inset 3px 0 #d0a448; }
 .chapter-card.current .chapter-number { color: #f1c969; }
