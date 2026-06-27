@@ -3257,6 +3257,29 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
   }[origin.id];
   const build = currentBuildState(deck, origin.id);
   const notebook = createRunNotebook({ screen: "combat", chapter, stage, routeProgress, hp, maxHp, stones, deck, origin, clues, pendingClue, profile, enemy });
+  const cardRequirementHint = (card) => {
+    const base = card.baseName || card.name.replace("·真解", "");
+    const hints = {
+      药炉温养: { label: "需寒热", detail: "需要寒性与热性各 1 点才能调和。" },
+      玄雷敕令: { label: "需符印", detail: "至少附着 1 枚符印后才能引爆。" },
+      彼岸回响: { label: "需前牌", detail: "本场至少打出过一张牌后才能回响。" },
+      无常索命: { label: "需余牌", detail: "需要另一张手牌作为献祭目标。" },
+      黄泉引路: { label: "需弃牌", detail: "弃牌堆中有牌后才能召回。" },
+      魂火焚身: { label: "需魂灯", detail: "至少点亮 1 盏魂灯后才能燃魂。" },
+      忘川照影: { label: "需本回合", detail: "本回合打出过牌后才能复制。" },
+      百鬼夜行: { label: "需弃牌", detail: "弃牌堆中有牌后才能按种类结算。" },
+    };
+    return hints[base] || { label: "条件未满", detail: "此牌需要先满足卡面联动条件。" };
+  };
+  const cardPlayStatus = (card, cost, synergy, playable) => {
+    if (combatBusy) return { kind: "busy", label: "结算中", detail: "当前动画或敌方行动尚未结束。" };
+    if (isCurse(card)) return { kind: "curse", label: "心魔", detail: "心魔不可打出，会占据手牌并进入弃牌循环。" };
+    if (!cardRequirementMet(card)) return { kind: "blocked", ...cardRequirementHint(card) };
+    if (qi < cost) return { kind: "qi", label: `差${cost - qi}灵`, detail: `还缺 ${cost - qi} 点灵气才能打出。` };
+    if (synergy.conditional && synergy.active) return { kind: "combo", label: "联动", detail: synergy.reason || "当前条件已满足，打出会触发额外效果。" };
+    if (playable) return { kind: "ready", label: "可出", detail: "单击即可立即施放。" };
+    return null;
+  };
   useEffect(() => {
     if (guideStep === 1 && combatFx?.card) setGuideStep(2);
   }, [combatFx?.card, guideStep]);
@@ -3337,7 +3360,8 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         {hand.slice(0, 7).map((card, index) => {
           const cost = effectiveCardCost(card);
           const synergy = cardSynergyState(card);
-          return <Card key={`${card.id}-${index}`} card={card} index={index} displayCost={cost} comboReady={synergy.conditional && synergy.active} playable={!combatBusy && !isCurse(card) && cardRequirementMet(card) && qi >= cost} casting={combatFx?.index === index} onClick={() => playCard(index)} />;
+          const playable = !combatBusy && !isCurse(card) && cardRequirementMet(card) && qi >= cost;
+          return <Card key={`${card.id}-${index}`} card={card} index={index} displayCost={cost} comboReady={synergy.conditional && synergy.active} playable={playable} status={cardPlayStatus(card, cost, synergy, playable)} casting={combatFx?.index === index} onClick={() => playCard(index)} />;
         })}
       </div>
       <button className={`end-turn ${guideStep === 2 ? "guide-focus" : ""}`} disabled={combatBusy} onClick={endTurn}><span className="end-turn-ring" /><strong>结束<br />回合</strong><kbd>Space</kbd></button>
@@ -3397,9 +3421,9 @@ function Resource({ icon, name, value, className = "" }) {
   return <div className={`resource ${className}`}><img src={icon} alt="" /><span>{name}</span><strong>{value}</strong></div>;
 }
 
-function Card({ card, index, playable, displayCost = card.cost, comboReady = false, casting = false, onClick }) {
+function Card({ card, index, playable, displayCost = card.cost, comboReady = false, casting = false, status = null, onClick }) {
   return (
-    <button className={`game-card rarity-${card.rarity} ${playable ? "playable" : "disabled"} ${comboReady ? "combo-ready" : ""} ${casting ? "casting-card" : ""} type-${card.type}`} disabled={!playable} aria-disabled={!playable} onClick={onClick}>
+    <button className={`game-card rarity-${card.rarity} ${playable ? "playable" : "disabled"} ${comboReady ? "combo-ready" : ""} ${casting ? "casting-card" : ""} type-${card.type}`} disabled={!playable} aria-disabled={!playable} title={status?.detail || status?.label || ""} onClick={onClick}>
       <span className={`card-cost ${displayCost < card.cost ? "discounted" : ""}`}>{displayCost}</span>
       <span className="card-key">{index + 1}</span>
       <h3>{card.name}</h3>
@@ -3409,6 +3433,7 @@ function Card({ card, index, playable, displayCost = card.cost, comboReady = fal
       {comboReady && <span className="combo-ready-seal">联</span>}
       <p>{card.text}</p>
       {card.combo && <em>{card.combo}</em>}
+      {status && <span className={`card-play-state state-${status.kind}`} aria-label={status.detail || status.label}>{status.label}</span>}
     </button>
   );
 }

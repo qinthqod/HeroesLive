@@ -308,6 +308,26 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .card-cost { position: absolute; z-index: 3; top: 5px; left: 5px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #274f42; border: 1px solid #b9d4bd; color: #fff2ca; font-family: serif; font-size: 17px; }
 .card-cost.discounted { color: #ffe68f; border-color: #e6b748; box-shadow: 0 0 10px rgba(230,183,72,.45); }
 .card-key { position: absolute; z-index: 3; right: 8px; bottom: 8px; color: rgba(32,45,37,.55); font-size: 9px; }
+.card-play-state {
+  position: absolute;
+  z-index: 5;
+  left: 8px;
+  bottom: 7px;
+  max-width: calc(100% - 38px);
+  padding: 3px 6px;
+  border: 1px solid rgba(45,72,58,.2);
+  border-radius: 10px;
+  background: rgba(220,210,178,.72);
+  color: #294336;
+  font-size: 8px;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 3px 8px rgba(0,0,0,.12);
+}
+.state-ready { border-color: rgba(54,117,87,.35); background: rgba(188,219,196,.82); color: #24513d; }
+.state-combo { border-color: rgba(205,158,52,.55); background: rgba(229,194,104,.88); color: #513915; box-shadow: 0 0 12px rgba(218,172,65,.28); }
+.state-qi { border-color: rgba(159,86,63,.35); background: rgba(212,165,130,.86); color: #5d2d1d; }
+.state-blocked, .state-curse, .state-busy { border-color: rgba(88,93,88,.28); background: rgba(151,162,149,.78); color: #3d463f; }
 .type-术法, .type-攻击 { border-color: #92734a; }
 .type-法门 { border-color: #608c7b; }
 .end-turn { position: absolute; z-index: 12; right: 2.5vw; bottom: 5%; width: 118px; height: 118px; border: 2px solid #d3a13e; border-radius: 50%; background: radial-gradient(circle, #9b601b 0, #59300c 68%, #161209 70%); color: #ffe5a8; box-shadow: 0 0 0 8px rgba(49,35,18,.76), 0 14px 40px rgba(0,0,0,.7), inset 0 0 22px rgba(255,178,47,.3); cursor: pointer; }
@@ -996,6 +1016,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .game-card p { margin: 3px 3px 0; font-size: 7px; line-height: 1.35; }
   .card-cost { width: 23px; height: 23px; font-size: 14px; }
   .card-key { font-size: 7px; right: 5px; bottom: 5px; }
+  .card-play-state { left: 5px; bottom: 5px; max-width: calc(100% - 28px); padding: 2px 4px; font-size: 6px; }
   .game-card.playable:hover { transform: translateY(-30px) scale(1.04); }
   .end-turn { right: 13px; bottom: 205px; width: 68px; height: 68px; }
   .end-turn strong { font-size: 15px; }

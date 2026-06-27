@@ -68,9 +68,11 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   const layout = await layoutSnapshot(page);
   const handBox = await page.locator(".hand").boundingBox();
   const enemyBox = await page.locator(".enemy-stage").boundingBox();
+  const cardStates = await page.locator(".hand .card-play-state").allTextContents();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (!handBox || handBox.width < 760) throw new Error(`PC 手牌区过窄：${handBox?.width}`);
   if (!enemyBox || enemyBox.width < 900) throw new Error(`PC 敌方舞台过窄：${enemyBox?.width}`);
+  if (!cardStates.some((text) => /可出|联动|差|需|心魔/.test(text))) throw new Error("PC 战斗页没有显示卡牌即时状态");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
