@@ -1898,6 +1898,9 @@ function App() {
     >
       <Atmosphere />
       <div className="screen-curtain" />
+      <div className="device-mode-badge" aria-hidden="true">
+        {deviceMode === "desktop" ? "PC 版 · 横屏战局" : "移动版 · 单手游玩"}
+      </div>
       {progressNotice && <div className="progress-reward-toast" role="status"><small>挑战卷已落印</small><strong>{progressNotice}</strong></div>}
       {screen === "home" && (
         <HomeScreen

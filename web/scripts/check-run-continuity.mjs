@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const sourcePath = fileURLToPath(new URL("../src/main.jsx", import.meta.url));
+const stylesPath = fileURLToPath(new URL("../src/styles.css", import.meta.url));
 const source = readFileSync(sourcePath, "utf8");
+const styles = readFileSync(stylesPath, "utf8");
 const failures = [];
 const expect = (condition, message) => {
   if (!condition) failures.push(message);
@@ -81,6 +83,9 @@ expect(source.includes("CHAPTER_MARKETS[chapter]") && source.includes("market.sp
 expect(source.includes("rewardFit(card, deck, origin.id)") && source.includes("market-fit"), "坊市卡牌必须展示当前构筑契合理由");
 expect(source.includes("cardPlayStatus") && source.includes("cardRequirementHint") && source.includes("card-play-state"), "战斗卡牌必须公开可出、联动、灵气不足和条件未满等即时状态");
 expect(source.includes("TurnFlowFx") && source.includes("turn-flow") && source.includes("手牌入弃") && source.includes("洗牌后抽取"), "回合结束必须公开敌方行动、弃牌、洗牌与抽牌的流转节奏");
+expect(source.includes("detectDeviceMode") && source.includes("data-device={deviceMode}") && source.includes("device-mode-badge"), "页面必须判断 PC/移动设备并公开当前适配模式");
+expect(styles.includes(".device-desktop .combat-screen") && styles.includes(".device-desktop .player-rail") && styles.includes(".device-desktop .progress-rail") && styles.includes(".device-desktop .hand"), "PC 战斗页必须拥有桌面端左中右战局与宽手牌区");
+expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite", "moon-debt"]) {
   expect(source.includes(`market.special.id === "${trade}"`), `坊市缺少 ${trade} 专属交易运行时`);
 }

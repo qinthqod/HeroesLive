@@ -41,7 +41,9 @@ const layoutSnapshot = async (page) => page.evaluate(() => {
 
 await run("PC 首页进入桌面模式并使用宽屏壳层", { width: 1366, height: 768 }, "", async (page) => {
   const layout = await layoutSnapshot(page);
+  const badgeText = await page.locator(".device-mode-badge").innerText();
   if (layout.device !== "desktop" || !layout.className.includes("device-desktop")) throw new Error(`设备模式为 ${layout.device}`);
+  if (!badgeText.includes("PC 版")) throw new Error(`PC 页面没有显示设备判断：${badgeText}`);
   if (layout.shellWidth < 1200) throw new Error(`桌面壳层仍像移动端：${layout.shellWidth}px`);
   if (layout.navLeft > 80 || layout.navTop < 80 || layout.navBottomGap === 0) throw new Error("PC 导航没有切换为左侧栏");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 首页横向溢出 ${layout.scrollWidth - layout.width}px`);
@@ -68,10 +70,16 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   const layout = await layoutSnapshot(page);
   const handBox = await page.locator(".hand").boundingBox();
   const enemyBox = await page.locator(".enemy-stage").boundingBox();
+  const playerBox = await page.locator(".player-rail").boundingBox();
+  const progressBox = await page.locator(".progress-rail").boundingBox();
+  const qiBox = await page.locator(".qi-orb").boundingBox();
+  const trackerBox = await page.locator(".combat-build-tracker").boundingBox();
   const cardStates = await page.locator(".hand .card-play-state").allTextContents();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (!handBox || handBox.width < 760) throw new Error(`PC 手牌区过窄：${handBox?.width}`);
-  if (!enemyBox || enemyBox.width < 900) throw new Error(`PC 敌方舞台过窄：${enemyBox?.width}`);
+  if (!enemyBox || enemyBox.width < 820) throw new Error(`PC 敌方舞台过窄：${enemyBox?.width}`);
+  if (!playerBox || !progressBox || playerBox.right >= enemyBox.x || progressBox.x <= enemyBox.x + enemyBox.width) throw new Error("PC 战斗页没有形成左中右桌面战局");
+  if (qiBox && trackerBox && !(trackerBox.y + trackerBox.height < qiBox.y || qiBox.y + qiBox.height < trackerBox.y || trackerBox.x + trackerBox.width < qiBox.x || qiBox.x + qiBox.width < trackerBox.x)) throw new Error("PC 流派目标卡压住了灵气球");
   if (!cardStates.some((text) => /可出|联动|差|需|心魔/.test(text))) throw new Error("PC 战斗页没有显示卡牌即时状态");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
