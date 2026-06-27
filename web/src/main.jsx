@@ -2228,7 +2228,7 @@ function ChallengeGoalCard({ goal, claimProgressReward, compact = false }) {
       <i className="challenge-goal-progress"><b style={{ width: `${goal.percent}%` }} /></i>
       <div className="challenge-goal-reward">
         <small>{formatProgressReward(goal.reward)}</small>
-        {goal.claimable && <button onClick={() => claimProgressReward(goal.id)}>领取</button>}
+        {goal.claimable && claimProgressReward && <button onClick={() => claimProgressReward(goal.id)}>领取</button>}
       </div>
     </article>
   );
@@ -3626,6 +3626,7 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
   const tribulationStatus = runMode === "story" && runTribulation?.level
     ? tribulationRewardStatus(profile, chapter, runTribulation.level)
     : null;
+  const nextGoal = nextProgressGoals(profile, 1)[0];
   return (
     <section className="summary-screen screen-content">
       <div className="summary-seal"><span>{evaluation.grade}</span><small>{evaluation.score} 分 · {evaluation.title}</small></div>
@@ -3649,6 +3650,14 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
         <div><small>牌组 / 法宝</small><strong>{deck.length} / {treasures.length}</strong></div>
       </div>
       <div className="summary-rewards"><span>本章所得</span><b>修为 +{runStats.xpGained}</b><b>悟道 +{runStats.spiritGained}</b><b>灵玉 +{runStats.jadeGained}</b><b>灵石结余 {stones}</b></div>
+      {nextGoal && <section className={`summary-next-goal ${nextGoal.claimable ? "claimable" : ""}`}>
+        <div>
+          <span>{nextGoal.claimable ? "下一枚印记 · 可领取" : "下一枚印记 · 继续推进"}</span>
+          <strong>{nextGoal.title}</strong>
+          <p>{nextGoal.claimable ? "回到山门即可领取这份挑战卷奖励。" : nextGoal.hook}</p>
+        </div>
+        <ChallengeGoalCard goal={nextGoal} compact />
+      </section>}
       {runMode === "daily" && <div className="summary-daily"><span>今日试炼已落印</span><strong>{runTrial?.modifier?.name} · {runSeed}</strong><p>同日重复挑战仍可复盘构筑与评阶，但每日首胜资源不会重复发放。</p></div>}
       {tribulationStatus && <div className="summary-daily summary-tribulation">
         <span>{tribulationStatus.claimed ? "劫数落印" : "劫数复盘"}</span>

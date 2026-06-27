@@ -151,9 +151,11 @@ await run("PC 结算页可滚动复盘且不横溢", { width: 1366, height: 768 
   const layout = await layoutSnapshot(page);
   const summaryBox = await page.locator(".summary-copy").boundingBox();
   const causality = await page.locator(".summary-boss-causality").innerText();
+  const nextGoal = await page.locator(".summary-next-goal").innerText();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (!summaryBox || summaryBox.width < 500) throw new Error(`PC 结算主体过窄：${summaryBox?.width}`);
   if (!causality.includes("承担遗憾")) throw new Error("PC 结算页没有显示首领因果");
+  if (!nextGoal.includes("下一枚印记")) throw new Error("PC 结算页没有展示下一项长期目标");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 结算页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 

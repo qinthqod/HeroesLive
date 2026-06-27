@@ -518,6 +518,36 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .summary-rewards { display: flex; flex-wrap: wrap; gap: 6px; width: 650px; margin-top: 12px; }
 .summary-rewards span { width: 100%; color: #9d834d; font-size: 8px; letter-spacing: .16em; }
 .summary-rewards b { padding: 6px 9px; border: 1px solid rgba(205,161,65,.24); background: rgba(71,48,15,.28); color: #d2b96f; font-size: 9px; font-weight: 400; }
+.summary-next-goal {
+  width: 650px;
+  display: grid;
+  grid-template-columns: minmax(180px, .78fr) minmax(280px, 1.22fr);
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 14px;
+  padding: 13px;
+  border: 1px solid rgba(129,164,145,.2);
+  border-left: 2px solid #75a58b;
+  background: linear-gradient(108deg, rgba(7,29,21,.86), rgba(31,29,15,.72));
+}
+.summary-next-goal.claimable {
+  border-color: rgba(218,174,70,.48);
+  border-left-color: #d6ac4e;
+  background: linear-gradient(108deg, rgba(83,55,14,.45), rgba(7,29,21,.84));
+  box-shadow: 0 0 24px rgba(218,174,70,.08);
+}
+.summary-next-goal > div:first-child span,
+.summary-next-goal > div:first-child strong,
+.summary-next-goal > div:first-child p { display: block; }
+.summary-next-goal > div:first-child span { color: #9b8556; font-size: 8px; letter-spacing: .12em; }
+.summary-next-goal > div:first-child strong { margin-top: 5px; color: #e2d0a1; font-family: "STKaiti", serif; font-size: 20px; font-weight: 400; }
+.summary-next-goal > div:first-child p { margin: 5px 0 0; color: #84988d; font-size: 9px; line-height: 1.6; }
+.summary-next-goal .challenge-goal {
+  margin: 0;
+  border-color: rgba(126,160,141,.22);
+  background: rgba(5,18,14,.72);
+}
+.summary-next-goal.claimable .challenge-goal { border-color: rgba(218,174,70,.42); }
 .run-seed-note { display: block; margin-top: 12px; color: #7b9185; font-size: 9px; letter-spacing: .08em; }
 .summary-daily { width: 650px; margin-top: 14px; padding: 14px 16px; border-left: 2px solid #d1a74f; background: linear-gradient(90deg, rgba(83,55,14,.32), rgba(6,20,15,.68)); }
 .summary-daily span, .summary-daily strong, .summary-daily p { display: block; }
@@ -1072,7 +1102,8 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .reward-card-seal span { top: 12px; left: 10px; padding: 3px 5px; font-size: 7px; }
   .summary-screen { height: auto; min-height: 100%; padding: 92px 24px 50px; }
   .screen-summary .summary-screen { width: 100vw; max-width: 100vw; overflow-x: hidden; }
-  .summary-copy, .summary-epilogue, .summary-boss-causality, .summary-stats, .summary-chronicle, .summary-rewards, .summary-daily { width: 100%; }
+  .summary-copy, .summary-epilogue, .summary-boss-causality, .summary-stats, .summary-chronicle, .summary-rewards, .summary-next-goal, .summary-daily { width: 100%; }
+  .summary-next-goal { grid-template-columns: 1fr; }
   .summary-copy h1 { max-width: 100%; font-size: 38px; line-height: 1.12; overflow-wrap: anywhere; }
   .summary-copy p { max-width: 100%; font-size: 12px; overflow-wrap: anywhere; }
   .summary-stats { display: grid; grid-template-columns: 1fr 1fr; margin-top: 28px; }
@@ -1682,6 +1713,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .device-desktop .summary-stats,
 .device-desktop .summary-chronicle,
 .device-desktop .summary-rewards,
+.device-desktop .summary-next-goal,
 .device-desktop .summary-daily,
 .device-desktop .chapter-transition,
 .device-desktop .summary-actions { width: min(760px, 58vw); }

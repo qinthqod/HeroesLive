@@ -39,6 +39,7 @@ expect(source.includes("chapterFailures: { ...(archived.chapterFailures || {}), 
 expect(source.includes("扶助只改善容错，不降低敌人强度"), "失败页必须公开说明扶助边界");
 expect(!source.includes("jobMastery: { ...value.jobMastery, [origin]: (value.jobMastery[origin] || 0) + 10 }"), "开始或重试章节不得直接发放熟练度，避免故意失败刷成长");
 expect(source.includes("nextProgressGoals(profile, 2)") && source.includes("progress-board"), "首页必须展示可行动的下一长期目标");
+expect(source.includes("nextProgressGoals(profile, 1)") && source.includes("summary-next-goal") && source.includes("下一枚印记"), "结算页必须展示下一项长期挑战进度，形成回局动机");
 expect(source.includes("recentRuns: [runRecord") && source.includes("最近战绩"), "章节通关必须记录最近战绩并在异闻录展示");
 expect(source.includes("runMode,") && source.includes("runSeed,") && source.includes("runTrial,"), "试炼模式、种子与异兆必须进入自动存档");
 expect(source.includes("completedDailyTrials") && source.includes("dailyFirstClear"), "每日首胜奖励必须具有永久日期锁");
