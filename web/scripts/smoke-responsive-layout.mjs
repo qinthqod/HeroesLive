@@ -74,6 +74,48 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (layout.scrollWidth > layout.width) throw new Error(`PC 战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 事件页使用左右分栏", { width: 1366, height: 768 }, "?screen=event&chapter=6&pendingRoute=0&pendingNode=story", async (page) => {
+  await page.locator(".event-screen").waitFor();
+  const layout = await layoutSnapshot(page);
+  const copyBox = await page.locator(".event-copy").boundingBox();
+  const choicesBox = await page.locator(".event-choices").boundingBox();
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (!copyBox || !choicesBox || choicesBox.x <= copyBox.x + copyBox.width) throw new Error("PC 事件页没有形成左右分栏");
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 事件页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("PC 坊市页保持双栏交易布局", { width: 1366, height: 768 }, "?screen=market&chapter=6&origin=sword", async (page) => {
+  await page.locator(".market-layout").waitFor();
+  const layout = await layoutSnapshot(page);
+  const stallBox = await page.locator(".market-stall").boundingBox();
+  const servicesBox = await page.locator(".market-services").boundingBox();
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (!stallBox || !servicesBox || servicesBox.x <= stallBox.x + stallBox.width) throw new Error("PC 坊市页没有形成交易双栏");
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 坊市页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("PC 奖励页保持宽屏三选一", { width: 1366, height: 768 }, "?screen=reward&chapter=6&stage=3&origin=sword&runChoices=%E6%89%BF%E6%8B%85%E9%81%97%E6%86%BE", async (page) => {
+  await page.locator(".reward-screen").waitFor();
+  const layout = await layoutSnapshot(page);
+  const rewardCards = await page.locator(".reward-card-wrap").count();
+  const cardsBox = await page.locator(".reward-cards").boundingBox();
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (rewardCards !== 3) throw new Error(`奖励卡数量为 ${rewardCards}`);
+  if (!cardsBox || cardsBox.width < 700) throw new Error(`PC 奖励卡区过窄：${cardsBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 奖励页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("PC 结算页可滚动复盘且不横溢", { width: 1366, height: 768 }, "?screen=summary&chapter=6&runChoices=%E6%89%BF%E6%8B%85%E9%81%97%E6%86%BE&clues=4", async (page) => {
+  await page.locator(".summary-screen").waitFor();
+  const layout = await layoutSnapshot(page);
+  const summaryBox = await page.locator(".summary-copy").boundingBox();
+  const causality = await page.locator(".summary-boss-causality").innerText();
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (!summaryBox || summaryBox.width < 500) throw new Error(`PC 结算主体过窄：${summaryBox?.width}`);
+  if (!causality.includes("承担遗憾")) throw new Error("PC 结算页没有显示首领因果");
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 结算页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
 await browser.close();
 
 if (failures.length) {
