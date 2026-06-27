@@ -234,6 +234,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .event-choices small { color: var(--jade); }
 .event-choices strong { font-family: "STKaiti", serif; color: #eadcaf; font-size: 22px; font-weight: 400; }
 .event-choices span { color: #718078; font-size: 12px; }
+.event-choices i { display: block; margin-top: 3px; padding-top: 7px; border-top: 1px solid rgba(130,160,140,.14); color: #9a8d68; font-size: 9px; font-style: normal; line-height: 1.45; }
 
 .combat-screen { position: relative; z-index: 2; height: 100%; }
 .combat-screen .scene-backdrop { display: none; }

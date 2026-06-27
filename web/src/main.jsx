@@ -3158,7 +3158,7 @@ function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingC
         setRunDeck((value) => value.filter((_, cardIndex) => cardIndex !== index));
       }
     }
-    addRunEcho(`${event.name} · ${option.label}`);
+    addRunEcho(option.echo ? `${event.name} · ${option.echo}` : `${event.name} · ${option.label}`);
     if (option.revealsClue) completeInvestigation();
     else abandonInvestigation();
     setProfile((value) => ({ ...value, choices: [...value.choices.slice(-7), `${event.name}:${option.id}`] }));
@@ -3177,7 +3177,7 @@ function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingC
       <RunNotebook notebook={notebook} compact className="event-notebook" />
       <div className="event-choices">
         {event.options.map((option, index) => <button className={option.revealsClue ? "" : "safe-exit"} style={{ "--delay": `${140 + index * 70}ms` }} key={option.id} onClick={() => choose(option)}>
-          <small>{option.label}<em>{option.tone}</em></small><strong>{option.title}</strong><span>{option.detail}</span>
+          <small>{option.label}<em>{option.tone}</em></small><strong>{option.title}</strong><span>{option.detail}</span>{option.echo && <i>{option.echo}</i>}
         </button>)}
       </div>
     </section>

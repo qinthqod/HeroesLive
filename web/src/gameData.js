@@ -1476,8 +1476,8 @@ export const CHAPTER_ROUTE_STORIES = {
     description: "陆观按住左手残指，终于承认三年前曾替沈砚秋熄灭第一盏灯，也亲手放她离开山门。",
     art: "/bg_soul_shrine.png",
     options: [
-      { id: "trust-lu", label: "听完陆观的旧案", title: "恢复 10 点生命", detail: "在雨亭暂歇，也确认沈砚秋并非孤身背叛山门。", tone: "人物信任", effect: { heal: 10 }, revealsClue: true },
-      { id: "take-token", label: "取走他的守门令", title: "灵石 +12 · 敌方护体 +5", detail: "守门令能换取资粮，但失去令牌的山门禁制会落到下一名追兵身上。", tone: "信物换资粮", effect: { stones: 12, enemyShield: 5 }, revealsClue: true },
+      { id: "trust-lu", label: "听完陆观的旧案", title: "恢复 10 点生命", detail: "在雨亭暂歇，也确认沈砚秋并非孤身背叛山门。", tone: "人物信任", effect: { heal: 10 }, revealsClue: true, echo: "陆观承认自己放走沈砚秋，雨亭旧案从背叛变成共犯的沉默。" },
+      { id: "take-token", label: "取走他的守门令", title: "灵石 +12 · 敌方护体 +5", detail: "守门令能换取资粮，但失去令牌的山门禁制会落到下一名追兵身上。", tone: "信物换资粮", effect: { stones: 12, enemyShield: 5 }, revealsClue: true, echo: "守门令换成资粮，陆观失去最后一件能证明自己守过山门的信物。" },
     ],
   },
   2: {
@@ -1486,8 +1486,8 @@ export const CHAPTER_ROUTE_STORIES = {
     description: "童子每七年才醒一次。他已经等了你师父四次，却仍把那句“我会回来”当成今天刚听见的话。",
     art: "/ui/bg_act2_mountain.png",
     options: [
-      { id: "finish-message", label: "替师父说完告别", title: "恢复 12 点生命", detail: "童子终于放下旧灯，也把熄灯次序完整告诉你。", tone: "偿还旧诺", effect: { heal: 12 }, revealsClue: true },
-      { id: "borrow-flame", label: "借走一缕旧灯火", title: "清神粉 +1 · 生命 -4", detail: "灯火能烧去纸名，也会带走一小段属于你的寿数。", tone: "净心代价", effect: { consumables: { clarity: 1 }, hpLoss: 4 }, revealsClue: true },
+      { id: "finish-message", label: "替师父说完告别", title: "恢复 12 点生命", detail: "童子终于放下旧灯，也把熄灯次序完整告诉你。", tone: "偿还旧诺", effect: { heal: 12 }, revealsClue: true, echo: "纸灯童子听完迟到二十四年的告别，第一次不再替鬼灯数醒来的年份。" },
+      { id: "borrow-flame", label: "借走一缕旧灯火", title: "清神粉 +1 · 生命 -4", detail: "灯火能烧去纸名，也会带走一小段属于你的寿数。", tone: "净心代价", effect: { consumables: { clarity: 1 }, hpLoss: 4 }, revealsClue: true, echo: "旧灯火被借入行囊，童子的等待暂时熄灭，却把一小段寿数烧进纸名。" },
     ],
   },
   3: {
@@ -1496,8 +1496,8 @@ export const CHAPTER_ROUTE_STORIES = {
     description: "阵眼没有留下英雄名讳，只有一句反复被雷火擦去的话：我也曾以为，牺牲我便能结束牺牲。",
     art: "/bg_thunder_pool.png",
     options: [
-      { id: "carve-name", label: "把无名者刻回阵碑", title: "精研一张基础牌 · 生命 -6", detail: "以自身雷痕补全姓名，也从旧阵裂口中悟出一门真解。", tone: "记名换力", effect: { refine: 1, hpLoss: 6 }, revealsClue: true },
-      { id: "break-tablet", label: "击碎替灯阵碑", title: "灵气上限 +1 · 敌方护体 +8", detail: "阵法不再能借碑续转，但残余雷壁会依附下一名守阵者。", tone: "破阵代价", effect: { maxQi: 1, enemyShield: 8 }, revealsClue: true },
+      { id: "carve-name", label: "把无名者刻回阵碑", title: "精研一张基础牌 · 生命 -6", detail: "以自身雷痕补全姓名，也从旧阵裂口中悟出一门真解。", tone: "记名换力", effect: { refine: 1, hpLoss: 6 }, revealsClue: true, echo: "第一替灯人的姓名重回阵碑，雷池安稳第一次拥有可被追问的代价。" },
+      { id: "break-tablet", label: "击碎替灯阵碑", title: "灵气上限 +1 · 敌方护体 +8", detail: "阵法不再能借碑续转，但残余雷壁会依附下一名守阵者。", tone: "破阵代价", effect: { maxQi: 1, enemyShield: 8 }, revealsClue: true, echo: "替灯阵碑被击碎，旧阵不再能假借碑名续命，残雷却追上下一场战斗。" },
     ],
   },
   4: {
@@ -1506,8 +1506,8 @@ export const CHAPTER_ROUTE_STORIES = {
     description: "守卫的影子从城墙上剥落，指着城外。它不会说话，却在地上写下一句：我替他害怕了二十年。",
     art: "/bg_dark_forge.png",
     options: [
-      { id: "return-shadow", label: "把影子还给守卫", title: "恢复 8 · 石肤符 +1", detail: "守卫第一次因恐惧发抖，也第一次真心为你打开城门。", tone: "归还感受", effect: { heal: 8, consumables: { skin: 1 } }, revealsClue: true },
-      { id: "follow-shadow", label: "跟随影子潜入梦坊", title: "稀有职业牌 · 生命 -6", detail: "影子教会你绕过黑莲耳目，也让一段陌生噩梦留在体内。", tone: "潜行换术", effect: { cardRarity: "稀有", hpLoss: 6 }, revealsClue: true },
+      { id: "return-shadow", label: "把影子还给守卫", title: "恢复 8 · 石肤符 +1", detail: "守卫第一次因恐惧发抖，也第一次真心为你打开城门。", tone: "归还感受", effect: { heal: 8, consumables: { skin: 1 } }, revealsClue: true, echo: "守卫重新拥有恐惧，也重新拥有拒绝黑莲命令的理由。" },
+      { id: "follow-shadow", label: "跟随影子潜入梦坊", title: "稀有职业牌 · 生命 -6", detail: "影子教会你绕过黑莲耳目，也让一段陌生噩梦留在体内。", tone: "潜行换术", effect: { cardRarity: "稀有", hpLoss: 6 }, revealsClue: true, echo: "影子带你潜入梦坊，一段不属于你的噩梦从此跟在脚边。" },
     ],
   },
   5: {
@@ -1516,8 +1516,8 @@ export const CHAPTER_ROUTE_STORIES = {
     description: "第一行并非天条，只是一个凡人写下的愿望：愿所有无人收殓者，至少有名字可以回家。",
     art: "/bg_secret_realm.png",
     options: [
-      { id: "preserve-first-line", label: "保留最初的愿望", title: "恢复 14 点生命", detail: "你保留命册记录来路的能力，但拒绝让它继续命令未来。", tone: "守住初衷", effect: { heal: 14 }, revealsClue: true },
-      { id: "copy-first-line", label: "将第一行抄入自己的卷册", title: "传说职业牌 · 生命 -10", detail: "把记名权带入自身道途，也承担所有无名者留下的重量。", tone: "传承豪赌", effect: { cardRarity: "传说", hpLoss: 10 }, revealsClue: true },
+      { id: "preserve-first-line", label: "保留最初的愿望", title: "恢复 14 点生命", detail: "你保留命册记录来路的能力，但拒绝让它继续命令未来。", tone: "守住初衷", effect: { heal: 14 }, revealsClue: true, echo: "命册第一行被保留下来：记录来路可以是慈悲，支配未来才是枷锁。" },
+      { id: "copy-first-line", label: "将第一行抄入自己的卷册", title: "传说职业牌 · 生命 -10", detail: "把记名权带入自身道途，也承担所有无名者留下的重量。", tone: "传承豪赌", effect: { cardRarity: "传说", hpLoss: 10 }, revealsClue: true, echo: "第一行字进入你的卷册，无名者的重量也从命册转到你的道途之上。" },
     ],
   },
   6: {
@@ -1526,8 +1526,8 @@ export const CHAPTER_ROUTE_STORIES = {
     description: "月潮映出她留在无灯城、成为一名普通医者的未来。那里的她不认识你，却过着平静而完整的一生。",
     art: "/bg_spirit_rift.png",
     options: [
-      { id: "bless-other-life", label: "向那段人生道别", title: "恢复 14 · 清神粉 +1", detail: "承认未发生的人生也值得被祝福，然后让它安静沉回月海。", tone: "安放遗憾", effect: { heal: 14, consumables: { clarity: 1 } }, revealsClue: true },
-      { id: "take-remedy", label: "记下另一个她的药方", title: "稀有职业牌 · 生命 -8", detail: "带回从未存在过的医术，也承受两个沈砚秋互相遗忘的痛楚。", tone: "可能换术", effect: { cardRarity: "稀有", hpLoss: 8 }, revealsClue: true },
+      { id: "bless-other-life", label: "向那段人生道别", title: "恢复 14 · 清神粉 +1", detail: "承认未发生的人生也值得被祝福，然后让它安静沉回月海。", tone: "安放遗憾", effect: { heal: 14, consumables: { clarity: 1 } }, revealsClue: true, echo: "你向沈砚秋没有回谷的人生道别，月海第一次没有把遗憾变成索命的潮。" },
+      { id: "take-remedy", label: "记下另一个她的药方", title: "稀有职业牌 · 生命 -8", detail: "带回从未存在过的医术，也承受两个沈砚秋互相遗忘的痛楚。", tone: "可能换术", effect: { cardRarity: "稀有", hpLoss: 8 }, revealsClue: true, echo: "另一个沈砚秋的药方被记下，未发生的人生以伤口的方式留在现实。" },
     ],
   },
 };

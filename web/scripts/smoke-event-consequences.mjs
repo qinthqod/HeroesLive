@@ -41,6 +41,7 @@ await run("第六章途中剧情独立于奇遇", "chapter=6&eventChoice=1&pendi
   if (!body.includes("72/80")) throw new Error("途中剧情的 8 点生命代价未结算");
   const save = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-run-v1")));
   if (!save.runChronicle.some((entry) => entry.includes("沈砚秋没有回谷的人生"))) throw new Error("途中剧情没有写入命途回响");
+  if (!save.runChronicle.some((entry) => entry.includes("药方被记下"))) throw new Error("途中剧情没有写入选项后果回响");
 });
 
 await run("第六章月海遗舟高收益代价", "chapter=6&eventChoice=2&pendingRoute=1&pendingNode=event", async (page) => {

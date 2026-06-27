@@ -165,6 +165,7 @@ for (const chapter of CHAPTERS) {
   expect(Boolean(routeStory?.eyebrow && routeStory?.name && routeStory?.description && routeStory?.art), `${chapter.name} 缺少独立途中剧情`);
   expect(routeStory?.options?.length === 2, `${chapter.name} 途中剧情必须提供两个可执行抉择`);
   expect((routeStory?.options || []).every((option) => option.label && option.title && option.detail && option.tone && option.revealsClue && Object.keys(option.effect || {}).length > 0), `${chapter.name} 途中剧情抉择缺少真实后果`);
+  expect((routeStory?.options || []).every((option) => option.echo && option.echo.length >= 20), `${chapter.name} 途中剧情抉择必须提供章末可读的回响文本`);
   const market = CHAPTER_MARKETS[chapter.id];
   expect(Boolean(market?.eyebrow && market?.name && market?.description && market?.stall && market?.stockNote), `${chapter.name} 缺少独立坊市文案`);
   expect(Boolean(market?.bias && market?.special?.id && market?.special?.label && market?.special?.title && market?.special?.detail), `${chapter.name} 缺少坊市货架倾向或专属交易`);
