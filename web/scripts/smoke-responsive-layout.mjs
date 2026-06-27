@@ -212,12 +212,29 @@ await run("PC 奖励页保持宽屏三选一", { width: 1366, height: 768 }, "?s
   const rewardCards = await page.locator(".reward-card-wrap").count();
   const cardsBox = await page.locator(".reward-cards").boundingBox();
   const revealText = await page.locator(".reward-reveal-panel").innerText();
+  const contractText = await page.locator(".reward-contract").innerText();
   const sealCount = await page.locator(".reward-card-seal").count();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (rewardCards !== 3) throw new Error(`奖励卡数量为 ${rewardCards}`);
   if (sealCount !== 3 || !revealText.includes("战利已开")) throw new Error("PC 奖励页缺少自动翻牌揭示效果");
+  for (const phrase of ["本次保底", "可变奖励", "重整代价", "兜底选择"]) {
+    if (!contractText.includes(phrase)) throw new Error(`PC 奖励契约缺少 ${phrase}`);
+  }
   if (!cardsBox || cardsBox.width < 700) throw new Error(`PC 奖励卡区过窄：${cardsBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`PC 奖励页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动奖励页公开战利契约且不横溢", { width: 430, height: 932 }, "?screen=reward&chapter=6&stage=3&origin=sword&runChoices=%E6%89%BF%E6%8B%85%E9%81%97%E6%86%BE", async (page) => {
+  await page.locator(".reward-contract").waitFor();
+  const layout = await layoutSnapshot(page);
+  const contractBox = await page.locator(".reward-contract").boundingBox();
+  const contractText = await page.locator(".reward-contract").innerText();
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["本次保底", "可变奖励", "重整代价", "兜底选择"]) {
+    if (!contractText.includes(phrase)) throw new Error(`移动奖励契约缺少 ${phrase}`);
+  }
+  if (!contractBox || contractBox.width > 402) throw new Error(`移动奖励契约过宽：${contractBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`移动奖励页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
 await run("PC 结算页可滚动复盘且不横溢", { width: 1366, height: 768 }, "?screen=summary&chapter=6&runChoices=%E6%89%BF%E6%8B%85%E9%81%97%E6%86%BE&clues=4", async (page) => {

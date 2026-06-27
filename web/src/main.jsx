@@ -3647,6 +3647,9 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
     return pool[Math.floor(seededRandom(randomSeed, `reward-treasure:${chapter}:${stage}:${routeProgress}:${rerollCount}`) * pool.length)] || null;
   }, [origin, stage, rerollCount, randomSeed, chapter, routeProgress]);
   const rerollPrice = Math.max(4, 6 - Math.min(2, treasureValue(treasures, "marketDiscount")));
+  const rewardFits = rewards.map((card) => rewardFit(card, deck, origin));
+  const guaranteedFit = rewardFits.find((fit) => fit.recipe) || rewardFits[0];
+  const highFitCount = rewardFits.filter((fit) => fit.rank === "高").length;
   const reroll = () => {
     if (stones < rerollPrice) return;
     setStones((value) => value - rerollPrice);
@@ -3698,9 +3701,31 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
         <p>{rarityPlan.weights}</p>
         <small>{rarityPlan.promise}</small>
       </div>
+      <div className="reward-contract" aria-label="战利保底与取舍说明">
+        <article>
+          <small>本次保底</small>
+          <strong>{guaranteedFit?.recipe ? `推进「${guaranteedFit.recipe.name}」` : "三选一稳定补强"}</strong>
+          <span>{highFitCount ? `${highFitCount} 张高契合` : "至少一张可补当前短板"}</span>
+        </article>
+        <article>
+          <small>可变奖励</small>
+          <strong>{treasureReward ? "法宝机会已出现" : stage >= 2 ? "本次未见法宝" : "法宝二幕后开放"}</strong>
+          <span>{treasureReward ? treasureReward.name : "重整会重新抽取卡牌池"}</span>
+        </article>
+        <article>
+          <small>重整代价</small>
+          <strong>{rerollPrice} 灵石</strong>
+          <span>{stones >= rerollPrice ? `重整后余 ${stones - rerollPrice}` : `还缺 ${rerollPrice - stones}`}</span>
+        </article>
+        <article>
+          <small>兜底选择</small>
+          <strong>{isBossReward ? "直接结卷" : "调息 +10"}</strong>
+          <span>{isBossReward ? "放弃战利，不影响章节结算" : "用生命换稳定，不扩张牌组"}</span>
+        </article>
+      </div>
       <RunNotebook notebook={notebook} compact className="reward-notebook" />
       <div className="reward-cards">{rewards.map((card, index) => {
-        const fit = rewardFit(card, deck, origin);
+        const fit = rewardFits[index];
         return <div className={`reward-card-wrap fit-${fit.rank} ${rewardRevealed ? "revealed" : "sealed"}`} style={{ "--delay": `${180 + index * 120}ms` }} key={card.id}>
           <div className="reward-fit"><b>推荐 {fit.rank}</b><span>{fit.reason}</span></div>
           <Card card={card} index={index} playable={rewardRevealed} onClick={() => rewardRevealed && claimReward(card)} />
