@@ -3413,8 +3413,15 @@ function Card({ card, index, playable, displayCost = card.cost, comboReady = fal
   );
 }
 
+function rewardRarityPlan(stage) {
+  if (stage <= 1) return { name: "初幕战利池", weights: "普通 60 · 精良 30 · 稀有 10", promise: "优先给出尚未拥有的新基础牌，降低重复疲劳。" };
+  if (stage === 2) return { name: "破局战利池", weights: "普通 42 · 精良 38 · 稀有 20", promise: "精良与稀有权重提高，并可能出现法宝取舍。" };
+  return { name: "章末战利池", weights: "普通 34 · 精良 36 · 稀有 30 · 传说 9", promise: "终局牌与精研牌权重上升，至少一张继续推进当前流派。" };
+}
+
 function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, treasures, stones, clues, pendingClue, profile, randomSeed, runTribulation, setStones, claimReward, skipReward }) {
   const [rerollCount, setRerollCount] = useState(0);
+  const [rewardRevealed, setRewardRevealed] = useState(false);
   const profession = getProfession(origin);
   const chapterData = CHAPTERS[chapter - 1];
   const investigation = CHAPTER_INVESTIGATIONS[chapter];
@@ -3430,6 +3437,13 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
     let call = 0;
     return generateRewardChoices(profession, stage, deck, () => seededRandom(randomSeed, `reward:${chapter}:${stage}:${routeProgress}:${rerollCount}:${call++}`));
   }, [profession, stage, deck, rerollCount, randomSeed, chapter, routeProgress]);
+  const rewardRevealKey = rewards.map((card) => card.id).join(":");
+  const rarityPlan = rewardRarityPlan(stage);
+  useEffect(() => {
+    setRewardRevealed(false);
+    const timer = window.setTimeout(() => setRewardRevealed(true), 360);
+    return () => window.clearTimeout(timer);
+  }, [rewardRevealKey]);
   const treasureReward = useMemo(() => {
     if (stage < 2) return null;
     const pool = TREASURES.filter((treasure) => !treasures.some((owned) => owned.id === treasure.id));
@@ -3481,12 +3495,23 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
         <i><b style={{ width: `${buildDirection.progress * 20}%` }} /></i>
         <p>{buildDirection.recipe.focus} · 尚缺 {buildDirection.missing.length} 张核心组件</p>
       </div>}
+      <div className={`reward-reveal-panel ${rewardRevealed ? "revealed" : ""}`} aria-live="polite">
+        <span>{rewardRevealed ? "战利已开" : "灵光聚拢"}</span>
+        <strong>{rarityPlan.name}</strong>
+        <p>{rarityPlan.weights}</p>
+        <small>{rarityPlan.promise}</small>
+      </div>
       <RunNotebook notebook={notebook} compact className="reward-notebook" />
       <div className="reward-cards">{rewards.map((card, index) => {
         const fit = rewardFit(card, deck, origin);
-        return <div className={`reward-card-wrap fit-${fit.rank}`} style={{ "--delay": `${180 + index * 120}ms` }} key={card.id}>
+        return <div className={`reward-card-wrap fit-${fit.rank} ${rewardRevealed ? "revealed" : "sealed"}`} style={{ "--delay": `${180 + index * 120}ms` }} key={card.id}>
           <div className="reward-fit"><b>推荐 {fit.rank}</b><span>{fit.reason}</span></div>
-          <Card card={card} index={index} playable onClick={() => claimReward(card)} />
+          <Card card={card} index={index} playable={rewardRevealed} onClick={() => rewardRevealed && claimReward(card)} />
+          <div className="reward-card-seal" aria-hidden="true">
+            <img src="/card_back_qinglan_trial.png" alt="" />
+            <span>{card.rarity}</span>
+            <strong>待揭</strong>
+          </div>
         </div>;
       })}</div>
       {treasureReward && <button className="reward-treasure" onClick={() => claimReward(null, treasureReward)}>
