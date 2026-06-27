@@ -28,12 +28,14 @@ button:focus-visible { outline: 2px solid var(--amber-light); outline-offset: 3p
   position: relative;
   width: 100%;
   height: 100%;
-  min-width: 900px;
+  min-width: 0;
   min-height: 620px;
   overflow: hidden;
   color: var(--paper);
   background: var(--ink);
 }
+.app.device-desktop { min-width: 1024px; }
+.app.device-mobile { min-width: 0; min-height: 100%; }
 
 .scene-backdrop {
   position: absolute;
@@ -384,6 +386,12 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .summary-epilogue strong { margin-top: 5px; color: #e2d09c; font-family: "STKaiti", serif; font-size: 19px; font-weight: 400; }
 .summary-epilogue p { margin: 6px 0 8px; color: #91a198; font-size: 10px; line-height: 1.65; }
 .summary-epilogue small { color: #6d8076; font-size: 7px; }
+.summary-boss-causality { width: 650px; margin-top: 12px; padding: 13px 16px; border-left: 2px solid #ba6a4b; background: linear-gradient(100deg, rgba(75,28,18,.38), rgba(5,20,15,.78)); }
+.summary-boss-causality span, .summary-boss-causality strong, .summary-boss-causality small { display: block; }
+.summary-boss-causality span { color: #c17b62; font-size: 8px; letter-spacing: .12em; }
+.summary-boss-causality strong { margin-top: 5px; color: #e2c28d; font-family: "STKaiti", serif; font-size: 17px; font-weight: 400; }
+.summary-boss-causality p { margin: 5px 0 7px; color: #9da99f; font-size: 9px; line-height: 1.58; }
+.summary-boss-causality small { color: #7d8e84; font-size: 7px; }
 .summary-stats { display: flex; gap: 1px; width: 650px; margin-top: 42px; background: rgba(162,190,170,.2); }
 .summary-stats div { flex: 1; display: flex; flex-direction: column; padding: 18px 24px; background: rgba(5,16,13,.88); }
 .summary-stats small { color: #6f8378; }
@@ -939,7 +947,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .reward-cards .game-card { width: calc((100vw - 56px) / 3); max-width: 124px; height: 238px; }
   .summary-screen { height: auto; min-height: 100%; padding: 92px 24px 50px; }
   .screen-summary .summary-screen { width: 100vw; max-width: 100vw; overflow-x: hidden; }
-  .summary-copy, .summary-epilogue, .summary-stats, .summary-chronicle, .summary-rewards, .summary-daily { width: 100%; }
+  .summary-copy, .summary-epilogue, .summary-boss-causality, .summary-stats, .summary-chronicle, .summary-rewards, .summary-daily { width: 100%; }
   .summary-copy h1 { max-width: 100%; font-size: 38px; line-height: 1.12; overflow-wrap: anywhere; }
   .summary-copy p { max-width: 100%; font-size: 12px; overflow-wrap: anywhere; }
   .summary-stats { display: grid; grid-template-columns: 1fr 1fr; margin-top: 28px; }
@@ -1256,6 +1264,155 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .mobile-nav button.active { color: var(--amber-light); }
 .mobile-nav button.active::before { content: ""; display: block; width: 20px; height: 2px; margin: 0 auto 8px; background: var(--amber); box-shadow: 0 0 12px var(--amber); }
 
+.device-desktop .mobile-shell {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
+  background:
+    radial-gradient(circle at 72% 18%, rgba(129,184,163,.1), transparent 28%),
+    linear-gradient(100deg, rgba(3,10,9,.98), rgba(5,17,14,.9)),
+    url("/ui/bg_title_shrine.png") center/cover fixed;
+  box-shadow: none;
+}
+.device-desktop .mobile-topbar {
+  position: fixed;
+  z-index: 80;
+  top: 24px;
+  left: 34px;
+  right: 34px;
+  min-height: 58px;
+  padding: 10px 16px;
+  border: 1px solid rgba(137,170,151,.18);
+  background: rgba(4,15,12,.72);
+  backdrop-filter: blur(16px);
+}
+.device-desktop .mobile-topbar .back-button { width: 34px; height: 34px; font-size: 24px; }
+.device-desktop .account-level { margin-left: auto; }
+.device-desktop .home-screen {
+  display: grid;
+  grid-template-columns: minmax(560px, 1.2fr) minmax(390px, .8fr);
+  gap: 28px;
+  height: 100%;
+  padding: 104px 46px 36px 236px;
+  overflow: hidden;
+}
+.device-desktop .home-hero {
+  height: 100%;
+  min-height: 0;
+  border: 1px solid rgba(144,176,158,.18);
+  border-radius: 22px 4px 22px 4px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.38);
+}
+.device-desktop .home-player { bottom: 132px; left: 36px; right: 36px; }
+.device-desktop .home-hero.has-save .home-player { bottom: 238px; }
+.device-desktop .home-player h1 { max-width: 680px; font-size: clamp(58px, 6vw, 92px); }
+.device-desktop .home-player p { max-width: 640px; font-size: 14px; }
+.device-desktop .chapter-continue { left: 32px; right: 32px; bottom: 28px; }
+.device-desktop .run-resume { left: 32px; right: 32px; bottom: 118px; }
+.device-desktop .home-dashboard {
+  min-height: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+.device-desktop .resource-strip span { min-height: 68px; }
+.device-desktop .home-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.device-desktop .home-actions button { min-height: 128px; }
+.device-desktop .progress-board { margin-top: 18px; }
+.device-desktop .mobile-nav {
+  position: fixed;
+  z-index: 82;
+  left: 34px;
+  top: 104px;
+  bottom: auto;
+  width: 170px;
+  height: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: 12px;
+  transform: none;
+  border: 1px solid rgba(143,174,156,.18);
+  background: rgba(4,14,11,.78);
+  box-shadow: 0 20px 55px rgba(0,0,0,.32);
+}
+.device-desktop .mobile-nav button {
+  min-height: 42px;
+  padding: 0 12px;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 10px 2px 10px 2px;
+}
+.device-desktop .mobile-nav button.active {
+  border-color: rgba(218,170,72,.42);
+  background: rgba(88,59,18,.28);
+}
+.device-desktop .mobile-nav button.active::before {
+  display: inline-block;
+  width: 2px;
+  height: 16px;
+  margin: 0 9px -3px 0;
+}
+.device-desktop .chapter-screen,
+.device-desktop .class-screen,
+.device-desktop .growth-screen,
+.device-desktop .collection-screen,
+.device-desktop .daily-trial-screen,
+.device-desktop .challenge-code-screen {
+  height: 100%;
+  padding: 104px 48px 42px 236px;
+  overflow-y: auto;
+}
+.device-desktop .chapter-heading,
+.device-desktop .challenge-code-body,
+.device-desktop .daily-trial-body { max-width: 1220px; margin-inline: auto; }
+.device-desktop .chapter-heading { padding: 0 0 20px; }
+.device-desktop .chapter-heading h1 { font-size: 56px; }
+.device-desktop .tribulation-panel { max-width: 1220px; margin: 0 auto 18px; }
+.device-desktop .chapter-list {
+  max-width: 1220px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  margin: 0 auto;
+  padding: 0 0 40px;
+}
+.device-desktop .chapter-card { height: 260px; }
+.device-desktop .chapter-main-complete { grid-column: 1 / -1; }
+.device-desktop .class-screen {
+  display: grid;
+  grid-template-columns: minmax(430px, .85fr) minmax(560px, 1.15fr);
+  grid-template-rows: auto 1fr auto;
+  gap: 16px 26px;
+}
+.device-desktop .class-screen .mobile-topbar { grid-column: 1 / -1; }
+.device-desktop .class-focus {
+  grid-row: 1 / 4;
+  height: auto;
+  min-height: 620px;
+  border: 1px solid color-mix(in srgb, var(--job-color) 45%, transparent);
+  border-radius: 24px 4px 24px 4px;
+}
+.device-desktop .class-tabs,
+.device-desktop .mechanic-panel,
+.device-desktop .class-screen .mobile-primary { grid-column: 2; }
+.device-desktop .class-tabs { padding: 0; }
+.device-desktop .mechanic-panel { margin: 0; }
+.device-desktop .starter-preview { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.device-desktop .story-screen {
+  width: 100%;
+  max-width: none;
+}
+.device-desktop .story-progress { left: 8vw; right: 8vw; }
+.device-desktop .story-dialogue {
+  left: 8vw;
+  right: 48vw;
+  bottom: 10vh;
+}
+.device-desktop .story-dialogue h1 { font-size: 52px; }
+.device-desktop .story-dialogue > p { font-size: 24px; }
+.device-desktop .story-choices { width: min(560px, 42vw); }
+.device-desktop .collection-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
 .progress-reward-toast {
   position: fixed;
   z-index: 180;
@@ -1511,6 +1668,11 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 @keyframes screen-arrive {
   from { opacity: 0; transform: scale(1.018); filter: blur(7px); }
   to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+.screen-home .screen-content { animation: screen-arrive-fade .42s var(--ease-out) both; }
+@keyframes screen-arrive-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .screen-curtain {
   position: absolute;

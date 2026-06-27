@@ -16,7 +16,9 @@ for (const [chapterText, variants] of Object.entries(CHAPTER_EPILOGUES)) {
       await page.locator(".summary-epilogue").waitFor();
       const title = await page.locator(".summary-epilogue strong").innerText();
       const body = await page.locator(".summary-epilogue p").innerText();
+      const bossCausality = await page.locator(".summary-boss-causality").innerText();
       if (title !== epilogue.title || body !== epilogue.text) throw new Error(`显示为「${title}」`);
+      if (!bossCausality.includes(epilogue.choice)) throw new Error("章末未显示首领因果落点");
       console.log(`✓ 第 ${chapter} 章 · ${epilogue.title}`);
     } catch (error) {
       failures.push(`第 ${chapter} 章「${epilogue.choice}」：${error.message.split("\n")[0]}`);

@@ -300,8 +300,31 @@ function resolveChapterEpilogue(chapter, choices) {
   return [...variants].reverse().find((epilogue) => choices.includes(epilogue.choice)) || variants[0] || null;
 }
 
+function detectDeviceMode() {
+  if (typeof window === "undefined") return "desktop";
+  const wideEnough = window.innerWidth >= 900;
+  const coarsePointer = window.matchMedia?.("(pointer: coarse)")?.matches;
+  return wideEnough && !(coarsePointer && window.innerWidth < 1180) ? "desktop" : "mobile";
+}
+
+function useDeviceMode() {
+  const [deviceMode, setDeviceMode] = useState(() => detectDeviceMode());
+  useEffect(() => {
+    const update = () => setDeviceMode(detectDeviceMode());
+    const pointerQuery = window.matchMedia?.("(pointer: coarse)");
+    window.addEventListener("resize", update);
+    pointerQuery?.addEventListener?.("change", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      pointerQuery?.removeEventListener?.("change", update);
+    };
+  }, []);
+  return deviceMode;
+}
+
 function App() {
   const query = new URLSearchParams(window.location.search);
+  const deviceMode = useDeviceMode();
   const initialScreen = query.get("screen") || "home";
   const initialOrigin = PROFESSIONS.some((job) => job.id === query.get("origin")) ? query.get("origin") : "sword";
   const initialChapter = Math.min(CHAPTERS.length, Math.max(1, Number(query.get("chapter")) || 1));
@@ -1853,7 +1876,8 @@ function App() {
 
   return (
     <main
-      className={`app screen-${screen} transition-${transition}`}
+      className={`app screen-${screen} device-${deviceMode} transition-${transition}`}
+      data-device={deviceMode}
       onScroll={(event) => {
         if (screen === "combat" && event.currentTarget.scrollTop !== 0) {
           event.currentTarget.scrollTop = 0;
@@ -3481,6 +3505,7 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
       : ["旧册重明，无名归卷。", "你修复命册，却保留了所有被抹去的旧名。天地重新记住他们，也永远留下了篡改命数的罪证。"]
     : baseEnding;
   const epilogue = resolveChapterEpilogue(chapter, runChoices);
+  const bossResponse = resolveBossChoiceResponse(chapter, runChoices);
   const investigation = CHAPTER_INVESTIGATIONS[chapter];
   const investigationComplete = runClues.length >= 4;
   const archive = profile.investigationArchive?.[String(chapter)] || [];
@@ -3501,6 +3526,12 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
         <strong>{epilogue.title}</strong>
         <p>{epilogue.text}</p>
         <small>源于本局抉择「{epilogue.choice}」· 已收入异闻录</small>
+      </div>}
+      {bossResponse && <div className="summary-boss-causality">
+        <span>首领因果 · {bossResponse.choice}</span>
+        <strong>{bossResponse.effect}</strong>
+        <p>{bossResponse.line}</p>
+        <small>该抉择已在首领转相时改变战斗，并作为本章结局因果保留。</small>
       </div>}
       <div className="summary-stats">
         <div><small>余命</small><strong>{hp}/{maxHp}</strong></div>

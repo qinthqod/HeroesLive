@@ -9,6 +9,7 @@ const expect = (condition, message) => {
 };
 
 expect(source.includes("const [runChoices, setRunChoices]"), "本局剧情选择必须与跨局异闻记录分离");
+expect(source.includes("function detectDeviceMode()") && source.includes("device-${deviceMode}") && source.includes("data-device={deviceMode}"), "页面必须判断 PC/移动设备并暴露设备模式 class");
 expect(source.includes("runChoices.includes(\"重写命册\")"), "第五章结局必须读取本局选择");
 expect(!source.includes("profile.choices.includes(\"重写命册\")"), "第五章结局不得读取跨局历史选择");
 expect(source.includes("runChoices,") && source.includes("runChronicle,") && source.includes("nextEnemyShield,"), "自动存档必须覆盖本局选择、命途回响和待兑现代价");
@@ -87,6 +88,7 @@ expect(source.includes("\"encounterPrelude\", \"bossPrelude\"") && source.includ
 expect(source.includes("seenEncounters") && source.includes("再次遭遇时跳过第一段对白"), "重复遭遇必须缩短登场流程");
 expect(source.includes("resolveBattleAftermath(chapter, stage)") && source.includes("battle-aftermath") && source.includes("战利来源"), "普通与精英奖励页必须承接敌人余波、证据和战利来源");
 expect(source.includes("resolveChapterEpilogue") && source.includes("unlockedEpilogues") && source.includes("summary-epilogue"), "章节抉择必须生成可持久化人物后记并在结算页回应");
+expect(source.includes("const bossResponse = resolveBossChoiceResponse(chapter, runChoices)") && source.includes("summary-boss-causality"), "首领战回应必须在章末结算中形成因果落点");
 expect(source.includes("CHAPTER_TRANSITIONS[chapter]") && source.includes("沿此线索继续") && source.includes("beginRun(nextChapter"), "主线结算必须提供章节桥梁与同职业连续远征");
 expect(source.includes("runMode === \"story\" && chapter < CHAPTERS.length"), "每日试炼、挑战复刻和终章不得错误进入下一章");
 expect(source.includes("CHAPTER_HOME_STATES[mainComplete ? \"complete\" : currentChapterId]") && source.includes("currentInvestigation.objective"), "山门首页必须读取真实主线章节与当前调查");
