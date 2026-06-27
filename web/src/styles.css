@@ -1027,6 +1027,19 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .played-card-fx { transform: translate(-50%, -50%) scale(.72); }
   .damage-number { font-size: 48px; }
   .enemy-turn-banner { font-size: 31px; }
+  .turn-flow {
+    top: 18%;
+    width: min(390px, calc(100vw - 30px));
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 9px 11px;
+  }
+  .turn-flow strong { font-size: 14px; }
+  .turn-flow p { display: none; }
+  .turn-flow ol { gap: 3px; }
+  .turn-flow li b { font-size: 7px; }
+  .turn-flow li span { width: 20px; height: 20px; font-size: 7px; }
+  .turn-flow li:not(:last-child)::after { left: calc(50% + 11px); right: calc(-50% + 11px); top: 10px; }
 
   .reward-screen { height: auto; min-height: 100%; padding: 72px 18px 40px; }
   .reward-screen { overflow-x: hidden; }
@@ -2183,6 +2196,39 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .turn-banner small, .turn-banner strong { display: block; }
 .turn-banner small { color: #c18070; letter-spacing: .28em; font-size: 10px; }
 .turn-banner strong { margin-top: 4px; color: #f2d4b7; font-family: "STKaiti", serif; font-size: 26px; font-weight: 400; }
+.turn-flow {
+  position: absolute;
+  z-index: 84;
+  left: 50%;
+  top: 18%;
+  width: min(520px, 56vw);
+  display: grid;
+  grid-template-columns: minmax(160px, .75fr) minmax(220px, 1.25fr);
+  gap: 14px;
+  padding: 12px 15px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(216,176,82,.42);
+  border-radius: 3px 16px 3px 16px;
+  background: linear-gradient(112deg, rgba(39,25,11,.92), rgba(5,24,18,.94));
+  box-shadow: 0 18px 46px rgba(0,0,0,.48), 0 0 24px rgba(216,176,82,.12);
+  text-align: left;
+  pointer-events: none;
+  animation: turn-flow-in .42s var(--ease-snap) both;
+}
+.turn-flow small { color: #d3a957; font-size: 8px; letter-spacing: .18em; }
+.turn-flow strong { display: block; margin-top: 4px; color: #f1dfae; font-family: "STKaiti", serif; font-size: 18px; font-weight: 400; }
+.turn-flow p { margin: 4px 0 0; color: #91a89b; font-size: 9px; line-height: 1.45; }
+.turn-flow ol { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.turn-flow li { position: relative; display: grid; justify-items: center; gap: 4px; color: #667d72; font-size: 8px; }
+.turn-flow li:not(:last-child)::after { content: ""; position: absolute; left: calc(50% + 13px); right: calc(-50% + 13px); top: 12px; height: 1px; background: rgba(118,152,133,.2); }
+.turn-flow li span { position: relative; z-index: 2; display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid rgba(117,151,133,.34); border-radius: 50%; background: #07150f; }
+.turn-flow li b { font-weight: 400; white-space: nowrap; }
+.turn-flow li.done, .turn-flow li.active { color: #e4c36d; }
+.turn-flow li.done span, .turn-flow li.active span { border-color: rgba(221,178,75,.72); box-shadow: 0 0 12px rgba(221,178,75,.2); }
+.turn-flow li.done:not(:last-child)::after { background: rgba(221,178,75,.54); }
+.turn-flow li.active span { background: radial-gradient(circle, rgba(222,178,75,.26), #07150f 72%); animation: flow-step-pulse 1s ease-in-out infinite; }
+.turn-flow.phase-impact { border-color: rgba(204,96,69,.48); }
+.turn-flow.phase-draw { border-color: rgba(106,180,143,.5); }
 .trigger-feedback { position: absolute; z-index: 95; left: 50%; top: 29%; min-width: 270px; max-width: 440px; padding: 12px 18px; transform: translateX(-50%); border: 1px solid rgba(217,177,85,.48); background: linear-gradient(110deg, rgba(42,30,11,.94), rgba(5,25,18,.94)); text-align: center; box-shadow: 0 18px 50px rgba(0,0,0,.5), 0 0 24px rgba(217,177,85,.12); animation: trigger-feedback-in 1.45s var(--ease-out) both; pointer-events: none; }
 .trigger-feedback small, .trigger-feedback strong, .trigger-feedback em { display: block; }
 .trigger-feedback small { color: #c39d4e; font-size: 8px; letter-spacing: .22em; }
@@ -2228,6 +2274,8 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   25%, 70% { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
   to { opacity: 0; transform: translate(-50%, -50%) scaleX(1.1); }
 }
+@keyframes turn-flow-in { from { opacity: 0; transform: translate(-50%, -10px) scale(.95); } }
+@keyframes flow-step-pulse { 50% { filter: brightness(1.35); transform: scale(1.08); } }
 
 .reward-card-wrap { animation: reward-reveal .75s var(--delay) var(--ease-snap) both; }
 @keyframes reward-reveal { from { opacity: 0; transform: perspective(800px) rotateY(75deg) translateY(30px); } }

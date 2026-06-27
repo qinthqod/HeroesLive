@@ -76,6 +76,16 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (layout.scrollWidth > layout.width) throw new Error(`PC 战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 结束回合显示回合流转节奏", { width: 1366, height: 768 }, "?screen=combat&chapter=6&stage=3&move=0", async (page) => {
+  await page.locator(".combat-screen").waitFor();
+  await page.locator(".end-turn").click();
+  await page.locator(".turn-flow").waitFor();
+  const flowText = await page.locator(".turn-flow").innerText();
+  const flowSteps = await page.locator(".turn-flow li").count();
+  if (!flowText.includes("回合流转") || !flowText.includes("敌方行动")) throw new Error("结束回合没有显示敌方行动节奏");
+  if (flowSteps !== 4) throw new Error(`回合流转步骤数异常：${flowSteps}`);
+});
+
 await run("PC 路线页显示序破急节奏导航", { width: 1366, height: 768 }, "?screen=map&chapter=4&routeProgress=2&clues=3", async (page) => {
   await page.locator(".route-pacing").waitFor();
   const layout = await layoutSnapshot(page);

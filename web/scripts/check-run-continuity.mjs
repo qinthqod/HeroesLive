@@ -79,6 +79,7 @@ expect(source.includes("if (option.revealsClue) completeInvestigation()") && sou
 expect(source.includes("CHAPTER_MARKETS[chapter]") && source.includes("market.special.id"), "章节坊市必须由章节数据和专属交易驱动");
 expect(source.includes("rewardFit(card, deck, origin.id)") && source.includes("market-fit"), "坊市卡牌必须展示当前构筑契合理由");
 expect(source.includes("cardPlayStatus") && source.includes("cardRequirementHint") && source.includes("card-play-state"), "战斗卡牌必须公开可出、联动、灵气不足和条件未满等即时状态");
+expect(source.includes("TurnFlowFx") && source.includes("turn-flow") && source.includes("手牌入弃") && source.includes("洗牌后抽取"), "回合结束必须公开敌方行动、弃牌、洗牌与抽牌的流转节奏");
 for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite", "moon-debt"]) {
   expect(source.includes(`market.special.id === "${trade}"`), `坊市缺少 ${trade} 专属交易运行时`);
 }

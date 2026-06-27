@@ -566,6 +566,7 @@ function App() {
   const [combatBusy, setCombatBusy] = useState(false);
   const [playerFx, setPlayerFx] = useState(null);
   const [triggerFx, setTriggerFx] = useState(null);
+  const [turnFlowFx, setTurnFlowFx] = useState(null);
   const [transition, setTransition] = useState("");
   const timers = useRef([]);
   const feedbackEngine = useRef(null);
@@ -1693,9 +1694,11 @@ function App() {
     setRunStats((value) => ({ ...value, turns: value.turns + 1 }));
     feedback("enemy");
     setCombatFx({ phase: "enemy-turn", kind: "enemy", damage: lost });
+    setTurnFlowFx({ phase: "enemy", title: "破 · 敌方行动", detail: currentMove.name, nonce: Date.now() });
     setLog(`敌人正在发动「${currentMove.name}」……`);
     later(() => {
       setCombatFx({ phase: "enemy-impact", kind: "enemy", damage: lost });
+      setTurnFlowFx({ phase: "impact", title: lost > 0 ? "急 · 受击结算" : "急 · 护体抵消", detail: lost > 0 ? `承受 ${lost} 点伤害` : "护盾挡下本轮伤害", nonce: Date.now() });
       setPlayerFx({ kind: lost > 0 ? "hurt" : "blocked", damage: lost });
       if (lost > 0) feedback("hurt");
       else feedback("guard");
@@ -1730,6 +1733,9 @@ function App() {
       setLog(`敌人发动「${currentMove.name}」。护盾抵去 ${Math.min(shield, incoming)}，你受到 ${lost} 点伤害${extra ? `；${extra}` : ""}。`);
     }, 560);
     later(() => {
+      setTurnFlowFx({ phase: "discard", title: "序 · 手牌入弃", detail: `${hand.length} 张余牌进入弃牌堆`, nonce: Date.now() });
+    }, 1040);
+    later(() => {
       const nextHandSize = Math.max(3, 5 - (currentMove.drawPenalty || 0));
       const burnTick = enemyBurn > 0 ? (enemyBurn + treasureValue(treasures, "burnDamage")) * jobState.burnMultiplier : 0;
       if (burnTick > 0) {
@@ -1756,6 +1762,9 @@ function App() {
       const hasEnoughDraw = carry.length >= nextHandSize;
       const source = hasEnoughDraw ? carry : [...carry, ...reshuffled];
       const nextHand = source.slice(0, nextHandSize);
+      const flowDetail = hasEnoughDraw
+        ? `抽取 ${nextHand.length} 张，抽牌堆余 ${Math.max(0, carry.length - nextHand.length)}`
+        : `弃牌堆洗回，抽取 ${nextHand.length} 张`;
       setHand(nextHand);
       setDrawPile(source.slice(nextHandSize));
       setDiscardPile(hasEnoughDraw ? turnDiscard : []);
@@ -1776,11 +1785,13 @@ function App() {
       });
       setQi(Math.max(0, maxQi - (currentMove.drainQi || 0)));
       setDrawFx({ cards: nextHand, source: hasEnoughDraw ? "抽牌" : "洗牌后抽取", nonce: Date.now() });
+      setTurnFlowFx({ phase: "draw", title: hasEnoughDraw ? "序 · 抽取新手牌" : "序 · 洗牌后抽取", detail: flowDetail, nonce: Date.now() });
       feedback("draw");
       setCombatFx(null);
       setPlayerFx(null);
       setCombatBusy(false);
       later(() => setDrawFx(null), 1250);
+      later(() => setTurnFlowFx(null), 1400);
     }, 1280);
   }
 
@@ -2144,6 +2155,7 @@ function App() {
           combatBusy={combatBusy}
           playerFx={playerFx}
           triggerFx={triggerFx}
+          turnFlowFx={turnFlowFx}
           runTribulation={runTribulation}
           playCard={playCard}
           effectiveCardCost={effectiveCardCost}
@@ -3232,7 +3244,7 @@ function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingC
   );
 }
 
-function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, runTribulation, playCard, effectiveCardCost, cardRequirementMet, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, moonPhase, useConsumable, setOverlay, showGuide, completeGuide }) {
+function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, turnFlowFx, runTribulation, playCard, effectiveCardCost, cardRequirementMet, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, moonPhase, useConsumable, setOverlay, showGuide, completeGuide }) {
   const [guideStep, setGuideStep] = useState(showGuide ? 0 : -1);
   const hpPercent = Math.max(0, (enemy.hp / enemy.max) * 100);
   const currentEnemyMove = enemy.moves[enemy.moveIndex || 0];
@@ -3339,6 +3351,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
       {combatFx?.phase === "enemy-impact" && <div className="enemy-strike-flash" />}
       {playerFx && <div className={`player-damage-number ${playerFx.kind}`}>{playerFx.damage > 0 ? `−${playerFx.damage}` : "格挡"}</div>}
       {combatFx?.phase === "enemy-turn" && <div className="turn-banner"><small>敌方回合</small><strong>{enemy.intent}</strong></div>}
+      {turnFlowFx && <TurnFlowFx fx={turnFlowFx} />}
       {triggerFx && <div className="trigger-feedback">
         <small>{triggerFx.combo ? "联动触发" : "术法结算"}</small>
         <strong>{triggerFx.card}</strong>
@@ -3399,6 +3412,28 @@ function DrawSequence({ fx }) {
         </div>
       ))}
       <div className="draw-ink-bloom" />
+    </div>
+  );
+}
+
+function TurnFlowFx({ fx }) {
+  const steps = [
+    ["enemy", "敌方行动"],
+    ["impact", "伤害结算"],
+    ["discard", "手牌入弃"],
+    ["draw", "抽取新牌"],
+  ];
+  const activeIndex = Math.max(0, steps.findIndex(([phase]) => phase === fx.phase));
+  return (
+    <div className={`turn-flow phase-${fx.phase}`} key={fx.nonce} aria-live="polite">
+      <div>
+        <small>回合流转</small>
+        <strong>{fx.title}</strong>
+        <p>{fx.detail}</p>
+      </div>
+      <ol>
+        {steps.map(([phase, label], index) => <li className={index < activeIndex ? "done" : index === activeIndex ? "active" : ""} key={phase}><span>{index + 1}</span><b>{label}</b></li>)}
+      </ol>
     </div>
   );
 }
