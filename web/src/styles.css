@@ -758,6 +758,29 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .market-wallet span { color: #75877c; font-size: 8px; }
 .market-wallet strong { color: #e8c46c; font-family: serif; font-size: 23px; }
 .market-notice { max-width: 1280px; margin: 18px auto 0; padding: 9px 14px; border-left: 2px solid #b9984e; background: rgba(7,22,17,.75); color: #9eb0a6; font-size: 10px; }
+.market-economy {
+  max-width: 1280px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: stretch;
+  margin: 10px auto 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(126,164,142,.2);
+  border-left: 2px solid #6fa286;
+  background: linear-gradient(110deg, rgba(6,27,20,.82), rgba(29,28,15,.62));
+  box-shadow: 0 14px 38px rgba(0,0,0,.22);
+}
+.market-economy.trade-tight { border-left-color: #b96f55; background: linear-gradient(110deg, rgba(44,20,15,.76), rgba(8,23,17,.78)); }
+.market-economy article small, .market-economy article strong, .market-economy article p { display: block; }
+.market-economy article small { color: #84aa96; font-size: 8px; letter-spacing: .1em; }
+.market-economy.trade-tight article small { color: #c1866e; }
+.market-economy article strong { margin-top: 5px; color: #ded2ad; font-size: 11px; font-weight: 400; line-height: 1.55; }
+.market-economy article p { margin: 4px 0 0; color: #7d9186; font-size: 8px; line-height: 1.45; }
+.market-economy > div { display: grid; grid-template-columns: repeat(3, minmax(72px, 1fr)); gap: 1px; min-width: 290px; border: 1px solid rgba(126,164,142,.12); background: rgba(126,164,142,.12); }
+.market-economy > div span { display: grid; place-items: center; padding: 8px 10px; background: rgba(3,14,11,.72); }
+.market-economy > div b { color: #e4bf65; font-family: serif; font-size: 18px; }
+.market-economy > div small { margin-top: 2px; color: #687d72; font-size: 7px; white-space: nowrap; }
 .market-layout { display: grid; grid-template-columns: minmax(600px, 1.25fr) minmax(340px, .75fr); gap: 24px; max-width: 1280px; margin: 18px auto 0; }
 .market-stall, .market-services { padding: 18px; border: 1px solid rgba(142,170,152,.22); background: rgba(4,15,12,.86); box-shadow: 0 24px 60px rgba(0,0,0,.32); }
 .market-section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -767,6 +790,9 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .market-offer { display: flex; flex-direction: column; align-items: stretch; min-width: 0; }
 .market-fit { min-height: 29px; margin-bottom: 5px; padding: 5px 7px; overflow: hidden; border-left: 2px solid #637d6e; background: rgba(6,20,15,.76); color: #7e9186; font-size: 7px; line-height: 1.35; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .market-fit.fit-高 { border-color: #d1a44a; color: #c3ad72; }
+.market-offer-economy { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; padding: 5px 7px; border: 1px solid rgba(126,164,142,.14); background: rgba(3,14,11,.54); color: #7f9589; font-size: 7px; }
+.market-offer-economy b { color: #c4ad71; font-weight: 400; white-space: nowrap; }
+.market-offer.unaffordable .market-offer-economy span { color: #b88974; }
 .market-offer .game-card { width: min(15vw, 184px); height: 292px; transform: none; margin: 0; }
 .market-offer .game-card:hover { transform: translateY(-8px); }
 .market-offer.unaffordable .game-card.disabled { filter: saturate(.72) brightness(.9); opacity: .86; }
@@ -1157,10 +1183,22 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .market-header h1 { font-size: 39px; }
   .market-header p { max-width: 235px; line-height: 1.6; }
   .market-wallet { min-width: 98px; padding: 8px 10px; }
+  .market-economy {
+    grid-template-columns: 1fr;
+    gap: 9px;
+    margin-top: 9px;
+    padding: 10px 11px;
+  }
+  .market-economy > div {
+    min-width: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .market-economy article strong { font-size: 9px; }
   .market-layout { display: block; margin-top: 12px; }
   .market-stall, .market-services { padding: 13px; }
   .market-services { margin-top: 14px; }
   .market-offers { gap: 7px; }
+  .market-offer-economy { padding: 4px 5px; font-size: 6px; }
   .market-offer .game-card { width: min(28vw, 126px); height: 222px; padding-inline: 5px; }
   .market-offer .game-card h3 { font-size: 12px; }
   .market-offer .game-card p { font-size: 7px; }

@@ -3008,17 +3008,48 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
   }, [chapter, market.bias, origin.id, randomSeed, routeProgress]);
   const discount = treasureValue(treasures, "marketDiscount");
   const priceFor = (card) => Math.max(4, ({ 普通: 10, 精良: 13, 稀有: 17, 传说: 22 }[card.rarity] || 12) + market.cardPrice + (card.refined ? 4 : 0) - discount);
+  const pricedOffers = offers.map((card) => ({
+    card,
+    price: priceFor(card),
+    sold: sold.includes(card.id),
+    fit: rewardFit(card, deck, origin.id),
+  }));
   const treasureOffer = useMemo(() => {
     const pool = TREASURES.filter((treasure) => !treasures.some((owned) => owned.id === treasure.id));
     return pool[Math.floor(seededRandom(randomSeed, `market-treasure:${chapter}:${routeProgress}`) * pool.length)] || null;
   }, [chapter, randomSeed, routeProgress]);
+  const treasurePrice = treasureOffer ? Math.max(12, market.treasureCost - discount) : 0;
+  const openOffers = pricedOffers.filter((item) => !item.sold);
+  const affordableOffers = openOffers.filter((item) => stones >= item.price);
+  const cheapestOffer = [...openOffers].sort((a, b) => a.price - b.price)[0] || null;
+  const bestOffer = [...affordableOffers].sort((a, b) => b.fit.score - a.fit.score || a.price - b.price)[0] || null;
+  const serviceCosts = [
+    market.removeCost,
+    market.refineCost,
+    treasureOffer && !treasureBought && !treasures.some((item) => item.id === treasureOffer.id) ? treasurePrice : Infinity,
+  ].filter(Number.isFinite);
+  const cheapestService = serviceCosts.length ? Math.min(...serviceCosts) : Infinity;
+  const cheapestTrade = Math.min(cheapestOffer?.price ?? Infinity, cheapestService);
+  const canTradeNow = stones >= cheapestTrade;
+  const economyState = canTradeNow ? "可交易" : "灵石紧缺";
+  const economyAdvice = bestOffer
+    ? `优先看「${bestOffer.card.name}」：${bestOffer.fit.reason}，买后余 ${stones - bestOffer.price}。`
+    : cheapestOffer
+      ? `最低价术法尚缺 ${cheapestOffer.price - stones} 灵石；可先评估专属交易、忘却冗牌或直接离开保血。`
+      : treasureOffer && stones >= treasurePrice
+        ? `卡牌货架已清，可用 ${treasurePrice} 灵石换法宝，或保留灵石进入下一段路线。`
+        : "货架已接近清空，优先用精研、忘却或专属交易整理牌组。";
+  const sourceSinkLine = market.special.cost.includes("+") || market.special.title.includes("+")
+    ? "本章专属交易偏向放出资源，可补足灵石缺口。"
+    : "购牌、法宝、精研和忘却都会消耗灵石，别把下段路线预算花空。";
   const buy = (card) => {
     const price = priceFor(card);
-    if (stones < price || sold.includes(card.id)) return;
+    if (sold.includes(card.id)) return setNotice(`「${card.name}」已经收入行囊。`);
+    if (stones < price) return setNotice(`灵石不足：购入「${card.name}」还差 ${price - stones}。`);
     setStones((value) => value - price);
     setDeck((value) => [...value, card]);
     setVisit((value) => ({ ...(value.key === visitKey ? value : { key: visitKey, sold: [], specialUsed: false, treasureBought: false }), sold: [...new Set([...(value.key === visitKey ? value.sold || [] : []), card.id])] }));
-    setNotice(`购得「${card.name}」。牌组增至 ${deck.length + 1} 张。`);
+    setNotice(`购得「${card.name}」，剩余 ${stones - price} 灵石。牌组增至 ${deck.length + 1} 张。`);
   };
   const remove = (index) => {
     if (stones < market.removeCost || deck.length <= 8) return;
@@ -3121,19 +3152,34 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
         <div className="market-wallet"><img src="/ui/icons/stones.png" alt="" /><span>灵石</span><strong>{stones}</strong></div>
       </header>
       <div className="market-notice">{notice}</div>
+      <div className={`market-economy ${canTradeNow ? "trade-ready" : "trade-tight"}`}>
+        <article>
+          <small>预算状态 · {economyState}</small>
+          <strong>{economyAdvice}</strong>
+          <p>{sourceSinkLine}</p>
+        </article>
+        <div>
+          <span><b>{stones}</b><small>当前灵石</small></span>
+          <span><b>{Number.isFinite(cheapestTrade) ? cheapestTrade : "—"}</b><small>最低交易</small></span>
+          <span><b>{discount || "无"}</b><small>木牌折扣</small></span>
+        </div>
+      </div>
       <div className="market-layout">
         <section className="market-stall">
           <div className="market-section-title"><span>{market.stall}</span><small>{market.stockNote}</small></div>
           <div className="market-offers">
-            {offers.map((card, index) => {
-              const price = priceFor(card);
-              const unavailable = stones < price || sold.includes(card.id);
-              const fit = rewardFit(card, deck, origin.id);
-              return <div className={`market-offer ${sold.includes(card.id) ? "sold" : unavailable ? "unaffordable" : ""}`} key={card.id}>
+            {pricedOffers.map(({ card, price, fit, sold: itemSold }, index) => {
+              const unavailable = stones < price || itemSold;
+              const afterBuy = stones - price;
+              return <div className={`market-offer ${itemSold ? "sold" : unavailable ? "unaffordable" : ""}`} key={card.id}>
                 <small className={`market-fit fit-${fit.rank}`}>{fit.reason}</small>
+                <div className="market-offer-economy">
+                  <span>{itemSold ? "库存已空" : stones >= price ? `买后余 ${afterBuy}` : `尚缺 ${price - stones}`}</span>
+                  <b>{fit.rank}契合</b>
+                </div>
                 <Card card={card} index={index} playable={!unavailable} onClick={() => buy(card)} />
                 <button disabled={unavailable} onClick={() => buy(card)}>
-                  {sold.includes(card.id) ? "已购得" : stones < price ? `${price} 灵石 · 尚缺 ${price - stones}` : `${price} 灵石 · 购入`}
+                  {itemSold ? "已购得" : stones < price ? `${price} 灵石 · 尚缺 ${price - stones}` : `${price} 灵石 · 购入`}
                 </button>
               </div>;
             })}

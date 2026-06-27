@@ -81,6 +81,7 @@ for (const effect of ["cardRarity", "refine", "removeCurse", "maxQi", "enemyShie
 expect(source.includes("if (option.revealsClue) completeInvestigation()") && source.includes("else abandonInvestigation()"), "奇遇离开选项必须放弃待查证线索");
 expect(source.includes("CHAPTER_MARKETS[chapter]") && source.includes("market.special.id"), "章节坊市必须由章节数据和专属交易驱动");
 expect(source.includes("rewardFit(card, deck, origin.id)") && source.includes("market-fit"), "坊市卡牌必须展示当前构筑契合理由");
+expect(source.includes("market-economy") && source.includes("economyAdvice") && source.includes("买后余") && source.includes("sourceSinkLine"), "坊市必须展示预算状态、买后余量和资源收放提示");
 expect(source.includes("cardPlayStatus") && source.includes("cardRequirementHint") && source.includes("card-play-state"), "战斗卡牌必须公开可出、联动、灵气不足和条件未满等即时状态");
 expect(source.includes("TurnFlowFx") && source.includes("turn-flow") && source.includes("手牌入弃") && source.includes("洗牌后抽取"), "回合结束必须公开敌方行动、弃牌、洗牌与抽牌的流转节奏");
 expect(source.includes("detectDeviceMode") && source.includes("data-device={deviceMode}") && source.includes("device-mode-badge"), "页面必须判断 PC/移动设备并公开当前适配模式");

@@ -133,9 +133,24 @@ await run("PC 坊市页保持双栏交易布局", { width: 1366, height: 768 }, 
   const layout = await layoutSnapshot(page);
   const stallBox = await page.locator(".market-stall").boundingBox();
   const servicesBox = await page.locator(".market-services").boundingBox();
+  const economyText = await page.locator(".market-economy").innerText();
+  const offerEconomy = await page.locator(".market-offer-economy").allTextContents();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (!stallBox || !servicesBox || servicesBox.x <= stallBox.x + stallBox.width) throw new Error("PC 坊市页没有形成交易双栏");
+  if (!economyText.includes("预算状态") || !economyText.includes("最低交易")) throw new Error("PC 坊市页缺少预算状态或最低交易提示");
+  if (!offerEconomy.some((text) => text.includes("买后余") || text.includes("尚缺"))) throw new Error("PC 坊市商品缺少买后余量或缺口提示");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 坊市页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动坊市页显示预算且不横溢", { width: 430, height: 932 }, "?screen=market&chapter=6&origin=sword", async (page) => {
+  await page.locator(".market-economy").waitFor();
+  const layout = await layoutSnapshot(page);
+  const economyBox = await page.locator(".market-economy").boundingBox();
+  const economyText = await page.locator(".market-economy").innerText();
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  if (!economyBox || economyBox.width > 402) throw new Error(`移动坊市预算面板过宽：${economyBox?.width}`);
+  if (!economyText.includes("预算状态") || !economyText.includes("当前灵石")) throw new Error("移动坊市页缺少预算信息");
+  if (layout.scrollWidth > layout.width) throw new Error(`移动坊市页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
 await run("PC 奖励页保持宽屏三选一", { width: 1366, height: 768 }, "?screen=reward&chapter=6&stage=3&origin=sword&runChoices=%E6%89%BF%E6%8B%85%E9%81%97%E6%86%BE", async (page) => {
