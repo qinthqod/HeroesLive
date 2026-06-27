@@ -1953,17 +1953,34 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   z-index: 180;
   top: max(18px, env(safe-area-inset-top));
   left: 50%;
-  width: min(390px, calc(100% - 32px));
-  padding: 11px 16px;
+  width: min(440px, calc(100% - 32px));
+  padding: 14px 18px 15px;
+  overflow: hidden;
   transform: translateX(-50%);
   border: 1px solid rgba(218,178,84,.55);
-  background: linear-gradient(105deg, rgba(72,47,14,.97), rgba(7,25,19,.97));
+  border-radius: 2px 16px 2px 16px;
+  background:
+    radial-gradient(circle at 92% 14%, rgba(236,189,83,.24), transparent 26%),
+    linear-gradient(105deg, rgba(72,47,14,.97), rgba(7,25,19,.97));
   box-shadow: 0 18px 55px rgba(0,0,0,.58), inset 2px 0 #dbb45b;
   animation: reward-toast-in .28s ease-out both;
 }
-.progress-reward-toast small, .progress-reward-toast strong { display: block; }
+.progress-reward-toast::after {
+  content: "印";
+  position: absolute;
+  right: 14px;
+  top: 10px;
+  color: rgba(236,204,126,.16);
+  font-family: "STKaiti", serif;
+  font-size: 72px;
+  line-height: 1;
+}
+.progress-reward-toast small, .progress-reward-toast strong, .progress-reward-toast p, .progress-reward-toast b, .progress-reward-toast em { position: relative; z-index: 1; display: block; }
 .progress-reward-toast small { color: #a78c51; font-size: 8px; letter-spacing: .14em; }
-.progress-reward-toast strong { margin-top: 4px; color: #ead7a4; font-family: "STKaiti", serif; font-size: 14px; font-weight: 400; line-height: 1.45; }
+.progress-reward-toast strong { margin-top: 4px; color: #ead7a4; font-family: "STKaiti", serif; font-size: 20px; font-weight: 400; line-height: 1.25; }
+.progress-reward-toast p { margin: 7px 0 0; color: #d7c08b; font-size: 10px; line-height: 1.45; }
+.progress-reward-toast b { margin-top: 6px; color: #ffe198; font-family: "STKaiti", serif; font-size: 17px; font-weight: 400; }
+.progress-reward-toast em { margin-top: 6px; padding-top: 7px; border-top: 1px solid rgba(144,174,155,.16); color: #8ca89b; font-size: 8px; font-style: normal; }
 @keyframes reward-toast-in {
   from { opacity: 0; transform: translate(-50%, -12px); }
   to { opacity: 1; transform: translate(-50%, 0); }

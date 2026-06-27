@@ -102,6 +102,55 @@ for (const state of states) {
   }
 }
 
+{
+  const context = await browser.newContext({ viewport: { width: 430, height: 932 } });
+  await context.addInitScript(() => {
+    localStorage.setItem("qinglan-profile-v2", JSON.stringify({
+      level: 20,
+      xp: 0,
+      jade: 0,
+      spirit: 0,
+      chapter: 2,
+      unlockedJobs: ["sword", "talisman", "alchemy", "beast", "artificer", "soul"],
+      completedNodes: [],
+      choices: [],
+      unlockedLore: [],
+      talentLevels: { meridian: 0, mind: 0, edge: 0 },
+      jobMastery: {},
+      discoveredTreasures: [],
+      discoveredCards: [],
+      unlockedEndings: ["chapter_1_ending"],
+      unlockedEpilogues: [],
+      investigationArchive: {},
+      investigationRewards: [],
+      chapterFailures: {},
+      recentRuns: [],
+      claimedProgressGoals: [],
+      unlockedTitles: [],
+      equippedTitle: "云游录",
+      completedDailyTrials: [],
+      tutorialFlags: {},
+      feedback: { sound: false, haptics: false, volume: 0 },
+    }));
+  });
+  const page = await context.newPage();
+  try {
+    await page.goto(base, { waitUntil: "networkidle" });
+    await page.locator(".challenge-goal.claimable button").click();
+    await page.locator(".progress-reward-toast").waitFor();
+    const toast = await page.locator(".progress-reward-toast").innerText();
+    const profile = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-profile-v2")));
+    if (!toast.includes("挑战卷已落印") || !toast.includes("新称号") || !toast.includes("下一枚印记")) throw new Error(`挑战领取反馈不完整：「${toast}」`);
+    if (!profile.claimedProgressGoals.includes("first_truth")) throw new Error("挑战领取未写入永久锁");
+    if (profile.equippedTitle !== "初改命途") throw new Error(`领取后称号为「${profile.equippedTitle}」`);
+    console.log("✓ 挑战卷领取显示落印反馈并写入永久锁");
+  } catch (error) {
+    failures.push(`挑战卷领取：${error.message.split("\n")[0]}`);
+  } finally {
+    await context.close();
+  }
+}
+
 await browser.close();
 
 if (failures.length) {

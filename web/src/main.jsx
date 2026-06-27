@@ -500,7 +500,7 @@ function App() {
       } : {}),
     };
   });
-  const [progressNotice, setProgressNotice] = useState("");
+  const [progressNotice, setProgressNotice] = useState(null);
   const [hp, setHp] = useState(() => 72 + (profile.talentLevels.meridian || 0) * 4);
   const [qi, setQi] = useState(debugNumber("qi", 3 + treasureValue(debugTreasures, "maxQi") + treasureValue(debugTreasures, "firstTurnQi")));
   const [maxQi, setMaxQi] = useState(3 + treasureValue(debugTreasures, "maxQi"));
@@ -587,10 +587,17 @@ function App() {
   function claimChallengeReward(goalId) {
     const result = claimProgressGoal(profile, goalId);
     if (!result.claimed) return;
+    const nextAfterClaim = nextProgressGoals(result.profile, 1).find((goal) => goal.id !== result.goal.id) || null;
     setProfile(result.profile);
-    setProgressNotice(`${result.goal.title} · ${formatProgressReward(result.reward)}`);
+    setProgressNotice({
+      title: result.goal.title,
+      reward: formatProgressReward(result.reward),
+      epithet: result.reward.epithet,
+      hook: result.goal.hook,
+      next: nextAfterClaim ? `${nextAfterClaim.title} · ${nextAfterClaim.current}/${nextAfterClaim.target}` : "挑战卷暂已收束，重返云游补全宗卷。",
+    });
     feedback("reward");
-    timers.current.push(window.setTimeout(() => setProgressNotice(""), 2800));
+    timers.current.push(window.setTimeout(() => setProgressNotice(null), 4200));
   }
   async function copyChallengeCode(code) {
     if (!code) return;
@@ -1901,7 +1908,13 @@ function App() {
       <div className="device-mode-badge" aria-hidden="true">
         {deviceMode === "desktop" ? "PC 版 · 横屏战局" : "移动版 · 单手游玩"}
       </div>
-      {progressNotice && <div className="progress-reward-toast" role="status"><small>挑战卷已落印</small><strong>{progressNotice}</strong></div>}
+      {progressNotice && <div className="progress-reward-toast" role="status">
+        <small>挑战卷已落印</small>
+        <strong>{progressNotice.title}</strong>
+        <p>{progressNotice.reward}</p>
+        {progressNotice.epithet && <b>新称号 · {progressNotice.epithet}</b>}
+        <em>下一枚印记：{progressNotice.next}</em>
+      </div>}
       {screen === "home" && (
         <HomeScreen
           profile={profile}
