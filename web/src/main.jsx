@@ -2845,6 +2845,11 @@ function BossPreludeScreen({ chapter, choices, clues, onBegin }) {
         <strong>{boss.name}</strong>
         <small>{boss.archetype} · {boss.trait}</small>
         <p>{boss.counter}</p>
+        {prelude.dossier && <div className="boss-dossier-lore">
+          <section><em>来历</em><b>{prelude.dossier.origin}</b></section>
+          <section><em>执念</em><b>{prelude.dossier.obsession}</b></section>
+          <section><em>破绽</em><b>{prelude.dossier.weakness}</b></section>
+        </div>}
         <div><em>调查证据</em><b>{clues.length}/5</b></div>
         {prelude.choice && <div className="boss-prelude-choice"><em>将被回应的抉择</em><b>{prelude.choice}</b></div>}
       </aside>

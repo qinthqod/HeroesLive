@@ -214,6 +214,9 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .boss-prelude-dossier > div { display: flex; justify-content: space-between; gap: 12px; padding-top: 9px; border-top: 1px solid rgba(128,163,143,.14); }
 .boss-prelude-dossier em { color: #71877b; font-size: 8px; font-style: normal; }
 .boss-prelude-dossier b { color: #c9b275; font-size: 10px; font-weight: 400; }
+.boss-prelude-dossier .boss-dossier-lore { display: grid; gap: 8px; margin: 12px 0 2px; padding: 11px 0; border-top: 1px solid rgba(201,178,117,.16); border-bottom: 1px solid rgba(128,163,143,.12); }
+.boss-dossier-lore section { display: grid; grid-template-columns: 34px 1fr; gap: 9px; align-items: start; }
+.boss-dossier-lore b { color: #9fac9f; font-size: 8px; line-height: 1.55; }
 .boss-prelude-dossier .boss-prelude-choice { margin-top: 8px; border-color: rgba(207,165,72,.22); }
 .boss-prelude-choice b { color: #e0b85d; }
 .event-art { position: absolute; inset: 0; }
@@ -811,6 +814,8 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .boss-prelude-dossier { position: relative; right: auto; bottom: auto; left: auto; width: auto; margin: 4px 18px 24px; padding: 13px 15px; }
   .boss-prelude-dossier > p { display: none; }
   .boss-prelude-dossier > strong { font-size: 20px; }
+  .boss-prelude-dossier .boss-dossier-lore { margin-top: 10px; padding: 9px 0; }
+  .boss-dossier-lore section { grid-template-columns: 30px 1fr; }
   .event-art { position: fixed; }
   .event-art::after { background: rgba(3,10,8,.72); }
   .event-copy {

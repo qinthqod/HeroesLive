@@ -516,12 +516,46 @@ export const CHAPTER_BOSS_PRELUDES = {
   },
 };
 
+export const CHAPTER_BOSS_DOSSIERS = {
+  1: {
+    origin: "外门试炼失败者的命火被山门收束，久而久之凝成了替山门筛选后来者的第七盏灯。",
+    obsession: "它相信牺牲可以被登记、被排序，并最终变成一种不必再被追问的规矩。",
+    weakness: "灯障依赖旧名册确认目标；当回信或暗号改变命册链路时，火焰会短暂失去主人。",
+  },
+  2: {
+    origin: "玄阴灯冢保存着二十四年前失踪者的余生，写名鬼灯则是所有替命契约的第一盏引灯。",
+    obsession: "它把名字视作可转让的容器，只要生命延续，谁在活着并不重要。",
+    weakness: "拒绝替命会切断新燃料，偿还余愿则会让灯油里的旧名重新记起自己。",
+  },
+  3: {
+    origin: "雷池守阵者曾是第一位被送入阵眼的替灯人，后来被百年雷法铸成青岚谷安稳的守门锁。",
+    obsession: "它宁愿让真相永远埋在雷云下，也不愿看见谷中弟子得知自己踩在谁的骨上修行。",
+    weakness: "阵眼怕公开的姓名，也怕被释放的残魂；真相越完整，雷壁越难闭合。",
+  },
+  4: {
+    origin: "无影城主原是照夜城第一位守梦人，在黑莲契约中学会替全城保存痛苦与噩梦。",
+    obsession: "它相信没有噩梦的安稳胜过自由，哪怕那意味着所有人的欲望和恐惧都由它独自保管。",
+    weakness: "黑莲需要城民继续交出噩梦；守夜的微火和被斩断的契约都会让梦茧无法合瓣。",
+  },
+  5: {
+    origin: "守门真君不是天门本身，而是长期替命册修订众生命线的执笔者残相。",
+    obsession: "它将错误、战争与后悔视作自由的证据，因此想用命册替天下人省去选择。",
+    weakness: "罪证会令被删去的名字共同指认执笔者；焚去其名则能让命火脱离命册回流。",
+  },
+  6: {
+    origin: "月蚀司命诞生于归墟最深处，负责收容每个生命未曾走过的道路与无法被复原的遗憾。",
+    obsession: "它认为众生无法承受选择后的失去，于是试图把所有可能重新合成唯一结局。",
+    weakness: "承认遗憾会削弱万途索命，索回道路则会让司命失去独占结局的权柄。",
+  },
+};
+
 export function resolveBossPrelude(chapter, choices = []) {
   const prelude = CHAPTER_BOSS_PRELUDES[chapter];
   const response = resolveBossChoiceResponse(chapter, choices);
   if (!prelude) return null;
   return {
     ...prelude,
+    dossier: CHAPTER_BOSS_DOSSIERS[chapter],
     choice: response?.choice || "",
     beats: response
       ? [...prelude.beats, { speaker: ENCOUNTER_ENEMIES[chapter]?.[3]?.name || "首领", text: response.line }]

@@ -3,6 +3,7 @@ import {
   BOSS_MOVE_PATTERNS,
   BOSS_PHASES,
   BOSS_CHOICE_RESPONSES,
+  CHAPTER_BOSS_DOSSIERS,
   BATTLE_AFTERMATHS,
   ENCOUNTER_ENEMIES,
   ENCOUNTER_PRELUDES,
@@ -130,9 +131,12 @@ for (const chapter of CHAPTERS) {
   expect(Object.values(bossResponses).some((response) => response.bossShieldDelta < 0), `${chapter.name} 至少需要一种破局型首领回应`);
   expect(Object.keys(bossResponses).every((choice) => resolveBossChoiceResponse(chapter.id, ["无关选择", choice])?.choice === choice), `${chapter.name} 首领回应解析失败`);
   const prelude = CHAPTER_BOSS_PRELUDES[chapter.id];
+  const dossier = CHAPTER_BOSS_DOSSIERS[chapter.id];
   expect(Boolean(prelude?.eyebrow && prelude?.name && prelude?.setting && prelude?.art), `${chapter.name} 缺少首领前夜场景`);
   expect(prelude?.beats?.length === 3, `${chapter.name} 首领前夜必须包含三段序破急对白`);
   expect(prelude?.beats?.every((beat) => beat.speaker && beat.text), `${chapter.name} 首领前夜对白缺少角色或文本`);
+  expect(Boolean(dossier?.origin && dossier?.obsession && dossier?.weakness), `${chapter.name} 缺少首领宗卷来历、执念或破绽`);
+  expect(resolveBossPrelude(chapter.id, [])?.dossier?.weakness === dossier?.weakness, `${chapter.name} 首领宗卷未接入前夜场景`);
   for (const choice of Object.keys(bossResponses)) {
     const resolvedPrelude = resolveBossPrelude(chapter.id, [choice]);
     expect(resolvedPrelude?.choice === choice && resolvedPrelude?.beats?.length === 4, `${chapter.name} 首领前夜未接入抉择「${choice}」`);
