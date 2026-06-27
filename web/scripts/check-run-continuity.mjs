@@ -39,6 +39,7 @@ expect(source.includes("retrySupportFor") && source.includes("chapterFailures"),
 expect(source.includes("Math.min(3, (value.chapterFailures?.[selectedChapter] || 0) + 1)"), "章节扶助必须封顶，避免故意失败无限叠加");
 expect(source.includes("chapterFailures: { ...(archived.chapterFailures || {}), [selectedChapter]: 0 }"), "章节通关后必须清零对应受挫记录");
 expect(source.includes("扶助只改善容错，不降低敌人强度"), "失败页必须公开说明扶助边界");
+expect(source.includes("defeatLearningPlan") && source.includes("defeat-learning") && source.includes("错误类型") && source.includes("下局行动"), "失败页必须给出可行动的错误类型与下局学习处方");
 expect(!source.includes("jobMastery: { ...value.jobMastery, [origin]: (value.jobMastery[origin] || 0) + 10 }"), "开始或重试章节不得直接发放熟练度，避免故意失败刷成长");
 expect(source.includes("nextProgressGoals(profile, 2)") && source.includes("progress-board"), "首页必须展示可行动的下一长期目标");
 expect(source.includes("nextProgressGoals(profile, 1)") && source.includes("summary-next-goal") && source.includes("下一枚印记"), "结算页必须展示下一项长期挑战进度，形成回局动机");

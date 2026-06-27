@@ -605,6 +605,17 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .retry-support p { margin: 4px 0; color: #a3ad9c; font-size: 10px; line-height: 1.5; }
 .retry-support small { color: #65776d; font-size: 8px; }
 .retry-support.tier-3 { border-color: rgba(213,177,84,.48); box-shadow: inset 0 0 30px rgba(172,112,24,.08); }
+.defeat-learning { margin-top: 14px; padding: 13px 14px; border: 1px solid rgba(190,145,70,.28); border-left: 2px solid #c18a43; background: linear-gradient(115deg, rgba(63,38,14,.44), rgba(5,18,14,.82)); text-align: left; box-shadow: inset 0 0 0 1px rgba(225,177,79,.06); }
+.defeat-learning header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 9px; border-bottom: 1px solid rgba(128,158,140,.14); }
+.defeat-learning header span { color: #a98a4e; font-size: 8px; letter-spacing: .12em; }
+.defeat-learning header strong { color: #ead08d; font-family: "STKaiti", serif; font-size: 22px; font-weight: 400; }
+.defeat-learning > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 9px; background: rgba(130,151,139,.14); }
+.defeat-learning article { min-height: 86px; padding: 10px 11px; background: rgba(5,17,14,.86); }
+.defeat-learning small, .defeat-learning b { display: block; }
+.defeat-learning small { color: #71857a; font-size: 8px; }
+.defeat-learning b { margin-top: 5px; color: #cfc2a0; font-size: 9px; font-weight: 400; line-height: 1.55; }
+.defeat-learning p { margin: 9px 0 0; color: #8a9c92; font-size: 9px; line-height: 1.55; }
+.defeat-learning em { display: block; margin-top: 5px; color: #b89d62; font-size: 8px; font-style: normal; line-height: 1.45; }
 .defeat-diagnosis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 28px; background: rgba(130,151,139,.16); }
 .defeat-diagnosis div { min-height: 83px; padding: 13px; background: rgba(6,17,14,.92); }
 .defeat-diagnosis small, .defeat-diagnosis strong { display: block; }
@@ -1166,6 +1177,9 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .defeat-moon { top: 8%; right: -30px; width: 170px; height: 170px; }
   .defeat-copy { width: calc(100% - 28px); margin: 80px auto 0; padding: 28px 22px; }
   .defeat-copy h1 { font-size: 52px; }
+  .defeat-learning > div { grid-template-columns: 1fr; }
+  .defeat-learning article { min-height: 58px; }
+  .defeat-learning header strong { font-size: 18px; }
   .defeat-diagnosis { grid-template-columns: 1fr; }
   .defeat-diagnosis div { min-height: 60px; }
   .defeat-actions button { flex: 1; min-width: 0; }

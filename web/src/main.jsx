@@ -3737,9 +3737,65 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
   );
 }
 
+function defeatLearningPlan(analysis, stage, clues, pendingClue, failureStreak, support) {
+  let lesson = {
+    type: "节奏判断",
+    cause: "牌组结构尚可，但本场攻守节奏没有跟上敌人当前招式。",
+    next: "下一局先读当前与下一式：蓄势回合进攻，高压回合保留护盾或恢复。",
+  };
+  if (analysis.defense + analysis.heal <= 3) {
+    lesson = {
+      type: "生存疏漏",
+      cause: "护盾与恢复偏少，连续伤害或虚弱回合容易直接击穿血线。",
+      next: "战利优先拿护盾 / 恢复；坊市中若看到防御牌，宁可少买一张输出也要补生存。",
+    };
+  } else if (analysis.attack <= Math.max(3, Math.floor(analysis.total * 0.28))) {
+    lesson = {
+      type: "输出不足",
+      cause: "稳定伤害牌偏少，敌人的护体、恢复或二阶段会把战斗拖长。",
+      next: "下局至少补一张低费伤害或持续伤害牌；精英前不要只堆防御。",
+    };
+  } else if (analysis.draw <= 2 && analysis.total >= 12) {
+    lesson = {
+      type: "循环阻塞",
+      cause: "牌组变厚但过牌不足，关键牌不容易回到手中。",
+      next: "路线优先选择战利或修炼补过牌；坊市忘却重复低价值牌，让核心组件更快循环。",
+    };
+  } else if (analysis.highCost >= Math.ceil(analysis.total * 0.38)) {
+    lesson = {
+      type: "费用拥堵",
+      cause: "高费牌比例偏高，灵气不足时会出现想出牌却出不动的回合。",
+      next: "下局补 0–1 费运转牌；遇到夺气或多段攻击敌人时，保留低费防御更稳。",
+    };
+  } else if (analysis.total >= 16) {
+    lesson = {
+      type: "牌组冗余",
+      cause: "牌组过厚会稀释核心组件，让成型流派来得太晚。",
+      next: "优先走坊市或调息节点删牌；非核心高费牌不要因为稀有就全部收入。",
+    };
+  }
+  const practice = stage >= 3
+    ? "首领战先把二阶段当成新题目：转相后重新读意图，不沿用第一相的固定出牌节奏。"
+    : stage === 2
+      ? "精英战会把本章机制组合考核；进入前至少准备一项生存手段和一项破局输出。"
+      : "普通战负责教本章压力；先用低风险路线看清敌人模式，再决定是否贪高收益。";
+  const clueLine = pendingClue?.text
+    ? `本次中断了「${pendingClue.text}」。若下局血线低，可先放弃安全外的调查收益。`
+    : clues.length >= 3
+      ? `已带回 ${clues.length}/5 条线索，下局可以更大胆补构筑而不是只追调查。`
+      : "线索仍少，下局尽量完成一个战斗或异闻节点后再进入高风险路线。";
+  const supportLine = support.tier
+    ? `下次扶助会额外提供「${support.title}」，把它当容错窗口，不要当作降难度。`
+    : failureStreak > 0
+      ? "当前尚无额外数值扶助，先调整路线与牌组结构会更有效。"
+      : "首次失败不发放额外资源，先从本页处方修正构筑方向。";
+  return { ...lesson, practice, clueLine, supportLine };
+}
+
 function DefeatScreen({ chapter, stage, deck, treasures, clues, pendingClue, runMode, runSeed, runTrial, failureStreak, onRetry, onHome }) {
   const analysis = analyzeDeck(deck);
   const support = retrySupportFor(failureStreak);
+  const lesson = defeatLearningPlan(analysis, stage, clues, pendingClue, failureStreak, support);
   return (
     <section className="defeat-screen screen-content">
       <div className="defeat-moon" />
@@ -3754,6 +3810,16 @@ function DefeatScreen({ chapter, stage, deck, treasures, clues, pendingClue, run
           <p>{support.detail}</p>
           <small>扶助只改善容错，不降低敌人强度；通关本章后清零。</small>
         </div>
+        <section className="defeat-learning">
+          <header><span>失败学习处方</span><strong>{lesson.type}</strong></header>
+          <div>
+            <article><small>错误类型</small><b>{lesson.cause}</b></article>
+            <article><small>下局行动</small><b>{lesson.next}</b></article>
+            <article><small>节点练习</small><b>{lesson.practice}</b></article>
+          </div>
+          <p>{lesson.clueLine}</p>
+          <em>{lesson.supportLine}</em>
+        </section>
         <div className="defeat-diagnosis">
           <div><small>最终牌组</small><strong>{deck.length} 张</strong></div>
           <div><small>随身法宝</small><strong>{treasures.length ? treasures.map((item) => item.name).join(" / ") : "尚未获得"}</strong></div>
