@@ -362,6 +362,7 @@ function App() {
   const debugMastery = import.meta.env.DEV ? debugNumber("mastery") : 0;
   const debugMoveIndex = import.meta.env.DEV ? debugNumber("move") : 0;
   const debugClueCount = import.meta.env.DEV ? Math.min(5, debugNumber("clues")) : 0;
+  const debugRouteProgress = import.meta.env.DEV ? Math.min(3, debugNumber("routeProgress")) : 0;
   const debugPendingRoute = import.meta.env.DEV ? Math.min(3, debugNumber("pendingRoute")) : 0;
   const debugPendingNode = import.meta.env.DEV ? query.get("pendingNode") : null;
   const debugArchiveChapter = import.meta.env.DEV ? Math.min(CHAPTERS.length, Math.max(1, debugNumber("archiveChapter", initialChapter))) : 0;
@@ -403,7 +404,7 @@ function App() {
   const [runTrial, setRunTrial] = useState(null);
   const [runTribulation, setRunTribulation] = useState(() => tribulationForLevel(debugTribulationLevel));
   const [storyIndex, setStoryIndex] = useState(initialStory);
-  const [routeProgress, setRouteProgress] = useState(0);
+  const [routeProgress, setRouteProgress] = useState(debugRouteProgress);
   const [pendingEncounterStage, setPendingEncounterStage] = useState(initialStage);
   const [runChoices, setRunChoices] = useState(debugRunChoices);
   const [runChronicle, setRunChronicle] = useState([]);
@@ -2703,6 +2704,13 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
   const investigation = CHAPTER_INVESTIGATIONS[chapter];
   const build = currentBuildState(deck, origin);
   const notebook = createRunNotebook({ screen: "map", chapter, stage, routeProgress, hp, maxHp, stones, deck, origin: getProfession(origin), clues, pendingClue, profile });
+  const routePacing = [
+    { beat: "序", mood: "入局", tension: 24, cue: "先读线索与局内目标，选择一条能补足牌组或调查的路。" },
+    { beat: "破", mood: "分歧", tension: 48, cue: "风险开始分化：保血、拿牌或推进证据会互相牵扯。" },
+    { beat: "破", mood: "加压", tension: 72, cue: "首领前的最后塑形点，优先修补构筑短板或带回关键证据。" },
+    { beat: "急", mood: "临门", tension: 94, cue: "所有选择都将导向首领前夜，确认资源、线索与命途回响。" },
+  ][Math.min(routeProgress, 3)];
+  const nextKinds = chapterRoutes.slice(routeProgress + 1).map((row) => row.map((node) => node.kind).join(" / "));
   const routeMeta = {
     story: { risk: "无战斗", reward: "剧情线索", consequence: chapterCopy.storyConsequence },
     battle: { risk: "危险 · 低", reward: "职业卡牌", consequence: "稳定补强牌组" },
@@ -2745,6 +2753,21 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
       </div>}
       <RunNotebook notebook={notebook} className="map-notebook" />
       <div className="route-journey">
+        <div className="route-pacing" aria-label={`当前路线节奏：${routePacing.beat}，${routePacing.mood}`}>
+          <div className="route-pacing-seal">
+            <strong>{routePacing.beat}</strong>
+            <small>{routePacing.mood}</small>
+          </div>
+          <div className="route-pacing-copy">
+            <span>路线张力 · {routePacing.tension}%</span>
+            <i><b style={{ width: `${routePacing.tension}%` }} /></i>
+            <p>{routePacing.cue}</p>
+          </div>
+          <div className="route-pacing-next">
+            <small>将至</small>
+            <strong>{nextKinds[0] || "首领前夜"}</strong>
+          </div>
+        </div>
         <div className="route-progress-scroll">
           {chapterRoutes.map((row, index) => <i key={index} className={index < routeProgress ? "done" : index === routeProgress ? "current" : ""}><span>{index + 1}</span></i>)}
         </div>
@@ -2774,7 +2797,8 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
         </div>
         <div className="route-forecast">
           <span>后续命途</span>
-          {chapterRoutes.slice(routeProgress + 1).map((row, index) => <b key={index}>{row.map((node) => node.kind).join(" / ")}</b>)}
+          {nextKinds.map((kinds, index) => <b key={index}>{kinds}</b>)}
+          {!nextKinds.length && <b>首领前夜 / 章末突破</b>}
         </div>
       </div>
       <div className="map-side-note"><span>本章线索</span><p>{chapterCopy.clue}</p></div>

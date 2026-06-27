@@ -74,6 +74,30 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (layout.scrollWidth > layout.width) throw new Error(`PC 战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 路线页显示序破急节奏导航", { width: 1366, height: 768 }, "?screen=map&chapter=4&routeProgress=2&clues=3", async (page) => {
+  await page.locator(".route-pacing").waitFor();
+  const layout = await layoutSnapshot(page);
+  const pacingText = await page.locator(".route-pacing").innerText();
+  const journeyBox = await page.locator(".route-journey").boundingBox();
+  const notebookBox = await page.locator(".map-notebook").boundingBox();
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (!pacingText.includes("破") || !pacingText.includes("路线张力")) throw new Error("PC 路线页没有显示序破急节奏");
+  if (!journeyBox || journeyBox.width < 560) throw new Error(`PC 路线主体过窄：${journeyBox?.width}`);
+  if (!notebookBox || notebookBox.x <= journeyBox.x + journeyBox.width) throw new Error("PC 路线札记没有放在右侧信息栏");
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 路线页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动路线页保留节奏提示且无横溢", { width: 430, height: 932 }, "?screen=map&chapter=4&routeProgress=2&clues=3", async (page) => {
+  await page.locator(".route-pacing").waitFor();
+  const layout = await layoutSnapshot(page);
+  const pacingBox = await page.locator(".route-pacing").boundingBox();
+  const cardCount = await page.locator(".route-choice-card").count();
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  if (!pacingBox || pacingBox.width > 400) throw new Error(`移动节奏提示过宽：${pacingBox?.width}`);
+  if (cardCount < 2 || cardCount > 3) throw new Error(`移动路线选择数量异常：${cardCount}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`移动路线页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
 await run("PC 事件页使用左右分栏", { width: 1366, height: 768 }, "?screen=event&chapter=6&pendingRoute=0&pendingNode=story", async (page) => {
   await page.locator(".event-screen").waitFor();
   const layout = await layoutSnapshot(page);
