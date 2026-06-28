@@ -27,6 +27,7 @@
 - Chapter casefile pass: upgraded chapter selection from static cards into a pre-run story dossier. The selected chapter now previews investigation progress, four route beats, boss lore/weakness and enemy pressure from live chapter data, helping the start flow feel like opening a storybook instead of choosing a level tile.
 - Build atlas pass: upgraded the collection build tab with a live "next recipe" tracker. It now surfaces the closest incomplete build, missing component type/rarity/keyword hints, completion progress and PC/mobile smoke coverage, turning the Codex from a passive checklist into a long-term deckbuilding objective.
 - Spoils ritual pass: changed rewards from a near-instant auto flip into a player-triggered "open spoils" beat. The page now lets players read the rarity pool, pity promise, reroll cost and fallback before tapping once to reveal three sealed cards in sequence, preserving single-click selection after the reveal.
+- First-combat learning pass: strengthened the opening combat guide with a three-step progress rail and single-action prompts for reading enemy intent, tapping a playable card and ending the turn, matching the local learning/working-memory design notes and adding browser smoke coverage.
 - Pile/detail overlay: moved deck inspection into a centered lacquer scroll with scene artwork, click-outside dismissal and a full-screen dimming scrim.
 - Responsive pass: verified combat and result screens at both 1280×720 and 960×720 without clipped controls or overlapping content.
 

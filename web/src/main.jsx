@@ -3599,11 +3599,12 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
       completeGuide();
     }
   }, [combatTurn, completeGuide, guideStep]);
-  const guide = [
-    { label: "壹 · 先读敌意", title: "知道敌人下一步要做什么", text: `当前「${enemy.intent}」，下一式也会提前显示。先判断该进攻还是护体。`, action: "我看懂了" },
-    { label: "贰 · 单击出牌", title: "亮起的卡牌可以立即施放", text: "左上角是灵气费用。单击卡牌就会直接出牌，不需要再次确认。" },
-    { label: "叁 · 交出回合", title: "准备好后结束回合", text: "敌人会执行当前招式，随后弃置余牌、抽取新手牌并恢复灵气。" },
+  const guideSteps = [
+    { label: "壹 · 先读敌意", verb: "读", title: "知道敌人下一步要做什么", text: `当前「${enemy.intent}」，下一式也会提前显示。先判断该进攻还是护体。`, action: "我看懂了" },
+    { label: "贰 · 单击出牌", verb: "点", title: "亮起的卡牌可以立即施放", text: "左上角是灵气费用。单击卡牌就会直接出牌，不需要再次确认。" },
+    { label: "叁 · 交出回合", verb: "交", title: "准备好后结束回合", text: "敌人会执行当前招式，随后弃置余牌、抽取新手牌并恢复灵气。" },
   ][guideStep];
+  const guide = guideStep >= 0 ? guideSteps : null;
   return (
     <section className={`combat-screen screen-content ${combatFx?.phase || ""} ${playerFx?.kind || ""} guide-step-${guideStep}`}>
       <aside className={`player-rail ${playerFx ? "player-impact" : ""}`}>
@@ -3692,9 +3693,13 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
       <TreasureStrip treasures={treasures} compact />
       {guide && <aside className={`combat-guide guide-${guideStep}`}>
         <button className="guide-skip" onClick={() => { setGuideStep(-1); completeGuide(); }}>跳过</button>
+        <ol className="guide-steps" aria-label={`战斗引导第 ${guideStep + 1} 步，共 3 步`}>
+          {["读敌意", "点卡牌", "交回合"].map((step, index) => <li className={index < guideStep ? "done" : index === guideStep ? "active" : ""} key={step}><b>{index + 1}</b><span>{step}</span></li>)}
+        </ol>
         <small>{guide.label}</small>
         <strong>{guide.title}</strong>
         <p>{guide.text}</p>
+        <em className="guide-action-hint">当前只要做一件事：{guide.verb}</em>
         {guide.action && <button className="guide-next" onClick={() => setGuideStep(1)}>{guide.action}</button>}
       </aside>}
     </section>

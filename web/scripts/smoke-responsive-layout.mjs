@@ -210,6 +210,22 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (layout.scrollWidth > layout.width) throw new Error(`PC 战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 首战引导按读敌意出牌交回合推进", { width: 1366, height: 768 }, "?screen=combat&chapter=1&stage=1&tutorial=1", async (page) => {
+  await page.locator(".combat-guide").waitFor();
+  let guideText = await page.locator(".combat-guide").innerText();
+  const guideSteps = await page.locator(".guide-steps li").count();
+  if (guideSteps !== 3 || !guideText.includes("读敌意") || !guideText.includes("点卡牌") || !guideText.includes("交回合")) throw new Error("首战引导缺少三步学习脚印");
+  if (!guideText.includes("当前只要做一件事：读")) throw new Error("首战引导第一步没有聚焦单一动作");
+  await page.locator(".guide-next").click();
+  await page.locator(".combat-guide.guide-1").waitFor();
+  guideText = await page.locator(".combat-guide").innerText();
+  if (!guideText.includes("单击卡牌") || !guideText.includes("当前只要做一件事：点")) throw new Error("首战引导未进入单击出牌步骤");
+  await page.locator(".hand .game-card.playable").first().click();
+  await page.locator(".combat-guide.guide-2").waitFor();
+  guideText = await page.locator(".combat-guide").innerText();
+  if (!guideText.includes("结束回合") || !guideText.includes("当前只要做一件事：交")) throw new Error("首战引导未在出牌后推进到交回合步骤");
+});
+
 await run("PC 结束回合显示回合流转节奏", { width: 1366, height: 768 }, "?screen=combat&chapter=6&stage=3&move=0", async (page) => {
   await page.locator(".combat-screen").waitFor();
   await page.locator(".end-turn").click();

@@ -2945,6 +2945,16 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .combat-guide small { color: #c8a653; font-size: 8px; letter-spacing: .18em; }
 .combat-guide strong { margin-top: 5px; color: #f0dfb1; font-family: "STKaiti", serif; font-size: 19px; font-weight: 400; }
 .combat-guide p { margin: 6px 0 0; color: #9db0a5; font-size: 9px; line-height: 1.55; }
+.guide-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin: 0 30px 10px 0; padding: 0; list-style: none; }
+.guide-steps li { display: grid; grid-template-columns: 18px 1fr; align-items: center; gap: 5px; min-width: 0; color: #65796f; font-size: 7px; }
+.guide-steps li b { display: grid; place-items: center; width: 18px; height: 18px; border: 1px solid rgba(126,158,140,.28); border-radius: 50%; color: inherit; font-size: 8px; font-weight: 400; }
+.guide-steps li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.guide-steps li.done,
+.guide-steps li.active { color: #e0bf69; }
+.guide-steps li.done b,
+.guide-steps li.active b { border-color: rgba(225,181,76,.68); background: rgba(103,68,18,.44); box-shadow: 0 0 12px rgba(222,176,72,.14); }
+.guide-steps li.active b { animation: guide-pulse 1.35s ease-in-out infinite; }
+.guide-action-hint { display: inline-block; margin-top: 8px; padding: 5px 8px; border: 1px solid rgba(118,154,134,.2); border-radius: 999px; color: #d7c27f; font-size: 8px; font-style: normal; background: rgba(5,18,14,.6); }
 .combat-guide button { pointer-events: auto; cursor: pointer; }
 .guide-skip { position: absolute; top: 9px; right: 10px; border: 0; background: transparent; color: #6d8075; font-size: 8px; }
 .guide-next { margin-top: 10px; padding: 7px 13px; border: 1px solid rgba(213,172,74,.5); background: rgba(104,70,20,.62); color: #efd38c; font-size: 9px; }
@@ -3221,6 +3231,10 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .combat-guide.guide-0 { top: 55%; right: 10px; left: 82px; transform: translateY(-50%); }
   .combat-guide.guide-1 { left: 10px; right: 88px; bottom: 218px; transform: none; }
   .combat-guide.guide-2 { right: 10px; bottom: 320px; width: 228px; }
+  .guide-steps { gap: 3px; margin: 0 28px 7px 0; }
+  .guide-steps li { grid-template-columns: 16px 1fr; gap: 3px; font-size: 6px; }
+  .guide-steps li b { width: 16px; height: 16px; font-size: 7px; }
+  .guide-action-hint { margin-top: 6px; padding: 4px 7px; font-size: 7px; }
   .combat-guide strong { padding-right: 32px; font-size: 16px; }
   .combat-guide p { font-size: 8px; }
   .end-turn { right: auto; left: min(calc(100% - 81px), 348px); bottom: 225px; }
