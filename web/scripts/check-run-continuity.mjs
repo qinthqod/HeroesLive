@@ -32,6 +32,8 @@ expect(source.includes("GUIDE_PLAYBOOK") && source.includes("guide-playbook") &&
 expect(source.includes("guide-current-run") && source.includes("当前牌组提醒"), "试炼札记必须结合当前牌组或流派给即时建议");
 expect(source.includes("masteryStarterDeck") && source.includes("masteryOpeningState"), "职业熟练度必须真实改变起始牌组与战斗资源");
 expect(source.includes("mastery >= 25 ? 4 : 0") && source.includes("mastery >= 100"), "熟练度资粮与本命法宝里程碑必须接入新局");
+expect(source.includes("starterDeckSummary") && source.includes("class-system-grid") && source.includes("class-recipe-preview") && source.includes("起始手札"), "职业选择页必须展示真实起始牌组摘要、开局循环与构筑入口");
+expect(source.includes("classRecipePreview(current)") && source.includes("推荐构筑入口") && source.includes("真实读取流派图谱"), "职业选择页的构筑预览必须读取真实流派图谱");
 expect(source.includes("setDiscardPile(hasEnoughDraw ? turnDiscard : [])"), "抽牌堆充足时，回合弃牌不得被错误清空");
 expect(source.includes("currentMove.curse") && source.includes("FATE_CURSE"), "第五章首领必须能将心魔真实写入牌堆");
 expect(source.includes("ENCOUNTER_ENEMIES") && source.includes("ENCOUNTER_MOVE_PATTERNS"), "普通与精英战必须读取章节专属敌人与招式数据");
@@ -95,6 +97,7 @@ expect(source.includes("desktop-control-hints") && source.includes("Space 结束
 expect(styles.includes(".device-desktop .combat-screen") && styles.includes(".device-desktop .player-rail") && styles.includes(".device-desktop .progress-rail") && styles.includes(".device-desktop .hand"), "PC 战斗页必须拥有桌面端左中右战局与宽手牌区");
 expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile .desktop-mode-panel") && styles.includes(".device-desktop .desktop-control-hints"), "PC 专属面板和战斗提示必须具备桌面/移动端样式隔离");
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
+expect(styles.includes(".class-system-grid") && styles.includes(".starter-handbook") && styles.includes(".class-recipe-preview") && styles.includes(".device-desktop .mechanic-panel"), "职业选择页必须拥有移动/PC 的起手牌与构筑预览样式");
 for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite", "moon-debt"]) {
   expect(source.includes(`market.special.id === "${trade}"`), `坊市缺少 ${trade} 专属交易运行时`);
 }

@@ -22,6 +22,7 @@
 - Title detail pages: added contextual art banners and ornamental scroll surfaces for guide, codex, legacy, records and settings content.
 - Core late-run art: added dedicated illustrations for 镇魂符、雷纹护体、月蚀斩、玄阴引路鬼 and 雷池守阵者; card and enemy surfaces now prefer these assets automatically.
 - Imagegen expansion pass: added project-bound art for 第七盏灯、无影城主、月蚀司命、命册缺页、逐月月潮斩 and 月海渡口; chapter 1/4/6 bosses, boss preludes, chapter 6 route/story/event nodes and moon/fate themed cards now use these dedicated assets instead of fallback reuse.
+- Class selection pass: upgraded the profession page into a true pre-run planning surface. It now derives a starter-deck summary, opening resource loop, signature card, mastery treasure and three build-recipe entry points from live game data, with PC/mobile smoke coverage to prevent the setup screen from regressing into a plain class list.
 - Pile/detail overlay: moved deck inspection into a centered lacquer scroll with scene artwork, click-outside dismissal and a full-screen dimming scrim.
 - Responsive pass: verified combat and result screens at both 1280×720 and 960×720 without clipped controls or overlapping content.
 

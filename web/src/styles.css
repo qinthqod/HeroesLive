@@ -1796,8 +1796,20 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .device-desktop .mechanic-panel,
 .device-desktop .class-screen .mobile-primary { grid-column: 2; }
 .device-desktop .class-tabs { padding: 0; }
-.device-desktop .mechanic-panel { margin: 0; }
+.device-desktop .mechanic-panel { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .82fr); gap: 14px; align-content: start; }
+.device-desktop .mechanic-panel > .section-index,
+.device-desktop .mechanic-panel > p,
+.device-desktop .mechanic-panel > .build-count,
+.device-desktop .class-system-grid,
+.device-desktop .mastery-rewards { grid-column: 1; }
+.device-desktop .starter-handbook,
+.device-desktop .class-recipe-preview { grid-column: 2; }
+.device-desktop .class-system-grid { grid-template-columns: minmax(0, 1fr); }
+.device-desktop .class-signature-card { grid-template-columns: 86px 1fr; }
+.device-desktop .class-signature-card .mini-card { height: 118px; }
 .device-desktop .starter-preview { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.device-desktop .starter-card-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.device-desktop .class-recipe-preview { margin-top: 0; }
 .device-desktop .story-screen {
   width: 100%;
   max-width: none;
@@ -2291,6 +2303,27 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .mechanic-panel { margin: 0 16px; padding: 17px; border: 1px solid rgba(141,176,156,.18); background: rgba(7,21,17,.78); }
 .mechanic-panel > p { color: #a0aea6; font-size: 11px; line-height: 1.7; }
 .build-count { display: block; color: #c9aa66; font-size: 9px; font-weight: 400; }
+.class-system-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(132px, .9fr); gap: 8px; margin-top: 13px; }
+.class-cycle-card,
+.class-signature-card,
+.starter-handbook,
+.class-recipe-preview article {
+  border: 1px solid rgba(126,158,141,.16);
+  background: linear-gradient(145deg, rgba(4,14,11,.72), rgba(8,25,20,.58));
+}
+.class-cycle-card { padding: 12px; }
+.class-cycle-card > span,
+.class-signature-card > span,
+.starter-handbook-head span { color: var(--job-color); font-size: 9px; letter-spacing: .14em; }
+.class-cycle-card strong { display: block; margin-top: 5px; color: #ead8a8; font-family: "STKaiti", serif; font-size: 20px; font-weight: 400; }
+.class-cycle-card p { margin: 6px 0 10px; color: #96a99e; font-size: 10px; line-height: 1.55; }
+.class-cycle-tags { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+.class-cycle-tags b { padding: 5px 6px; border: 1px solid rgba(211,171,72,.13); color: #c9b579; background: rgba(91,65,21,.16); font-size: 8px; font-weight: 500; }
+.class-signature-card { display: grid; grid-template-columns: 74px 1fr; gap: 8px; align-items: start; padding: 9px; }
+.class-signature-card > span { grid-column: 1 / -1; }
+.class-signature-card .mini-card { height: 104px; margin: 0; }
+.class-signature-card p { margin: 0; color: #a7b6ad; font-size: 9px; line-height: 1.48; }
+.class-signature-card small { display: block; margin-top: 7px; color: #cfac66; font-size: 8px; line-height: 1.45; }
 .mastery-rewards { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 14px; }
 .mastery-reward-heading { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; }
 .mastery-reward-heading span { color: #c8a657; font-size: 9px; letter-spacing: .12em; }
@@ -2303,11 +2336,25 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .mastery-reward.unlocked { border-color: rgba(211,171,72,.34); background: linear-gradient(110deg, rgba(83,55,16,.35), rgba(6,24,18,.68)); opacity: 1; }
 .mastery-reward.unlocked > b { border-color: #c7a253; color: #f0d58e; box-shadow: 0 0 12px rgba(203,160,64,.16); }
 .mastery-reward.unlocked span strong { color: #dbc58c; }
-.starter-preview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 13px; }
+.starter-handbook { margin-top: 13px; padding: 11px; }
+.starter-handbook-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.starter-handbook-head small { color: #6f8378; font-size: 8px; text-align: right; line-height: 1.35; }
+.starter-preview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 10px; }
 .mini-card { position: relative; height: 105px; overflow: hidden; border: 1px solid #6b765e; border-radius: 4px; background: #d5c9a8; }
 .mini-card img { width: 100%; height: 76%; object-fit: cover; }
 .mini-card > span { position: absolute; top: 3px; left: 3px; width: 19px; height: 19px; display: grid; place-items: center; border-radius: 50%; background: #285547; color: white; font-size: 10px; }
 .mini-card small { display: block; overflow: hidden; padding: 3px; color: #263029; font-size: 7px; white-space: nowrap; text-overflow: ellipsis; }
+.starter-card-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin-top: 9px; }
+.starter-card-counts span { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 5px; min-width: 0; padding: 5px 6px; color: #b7c3ba; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.05); font-size: 8px; }
+.starter-card-counts b { display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: rgba(211,171,72,.16); color: #e5c777; font-size: 8px; }
+.starter-card-counts small { color: #6e8378; font-size: 7px; }
+.class-recipe-preview { display: grid; gap: 7px; margin-top: 13px; }
+.class-recipe-preview article { padding: 10px; }
+.class-recipe-preview article div { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.class-recipe-preview strong { color: #e1c982; font-size: 12px; }
+.class-recipe-preview small { color: var(--job-color); font-size: 8px; }
+.class-recipe-preview p { margin: 6px 0; color: #9fb0a7; font-size: 9px; line-height: 1.5; }
+.class-recipe-preview em { display: block; color: #6f8378; font-size: 8px; font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mobile-primary { width: calc(100% - 32px); margin: 18px 16px 0; }
 
 .story-screen { position: relative; z-index: 2; width: min(100%, 540px); height: 100%; margin: auto; overflow: hidden; background: #050c0b; }

@@ -143,6 +143,52 @@ function masteryOpeningState(job, mastery) {
   return state;
 }
 
+function starterDeckSummary(starter) {
+  const unique = new Map();
+  starter.forEach((card) => {
+    const key = card.baseName || card.name;
+    const entry = unique.get(key) || { card, count: 0 };
+    entry.count += 1;
+    unique.set(key, entry);
+  });
+  const counts = {
+    attack: starter.filter((card) => ["攻击", "术法"].includes(card.type)).length,
+    guard: starter.filter((card) => /护盾|恢复|驱散|净除/.test(`${card.text}${card.combo || ""}`)).length,
+    draw: starter.filter((card) => /抽|返回手牌|发现/.test(`${card.text}${card.combo || ""}`)).length,
+    zero: starter.filter((card) => card.cost === 0).length,
+  };
+  return { unique: [...unique.values()], counts };
+}
+
+function openingStateSummary(job, mastery) {
+  const state = masteryOpeningState(job.id || job, mastery);
+  const resourceValue = job.id === "sword"
+    ? state.sword || 0
+    : job.id === "talisman"
+      ? state.seals || 0
+      : job.id === "alchemy"
+        ? Math.max(state.heat || 0, state.cold || 0)
+        : job.id === "beast"
+          ? state.contracts?.length || 0
+          : job.id === "artificer"
+            ? state.cunning || state.devices || 0
+            : state.lamps || 0;
+  if (mastery < 75) return `初入道途：以 0 点${job.resource}起步，靠基础牌建立循环。`;
+  return `本源初醒：每场战斗开局带入 ${resourceValue || 1} 点${job.resource}节奏。`;
+}
+
+function classRecipePreview(job) {
+  return DECK_RECIPES
+    .filter((recipe) => recipe.job === job.id)
+    .slice(0, 3)
+    .map((recipe) => ({
+      ...recipe,
+      components: recipe.cards
+        .map((cardId) => job.cards.find((card) => card.id === cardId))
+        .filter(Boolean),
+    }));
+}
+
 function defaultDiscoveredCards() {
   return [...new Set(PROFESSIONS.flatMap((profession) => profession.starterDeck))];
 }
@@ -2540,6 +2586,12 @@ function ClassScreen({ origin, setOrigin, profile, onBack, onStart }) {
   const current = getProfession(origin);
   const mastery = profile.jobMastery[origin] || 0;
   const nextMilestone = MASTERY_MILESTONES.find((milestone) => mastery < milestone.level);
+  const starter = masteryStarterDeck(current, mastery);
+  const starterSummary = starterDeckSummary(starter);
+  const recipePreview = classRecipePreview(current);
+  const signatureCard = current.cards.find((card) => card.baseName === MASTERY_SIGNATURE_BY_JOB[current.id] && card.refined)
+    || current.cards.find((card) => card.baseName === MASTERY_SIGNATURE_BY_JOB[current.id]);
+  const masteryTreasure = TREASURES.find((treasure) => treasure.id === MASTERY_TREASURE_BY_JOB[current.id]);
   return (
     <section className="mobile-shell class-screen screen-content">
       <MobileTopBar title="选择道途" subtitle="职业决定卡池与核心资源" onBack={onBack} profile={profile} />
@@ -2558,13 +2610,52 @@ function ClassScreen({ origin, setOrigin, profile, onBack, onStart }) {
         <span className="section-index">核心机制</span>
         <p>{current.mechanic}</p>
         <strong className="build-count">20 张专属技能 · 12 张起始牌库 · 18 套推荐构筑</strong>
+        <div className="class-system-grid">
+          <section className="class-cycle-card">
+            <span>开局循环</span>
+            <strong>{current.resource} · {current.style}</strong>
+            <p>{openingStateSummary(current, mastery)}</p>
+            <div className="class-cycle-tags">
+              <b>攻击 {starterSummary.counts.attack}</b>
+              <b>防御/恢复 {starterSummary.counts.guard}</b>
+              <b>过牌 {starterSummary.counts.draw}</b>
+              <b>0 费 {starterSummary.counts.zero}</b>
+            </div>
+          </section>
+          <section className="class-signature-card">
+            <span>真传核心</span>
+            {signatureCard && <MiniCard card={signatureCard} />}
+            <p>{signatureCard ? `${signatureCard.name} · ${signatureCard.keyword}。${signatureCard.combo}` : "完成熟练度后解锁核心真解。"}</p>
+            {masteryTreasure && <small>本命法宝：{masteryTreasure.name} · {masteryTreasure.effect}</small>}
+          </section>
+        </div>
         <div className="mastery-rewards">
           <div className="mastery-reward-heading"><span>道途传承</span><small>{nextMilestone ? `下一层 · ${nextMilestone.level - mastery} 熟练` : "全部传承已觉醒"}</small></div>
           {MASTERY_MILESTONES.map((milestone) => <div className={`mastery-reward ${mastery >= milestone.level ? "unlocked" : ""}`} key={milestone.level}>
             <b>{milestone.level}</b><span><strong>{milestone.name}</strong><small>{milestone.effect}</small></span>
           </div>)}
         </div>
-        <div className="starter-preview">{masteryStarterDeck(current, mastery).slice(0, 8).map((card, index) => <MiniCard card={card} key={`${card.id}-${index}`} />)}</div>
+        <section className="starter-handbook">
+          <div className="starter-handbook-head">
+            <span>起始手札</span>
+            <small>12 张 · {starterSummary.unique.length} 种基础术式 · 真解会替换同名基础牌</small>
+          </div>
+          <div className="starter-preview">{starter.slice(0, 8).map((card, index) => <MiniCard card={card} key={`${card.id}-${index}`} />)}</div>
+          <div className="starter-card-counts">
+            {starterSummary.unique.map(({ card, count }) => <span key={card.baseName || card.name}><b>{count}</b>{card.baseName || card.name}<small>{card.keyword}</small></span>)}
+          </div>
+        </section>
+        <section className="class-recipe-preview" aria-label="职业构筑预览">
+          <div className="starter-handbook-head">
+            <span>推荐构筑入口</span>
+            <small>真实读取流派图谱；战利页会优先补这些核心组件</small>
+          </div>
+          {recipePreview.map((recipe) => <article key={recipe.id}>
+            <div><strong>{recipe.name}</strong><small>{recipe.rank} · {recipe.focus}</small></div>
+            <p>{recipe.strategy}</p>
+            <em>{recipe.components.slice(0, 5).map((card) => card.baseName).join(" / ")}</em>
+          </article>)}
+        </section>
       </article>
       <button className="primary-cta mobile-primary" onClick={onStart}>确认道途 · 选择章节</button>
     </section>

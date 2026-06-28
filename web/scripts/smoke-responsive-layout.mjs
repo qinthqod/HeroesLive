@@ -113,6 +113,41 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   if (layout.scrollWidth > layout.width) throw new Error(`移动章节页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 职业页展示起手牌与构筑入口", { width: 1366, height: 768 }, "?screen=classes&origin=sword", async (page) => {
+  await page.locator(".class-system-grid").waitFor();
+  const layout = await layoutSnapshot(page);
+  const systemText = await page.locator(".mechanic-panel").innerText();
+  const focusBox = await page.locator(".class-focus").boundingBox();
+  const starterBox = await page.locator(".starter-handbook").boundingBox();
+  const recipeBox = await page.locator(".class-recipe-preview").boundingBox();
+  const miniCards = await page.locator(".starter-preview .mini-card").count();
+  const recipeCards = await page.locator(".class-recipe-preview article").count();
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["开局循环", "起始手札", "推荐构筑入口", "真传核心"]) {
+    if (!systemText.includes(phrase)) throw new Error(`PC 职业页缺少 ${phrase}`);
+  }
+  if (miniCards < 8) throw new Error(`PC 起手牌预览不足：${miniCards}`);
+  if (recipeCards !== 3) throw new Error(`PC 构筑入口数量异常：${recipeCards}`);
+  if (!focusBox || focusBox.height < 560) throw new Error(`PC 职业画像高度不足：${focusBox?.height}`);
+  if (!starterBox || !recipeBox || recipeBox.x < starterBox.x - 4) throw new Error("PC 职业页没有形成右侧起手牌/构筑信息列");
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 职业页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动职业页保留开局预览且不横溢", { width: 430, height: 932 }, "?screen=classes&origin=soul", async (page) => {
+  await page.locator(".starter-handbook").waitFor();
+  const layout = await layoutSnapshot(page);
+  const systemText = await page.locator(".mechanic-panel").innerText();
+  const starterBox = await page.locator(".starter-handbook").boundingBox();
+  const countsBox = await page.locator(".starter-card-counts").boundingBox();
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["开局循环", "起始手札", "推荐构筑入口"]) {
+    if (!systemText.includes(phrase)) throw new Error(`移动职业页缺少 ${phrase}`);
+  }
+  if (!starterBox || starterBox.width > 402) throw new Error(`移动起手牌面板过宽：${starterBox?.width}`);
+  if (!countsBox || countsBox.width > 380) throw new Error(`移动起手牌统计过宽：${countsBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`移动职业页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
 await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, "?screen=combat&chapter=6&stage=3&move=0", async (page) => {
   await page.locator(".combat-screen").waitFor();
   const layout = await layoutSnapshot(page);
