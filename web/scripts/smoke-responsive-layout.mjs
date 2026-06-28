@@ -93,9 +93,17 @@ await run("移动试炼札记单列且不横溢", { width: 430, height: 932 }, "
 await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, "?screen=chapters", async (page) => {
   await page.locator(".chapter-card").first().waitFor();
   const layout = await layoutSnapshot(page);
+  const casefileText = await page.locator(".chapter-casefile").innerText();
+  const casefileBox = await page.locator(".chapter-casefile").boundingBox();
+  const loreCards = await page.locator(".casefile-lore section").count();
   const firstCardText = await page.locator(".chapter-card").first().innerText();
   const firstCardBox = await page.locator(".chapter-card").first().boundingBox();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["案卷预览", "调查目标", "路线节奏", "首领宗卷", "敌情压力"]) {
+    if (!casefileText.includes(phrase)) throw new Error(`PC 章节案卷缺少 ${phrase}`);
+  }
+  if (!casefileBox || casefileBox.width < 1000 || casefileBox.height < 330) throw new Error(`PC 章节案卷尺寸异常：${casefileBox?.width}×${casefileBox?.height}`);
+  if (loreCards !== 4) throw new Error(`PC 章节案卷信息块数量异常：${loreCards}`);
   if (layout.chapterRows !== 1) throw new Error("前三个章节卡没有排成同一行");
   if (!firstCardText.includes("证据") || !firstCardText.includes("后记") || !firstCardText.includes("劫数") || !firstCardText.includes("下一目标")) throw new Error("PC 章节卡缺少复玩目标");
   if (!firstCardBox || firstCardBox.height < 300) throw new Error(`PC 章节卡高度不足以承载目标梯度：${firstCardBox?.height}`);
@@ -105,9 +113,15 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
 await run("移动章节页显示复玩目标且不横溢", { width: 430, height: 932 }, "?screen=chapters", async (page) => {
   await page.locator(".chapter-card").first().waitFor();
   const layout = await layoutSnapshot(page);
+  const casefileText = await page.locator(".chapter-casefile").innerText();
+  const casefileBox = await page.locator(".chapter-casefile").boundingBox();
   const firstCardText = await page.locator(".chapter-card").first().innerText();
   const goalBox = await page.locator(".chapter-replay-goals").first().boundingBox();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["案卷预览", "调查目标", "路线节奏", "首领宗卷"]) {
+    if (!casefileText.includes(phrase)) throw new Error(`移动章节案卷缺少 ${phrase}`);
+  }
+  if (!casefileBox || casefileBox.width > 402) throw new Error(`移动章节案卷过宽：${casefileBox?.width}`);
   if (!firstCardText.includes("证据") || !firstCardText.includes("后记") || !firstCardText.includes("劫数") || !firstCardText.includes("下一目标")) throw new Error("移动章节卡缺少复玩目标");
   if (!goalBox || goalBox.width > 390) throw new Error(`移动章节复玩目标过宽：${goalBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动章节页横向溢出 ${layout.scrollWidth - layout.width}px`);

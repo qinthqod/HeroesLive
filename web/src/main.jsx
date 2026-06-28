@@ -16,6 +16,7 @@ import {
   CHAPTER_STORY_CHOICES,
   CHAPTER_EPILOGUES,
   CHAPTER_INVESTIGATIONS,
+  CHAPTER_BOSS_DOSSIERS,
   CHAPTER_EVENTS,
   CHAPTER_ROUTE_STORIES,
   CHAPTER_MARKETS,
@@ -2511,7 +2512,18 @@ function DailyTrialScreen({ trial, profile, savedRun, onBack, onResume, onStart 
 function ChapterScreen({ profile, onBack, onChoose }) {
   const mainComplete = (profile.unlockedEndings || []).includes("chapter_6_ending");
   const [tribulationLevel, setTribulationLevel] = useState(0);
+  const initialPreviewChapter = Math.min(CHAPTERS.length, Math.max(1, profile.chapter || 1));
+  const [previewChapterId, setPreviewChapterId] = useState(initialPreviewChapter);
   const selectedTribulation = mainComplete ? tribulationForLevel(tribulationLevel) : tribulationForLevel(0);
+  const previewChapter = CHAPTERS.find((chapter) => chapter.id === previewChapterId) || CHAPTERS[0];
+  const previewUnlocked = previewChapter.id === 1 || profile.chapter > previewChapter.id - 1;
+  const previewInvestigation = CHAPTER_INVESTIGATIONS[previewChapter.id];
+  const previewDossier = CHAPTER_BOSS_DOSSIERS[previewChapter.id];
+  const previewEnemies = Object.values(ENCOUNTER_ENEMIES[previewChapter.id] || {});
+  const previewFoundEvidence = profile.investigationArchive?.[String(previewChapter.id)]?.length || 0;
+  const previewEvidenceTotal = investigationEvidence(previewChapter.id).length;
+  const previewEpilogues = CHAPTER_EPILOGUES[previewChapter.id] || [];
+  const previewFoundEpilogues = previewEpilogues.filter((epilogue) => (profile.unlockedEpilogues || []).includes(epilogue.id)).length;
   return (
     <section className="mobile-shell chapter-screen screen-content">
       <MobileTopBar title="云游录" subtitle={`${CHAPTERS.length} 卷主线 · 逐章解锁`} onBack={onBack} profile={profile} />
@@ -2540,6 +2552,47 @@ function ChapterScreen({ profile, onBack, onChoose }) {
           })}
         </div>
       </div>}
+      <article className={`chapter-casefile ${previewUnlocked ? "" : "locked"}`} aria-label="章节案卷预览">
+        <img src={previewChapter.art} alt="" />
+        <div className="casefile-shade" />
+        <div className="casefile-main">
+          <span className="section-index">案卷预览 · 卷 {String(previewChapter.id).padStart(2, "0")}</span>
+          <h2>{previewChapter.name}</h2>
+          <p>{previewChapter.summary}</p>
+          <div className="casefile-metrics">
+            <span><b>{previewFoundEvidence}/{previewEvidenceTotal}</b><small>宗卷证据</small></span>
+            <span><b>{previewFoundEpilogues}/{previewEpilogues.length}</b><small>人物后记</small></span>
+            <span><b>{previewEnemies.length}</b><small>遭遇压力</small></span>
+          </div>
+          <button disabled={!previewUnlocked} onClick={() => onChoose(previewChapter.id, selectedTribulation.level)}>
+            {previewUnlocked ? `进入${previewChapter.name}` : "完成前章后解锁"}
+          </button>
+        </div>
+        <div className="casefile-lore">
+          <section>
+            <span>调查目标</span>
+            <strong>{previewInvestigation?.objective}</strong>
+            <p>{previewFoundEvidence >= 4 ? previewInvestigation?.conclusion : previewInvestigation?.opening}</p>
+          </section>
+          <section>
+            <span>路线节奏</span>
+            <div className="casefile-route-beats">
+              {(CHAPTER_ROUTE_COPY[previewChapter.id]?.beats || []).map((beat, index) => <i key={beat}><b>{index + 1}</b>{beat}</i>)}
+            </div>
+          </section>
+          <section>
+            <span>首领宗卷</span>
+            <strong>{previewChapter.boss} · {previewDossier?.weakness}</strong>
+            <p>{previewDossier?.origin}</p>
+          </section>
+          <section>
+            <span>敌情压力</span>
+            <div className="casefile-enemies">
+              {previewEnemies.map((enemy) => <em key={enemy.name}><b>{enemy.name}</b><small>{enemy.archetype} · {enemy.trait}</small></em>)}
+            </div>
+          </section>
+        </div>
+      </article>
       <div className="chapter-list">
         {CHAPTERS.map((chapter, index) => {
           const unlocked = index === 0 || profile.chapter > index;
@@ -2561,7 +2614,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
                   ? `破劫数 ${tribulationClears}/${TRIBULATION_LEVELS.length - 1}`
                   : completed ? "换职业复盘" : "推进主线";
           return (
-            <button key={chapter.id} className={`chapter-card ${unlocked ? "" : "locked"} ${completed ? "completed" : ""} ${current ? "current" : ""} ${selectedTribulation.level ? "tribulation-selected" : ""}`} disabled={!unlocked} onClick={() => onChoose(chapter.id, selectedTribulation.level)}>
+            <button key={chapter.id} className={`chapter-card ${unlocked ? "" : "locked"} ${completed ? "completed" : ""} ${current ? "current" : ""} ${previewChapterId === chapter.id ? "previewed" : ""} ${selectedTribulation.level ? "tribulation-selected" : ""}`} disabled={!unlocked} onMouseEnter={() => setPreviewChapterId(chapter.id)} onFocus={() => setPreviewChapterId(chapter.id)} onClick={() => onChoose(chapter.id, selectedTribulation.level)}>
               <img src={chapter.art} alt="" />
               <div className="chapter-card-shade" />
               <span className="chapter-number">{completed ? "已结卷" : current ? "当前主线" : `卷 ${String(chapter.id).padStart(2, "0")}`}</span>
