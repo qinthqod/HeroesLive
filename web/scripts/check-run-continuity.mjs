@@ -121,6 +121,7 @@ expect(source.includes("CHAPTER_HOME_STATES[mainComplete ? \"complete\" : curren
 expect(source.includes("chapter-card") && source.includes("completed ? \"已结卷\"") && source.includes("current ? \"当前主线\""), "章节列表必须区分锁定、当前主线与已完成状态");
 expect(source.includes("chapter-replay-goals") && source.includes("chapter-next-target") && source.includes("补证据") && source.includes("补后记") && source.includes("破劫数"), "章节列表必须展示证据、后记、劫数复玩目标和下一目标");
 expect(source.includes("chapter-casefile") && source.includes("案卷预览") && source.includes("casefile-boss-card") && source.includes("previewBoss?.art") && source.includes("casefile-route-beats") && source.includes("casefile-enemies"), "章节选择页必须提供案卷预览，展示首领现形、调查、路线节奏、首领宗卷和敌情压力");
+expect(source.includes("chapter-boss-sigil") && source.includes("chapterBoss.art") && source.includes("chapterBoss.trait"), "章节列表卡必须提供首领身份签作为路线终点地标");
 expect(source.includes("CHAPTER_BOSS_DOSSIERS") && source.includes("CHAPTER_ROUTE_COPY[previewChapter.id]?.beats") && source.includes("ENCOUNTER_ENEMIES[previewChapter.id]"), "章节案卷必须读取真实宗卷、路线与遭遇数据");
 expect(source.includes("tribulation-panel") && source.includes("TRIBULATION_LEVELS.map") && source.includes("selectedTribulation.reward.title"), "主线完成后的章节列表必须提供劫数选择、风险预览与首破奖励说明");
 expect(source.includes("completedNodes") && source.includes("chapter-1-scene-"), "章节剧情节点必须形成跨局完成进度");

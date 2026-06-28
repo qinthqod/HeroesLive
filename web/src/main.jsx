@@ -2611,6 +2611,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
           const evidence = investigationEvidence(chapter.id);
           const foundEvidence = profile.investigationArchive?.[String(chapter.id)]?.length || 0;
           const epilogues = CHAPTER_EPILOGUES[chapter.id] || [];
+          const chapterBoss = ENCOUNTER_ENEMIES[chapter.id]?.[3];
           const foundEpilogues = epilogues.filter((epilogue) => (profile.unlockedEpilogues || []).includes(epilogue.id)).length;
           const tribulationClears = TRIBULATION_LEVELS.slice(1).filter((item) => tribulationRewardStatus(profile, chapter.id, item.level).claimed).length;
           const nextTarget = !unlocked
@@ -2627,6 +2628,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
               <img src={chapter.art} alt="" />
               <div className="chapter-card-shade" />
               <span className="chapter-number">{completed ? "已结卷" : current ? "当前主线" : `卷 ${String(chapter.id).padStart(2, "0")}`}</span>
+              {chapterBoss && <span className="chapter-boss-sigil"><img src={chapterBoss.art} alt="" /><b>{chapterBoss.name}</b><i>{chapterBoss.trait}</i></span>}
               <div><small>{chapter.region} · {chapter.level}</small><h2>{chapter.name}</h2><p>{chapter.summary}</p><strong>{!unlocked ? "完成前章后解锁" : selectedTribulation.level ? `${selectedTribulation.name} · ${tribulationStatus.claimed ? "首破已领" : `首破称号「${selectedTribulation.reward.title}」`}` : completed ? `可重访 · 首领 ${chapter.boss}` : `继续主线 · 首领 ${chapter.boss}`}</strong>
                 <div className="chapter-replay-goals" aria-label={`第 ${chapter.id} 章复玩目标`}>
                   <span className={foundEvidence >= evidence.length ? "done" : ""}><b>证据</b><i>{foundEvidence}/{evidence.length}</i></span>

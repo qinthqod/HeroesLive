@@ -1824,6 +1824,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   padding: 0 0 40px;
 }
 .device-desktop .chapter-card { height: 318px; }
+.device-desktop .chapter-boss-sigil { min-width: 144px; }
 .device-desktop .chapter-replay-goals span { min-height: 36px; padding: 6px 8px; }
 .device-desktop .chapter-next-target { margin-top: 9px; font-size: 9px; }
 .device-desktop .chapter-main-complete { grid-column: 1 / -1; }
@@ -2323,6 +2324,27 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .chapter-card > img { width: 100%; height: 100%; object-fit: cover; filter: brightness(.62) saturate(.7); transition: .3s; }
 .chapter-card-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4,12,10,.95), rgba(4,12,10,.25) 78%), linear-gradient(0deg, rgba(3,9,8,.86), transparent 65%); }
 .chapter-number { position: absolute; top: 15px; right: 15px; color: #d3ad61; font-size: 10px; letter-spacing: .12em; }
+.chapter-boss-sigil {
+  position: absolute;
+  top: 13px;
+  left: 14px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 128px);
+  padding: 6px 10px 6px 6px;
+  border: 1px solid rgba(215,173,76,.28);
+  border-radius: 999px;
+  background: linear-gradient(105deg, rgba(4,15,12,.9), rgba(72,44,13,.72));
+  box-shadow: 0 10px 26px rgba(0,0,0,.28);
+}
+.chapter-boss-sigil img { grid-row: 1 / 3; width: 42px; height: 42px; object-fit: cover; border: 1px solid rgba(221,180,85,.32); border-radius: 50%; filter: saturate(.8) brightness(.88); }
+.chapter-boss-sigil b,
+.chapter-boss-sigil i { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chapter-boss-sigil b { color: #e5cf94; font-family: "STKaiti", serif; font-size: 13px; font-weight: 400; }
+.chapter-boss-sigil i { color: #9fac9f; font-size: 7px; font-style: normal; }
 .chapter-card > div:last-child { position: absolute; left: 18px; right: 18px; bottom: 15px; }
 .chapter-card small { color: #83a395; font-size: 9px; }
 .chapter-card h2 { margin: 4px 0; font-family: "STKaiti", serif; font-size: 28px; font-weight: 400; color: #efe3c4; }
