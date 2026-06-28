@@ -487,7 +487,7 @@ export const CHAPTER_BOSS_PRELUDES = {
   3: {
     eyebrow: "首领前夜 · 雷池阵眼",
     name: "百年安稳开始崩裂",
-    art: "/ui/bg_act3_thunder.png",
+    art: "/enemy_thunder_pool_guardian.png",
     setting: "雷云压到触手可及。每一道阵纹都亮着一个被删去的姓名，而守阵者站在所有姓名中央。",
     beats: [
       { speaker: "沈砚秋", text: "这座阵不是为了挡雷，是为了让所有人相信，牺牲少数便能换来永远安稳。" },
@@ -1356,7 +1356,7 @@ export const CHAPTER_ROUTES = {
       { id: "elite", kind: "精英", name: "断碑试剑台", desc: "碑上刻着二十四年前的试炼名单。", art: "/bg_dark_forge.png" },
       { id: "market", kind: "坊市", name: "山道鬼市", desc: "有人出售被撕去姓名的旧名册。", art: "/bg_market_stall.png" },
     ],
-    [{ id: "boss", kind: "首领", name: "写名鬼灯", desc: "灯芯燃着你尚未走过的余生。", art: "/ui/bg_act2_mountain.png" }],
+    [{ id: "boss", kind: "首领", name: "写名鬼灯", desc: "灯芯燃着你尚未走过的余生。", art: "/generated/enemy_writing_name_ghost_lantern.png" }],
   ],
   3: [
     [{ id: "story", kind: "剧情", name: "雷纹验骨", desc: "雷池正在辨认你与旧阵的关系。", art: "/ui/bg_act3_thunder.png" }],
@@ -1368,7 +1368,7 @@ export const CHAPTER_ROUTES = {
       { id: "elite", kind: "精英", name: "问心石阶", desc: "每一级石阶都会唤出一种悔意。", art: "/ui/bg_act3_thunder.png" },
       { id: "market", kind: "坊市", name: "云端散市", desc: "渡劫前的修士交换最后一件法器。", art: "/bg_market_stall.png" },
     ],
-    [{ id: "boss", kind: "首领", name: "改命雷阵", desc: "守阵者不允许任何人带着疑问筑基。", art: "/bg_thunder_pool.png" }],
+    [{ id: "boss", kind: "首领", name: "改命雷阵", desc: "守阵者不允许任何人带着疑问筑基。", art: "/enemy_thunder_pool_guardian.png" }],
   ],
   4: [
     [{ id: "story", kind: "剧情", name: "无影城门", desc: "守卫要求你先交出自己的影子。", art: "/bg_dark_forge.png" }],
@@ -1380,7 +1380,7 @@ export const CHAPTER_ROUTES = {
       { id: "elite", kind: "精英", name: "黑莲梦坊", desc: "织梦师用影子缝补黑莲花瓣。", art: "/bg_spirit_rift.png" },
       { id: "market", kind: "坊市", name: "影子鬼市", desc: "这里能买到不属于自己的往事。", art: "/bg_market_stall.png" },
     ],
-    [{ id: "boss", kind: "首领", name: "照夜莲台", desc: "城主在此保管全城人的恐惧。", art: "/bg_dark_forge.png" }],
+    [{ id: "boss", kind: "首领", name: "照夜莲台", desc: "城主在此保管全城人的恐惧。", art: "/generated/enemy_shadowless_city_lord.png" }],
   ],
   5: [
     [{ id: "story", kind: "剧情", name: "天门问名", desc: "门上没有你的名字，却认得你的血。", art: "/bg_secret_realm.png" }],
@@ -1392,7 +1392,7 @@ export const CHAPTER_ROUTES = {
       { id: "elite", kind: "精英", name: "执笔者之阶", desc: "旧日执笔者要求你证明自由并非混乱。", art: "/ui/bg_act3_thunder.png" },
       { id: "market", kind: "坊市", name: "无名人市集", desc: "不在命册中的人交换最后的遗物。", art: "/bg_market_stall.png" },
     ],
-    [{ id: "boss", kind: "首领", name: "命册末页", desc: "守门真君等待你决定天下人的前路。", art: "/bg_secret_realm.png" }],
+    [{ id: "boss", kind: "首领", name: "命册末页", desc: "守门真君等待你决定天下人的前路。", art: "/generated/enemy_gatekeeping_true_lord.png" }],
   ],
   6: [
     [{ id: "story", kind: "剧情", name: "月海渡口", desc: "摆渡使要你先说出此生最后悔没有走的路。", art: "/generated/bg_moon_ferry_crossing.png" }],

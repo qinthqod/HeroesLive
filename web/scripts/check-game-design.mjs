@@ -123,9 +123,11 @@ const dedicatedBossArt = {
 for (const chapter of CHAPTERS) {
   const boss = ENCOUNTER_ENEMIES[chapter.id]?.[3];
   const expectedArt = dedicatedBossArt[boss?.name];
+  const bossRouteNode = (CHAPTER_ROUTES[chapter.id] || []).flat().find((node) => node.id === "boss");
   expect(Boolean(expectedArt), `${chapter.name} 首领缺少专属美术登记`);
   expect(boss?.art === expectedArt, `${chapter.name} 首领「${boss?.name}」必须使用专属 Boss 图 ${expectedArt}`);
-  expect(CHAPTER_BOSS_PRELUDES[chapter.id]?.art === expectedArt || CHAPTER_BOSS_PRELUDES[chapter.id]?.art?.startsWith("/ui/"), `${chapter.name} 首领前夜必须使用专属 Boss 图或章节专属场景图`);
+  expect(CHAPTER_BOSS_PRELUDES[chapter.id]?.art === expectedArt, `${chapter.name} 首领前夜必须使用与首领战一致的身份图 ${expectedArt}`);
+  expect(bossRouteNode?.art === expectedArt, `${chapter.name} 路线终点必须使用与首领战一致的身份图 ${expectedArt}`);
   expectAsset(expectedArt, `${chapter.name} 首领专属图`);
 }
 expect(new Set(TREASURES.map((treasure) => treasure.id)).size === TREASURES.length, "法宝 ID 必须唯一");
