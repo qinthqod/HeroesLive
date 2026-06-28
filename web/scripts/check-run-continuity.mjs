@@ -72,7 +72,7 @@ expect(source.includes("未收录组件") && source.includes("recipe.cards.every
 expect(source.includes("build-target-panel") && source.includes("下一卷追踪") && source.includes("优先在战利、坊市和异闻中寻找这些关键词"), "流派图谱必须展示下一套最接近成卷的构筑追踪目标");
 expect(source.includes("未收录组件 · ${card.keyword}") && source.includes("优先留意"), "未完成流派必须保留未知感但展示类型/关键词线索");
 expect(source.includes("generateRewardChoices") && source.includes("reward-build-direction"), "战利选择必须接入流派图谱并展示当前构筑方向");
-expect(source.includes("reward-reveal-panel") && source.includes("reward-card-seal") && source.includes("rewardRarityPlan"), "战利页必须保留自动揭示、牌背封印和奖励池说明");
+expect(source.includes("reward-reveal-panel") && source.includes("reward-card-seal") && source.includes("rewardRarityPlan") && source.includes("reward-open-spoils") && source.includes("启封战利"), "战利页必须保留主动启封、牌背封印和奖励池说明");
 expect(source.includes("reward-contract") && source.includes("本次保底") && source.includes("重整代价") && source.includes("兜底选择"), "战利页必须公开保底、可变奖励、重整代价与兜底选择");
 expect(source.includes("boss-revelation") && source.includes("首领最后的证词"), "首领战利必须承接章节真相，而非复用普通战文案");
 expect(source.includes("if (stage < 3) setHp") && source.includes("不取战利 · 直接结卷"), "章末跳过战利不得通过无后续价值的回血抬高评阶");

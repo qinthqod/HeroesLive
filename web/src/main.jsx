@@ -3785,7 +3785,9 @@ function rewardRarityPlan(stage) {
 
 function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, treasures, stones, clues, pendingClue, profile, randomSeed, runTribulation, setStones, claimReward, skipReward }) {
   const [rerollCount, setRerollCount] = useState(0);
+  const [rewardOpening, setRewardOpening] = useState(false);
   const [rewardRevealed, setRewardRevealed] = useState(false);
+  const revealTimerRef = useRef(null);
   const profession = getProfession(origin);
   const chapterData = CHAPTERS[chapter - 1];
   const investigation = CHAPTER_INVESTIGATIONS[chapter];
@@ -3804,9 +3806,12 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
   const rewardRevealKey = rewards.map((card) => card.id).join(":");
   const rarityPlan = rewardRarityPlan(stage);
   useEffect(() => {
+    if (revealTimerRef.current) window.clearTimeout(revealTimerRef.current);
+    setRewardOpening(false);
     setRewardRevealed(false);
-    const timer = window.setTimeout(() => setRewardRevealed(true), 360);
-    return () => window.clearTimeout(timer);
+    return () => {
+      if (revealTimerRef.current) window.clearTimeout(revealTimerRef.current);
+    };
   }, [rewardRevealKey]);
   const treasureReward = useMemo(() => {
     if (stage < 2) return null;
@@ -3821,6 +3826,15 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
     if (stones < rerollPrice) return;
     setStones((value) => value - rerollPrice);
     setRerollCount((value) => value + 1);
+  };
+  const openSpoils = () => {
+    if (rewardOpening || rewardRevealed) return;
+    setRewardOpening(true);
+    if (revealTimerRef.current) window.clearTimeout(revealTimerRef.current);
+    revealTimerRef.current = window.setTimeout(() => {
+      setRewardRevealed(true);
+      setRewardOpening(false);
+    }, 460);
   };
   return (
     <section className={`reward-screen screen-content ${isBossReward ? "boss-reward-screen" : ""}`}>
@@ -3862,11 +3876,12 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
         <i><b style={{ width: `${buildDirection.progress * 20}%` }} /></i>
         <p>{buildDirection.recipe.focus} · 尚缺 {buildDirection.missing.length} 张核心组件</p>
       </div>}
-      <div className={`reward-reveal-panel ${rewardRevealed ? "revealed" : ""}`} aria-live="polite">
-        <span>{rewardRevealed ? "战利已开" : "灵光聚拢"}</span>
+      <div className={`reward-reveal-panel ${rewardOpening ? "opening" : ""} ${rewardRevealed ? "revealed" : ""}`} aria-live="polite">
+        <span>{rewardRevealed ? "战利已开" : rewardOpening ? "封印松动" : "灵光聚拢"}</span>
         <strong>{rarityPlan.name}</strong>
         <p>{rarityPlan.weights}</p>
         <small>{rarityPlan.promise}</small>
+        <button className="reward-open-spoils" disabled={rewardOpening || rewardRevealed} onClick={openSpoils}>{rewardRevealed ? "已启封" : rewardOpening ? "揭示中…" : "启封战利"}</button>
       </div>
       <div className="reward-contract" aria-label="战利保底与取舍说明">
         <article>
@@ -3893,7 +3908,7 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
       <RunNotebook notebook={notebook} compact className="reward-notebook" />
       <div className="reward-cards">{rewards.map((card, index) => {
         const fit = rewardFits[index];
-        return <div className={`reward-card-wrap fit-${fit.rank} ${rewardRevealed ? "revealed" : "sealed"}`} style={{ "--delay": `${180 + index * 120}ms` }} key={card.id}>
+        return <div className={`reward-card-wrap fit-${fit.rank} ${rewardOpening ? "opening" : ""} ${rewardRevealed ? "revealed" : "sealed"}`} style={{ "--delay": `${180 + index * 120}ms` }} key={card.id}>
           <div className="reward-fit"><b>推荐 {fit.rank}</b><span>{fit.reason}</span></div>
           <Card card={card} index={index} playable={rewardRevealed} onClick={() => rewardRevealed && claimReward(card)} />
           <div className="reward-card-seal" aria-hidden="true">
@@ -3910,7 +3925,7 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
       </button>}
       <small className="reward-tip">{isBossReward ? "章末战利 · 选择后进入本章结算" : `第 ${stage} 幕奖励 · 后续章节提高稀有牌和精研牌概率`}</small>
       <div className="reward-actions">
-        <button className="reward-reroll" disabled={stones < rerollPrice} onClick={reroll}>重整奖励 · {rerollPrice} 灵石</button>
+        <button className="reward-reroll" disabled={stones < rerollPrice || rewardOpening} onClick={reroll}>重整奖励 · {rerollPrice} 灵石</button>
         <button className="reward-skip" onClick={skipReward}>{isBossReward ? "不取战利 · 直接结卷" : "调息离开 · 恢复 10 生命"}</button>
       </div>
     </section>
