@@ -2520,6 +2520,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
   const previewInvestigation = CHAPTER_INVESTIGATIONS[previewChapter.id];
   const previewDossier = CHAPTER_BOSS_DOSSIERS[previewChapter.id];
   const previewEnemies = Object.values(ENCOUNTER_ENEMIES[previewChapter.id] || {});
+  const previewBoss = ENCOUNTER_ENEMIES[previewChapter.id]?.[3];
   const previewFoundEvidence = profile.investigationArchive?.[String(previewChapter.id)]?.length || 0;
   const previewEvidenceTotal = investigationEvidence(previewChapter.id).length;
   const previewEpilogues = CHAPTER_EPILOGUES[previewChapter.id] || [];
@@ -2569,6 +2570,14 @@ function ChapterScreen({ profile, onBack, onChoose }) {
           </button>
         </div>
         <div className="casefile-lore">
+          <section className="casefile-boss-card">
+            <img src={previewBoss?.art} alt="" />
+            <div>
+              <span>首领现形</span>
+              <strong>{previewBoss?.name} · {previewBoss?.archetype}</strong>
+              <p>{previewBoss?.trait} · {previewBoss?.counter}</p>
+            </div>
+          </section>
           <section>
             <span>调查目标</span>
             <strong>{previewInvestigation?.objective}</strong>

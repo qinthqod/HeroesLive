@@ -1815,6 +1815,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   gap: 10px;
 }
 .device-desktop .casefile-lore section { min-height: 143px; }
+.device-desktop .casefile-boss-card { grid-column: 1 / -1; min-height: 118px; }
 .device-desktop .chapter-list {
   max-width: 1220px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2291,6 +2292,21 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .casefile-main button:disabled { opacity: .46; cursor: not-allowed; filter: grayscale(.6); }
 .casefile-lore { display: grid; gap: 8px; padding: 0 18px 18px; }
 .casefile-lore section { padding: 11px; border: 1px solid rgba(132,164,146,.14); background: rgba(4,17,14,.72); }
+.casefile-boss-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 12px;
+  align-items: center;
+  overflow: hidden;
+  border-color: rgba(214,172,73,.3) !important;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(213,171,72,.18), transparent 32%),
+    linear-gradient(115deg, rgba(66,38,12,.7), rgba(4,17,14,.82)) !important;
+}
+.casefile-boss-card::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(213,171,72,.06)); }
+.casefile-boss-card img { position: relative; z-index: 1; width: 92px; height: 98px; object-fit: cover; border: 1px solid rgba(218,177,85,.25); border-radius: 14px 2px 14px 2px; filter: saturate(.82) contrast(1.05) brightness(.9); box-shadow: 0 10px 24px rgba(0,0,0,.34); }
+.casefile-boss-card div { position: relative; z-index: 1; min-width: 0; }
 .casefile-lore span { color: #c9a65f; font-size: 8px; letter-spacing: .14em; }
 .casefile-lore strong { display: block; margin-top: 5px; color: #d8ceb0; font-size: 11px; font-weight: 500; line-height: 1.45; }
 .casefile-lore p { margin: 5px 0 0; color: #879b90; font-size: 9px; line-height: 1.55; }
