@@ -162,6 +162,32 @@ await run("移动职业页保留开局预览且不横溢", { width: 430, height:
   if (layout.scrollWidth > layout.width) throw new Error(`移动职业页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 藏经阁流派页展示下一卷追踪", { width: 1366, height: 768 }, "?screen=collection&origin=sword&collectionView=builds", async (page) => {
+  await page.locator(".build-target-panel").waitFor();
+  const layout = await layoutSnapshot(page);
+  const targetText = await page.locator(".build-target-panel").innerText();
+  const libraryBox = await page.locator(".build-library").boundingBox();
+  const recipeCards = await page.locator(".build-recipe").count();
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["下一卷追踪", "优先在战利、坊市和异闻", "未收录"]) {
+    if (!targetText.includes(phrase)) throw new Error(`PC 流派追踪缺少 ${phrase}`);
+  }
+  if (recipeCards < 18) throw new Error(`PC 流派图谱数量不足：${recipeCards}`);
+  if (!libraryBox || libraryBox.width < 1000) throw new Error(`PC 流派图谱区域过窄：${libraryBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 藏经阁横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动藏经阁流派页保留关键词线索", { width: 430, height: 932 }, "?screen=collection&origin=soul&collectionView=builds", async (page) => {
+  await page.locator(".build-target-panel").waitFor();
+  const layout = await layoutSnapshot(page);
+  const targetBox = await page.locator(".build-target-panel").boundingBox();
+  const unknownText = await page.locator(".build-recipe .unknown").first().innerText();
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  if (!targetBox || targetBox.width > 402) throw new Error(`移动流派追踪过宽：${targetBox?.width}`);
+  if (!unknownText.includes("未收录组件") || !unknownText.includes("·")) throw new Error("移动流派未知组件缺少关键词线索");
+  if (layout.scrollWidth > layout.width) throw new Error(`移动藏经阁横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
 await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, "?screen=combat&chapter=6&stage=3&move=0", async (page) => {
   await page.locator(".combat-screen").waitFor();
   const layout = await layoutSnapshot(page);

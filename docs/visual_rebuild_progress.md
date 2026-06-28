@@ -24,6 +24,7 @@
 - Imagegen expansion pass: added project-bound art for 第七盏灯、无影城主、月蚀司命、命册缺页、逐月月潮斩 and 月海渡口; chapter 1/4/6 bosses, boss preludes, chapter 6 route/story/event nodes and moon/fate themed cards now use these dedicated assets instead of fallback reuse.
 - Class selection pass: upgraded the profession page into a true pre-run planning surface. It now derives a starter-deck summary, opening resource loop, signature card, mastery treasure and three build-recipe entry points from live game data, with PC/mobile smoke coverage to prevent the setup screen from regressing into a plain class list.
 - Chapter casefile pass: upgraded chapter selection from static cards into a pre-run story dossier. The selected chapter now previews investigation progress, four route beats, boss lore/weakness and enemy pressure from live chapter data, helping the start flow feel like opening a storybook instead of choosing a level tile.
+- Build atlas pass: upgraded the collection build tab with a live "next recipe" tracker. It now surfaces the closest incomplete build, missing component type/rarity/keyword hints, completion progress and PC/mobile smoke coverage, turning the Codex from a passive checklist into a long-term deckbuilding objective.
 - Pile/detail overlay: moved deck inspection into a centered lacquer scroll with scene artwork, click-outside dismissal and a full-screen dimming scrim.
 - Responsive pass: verified combat and result screens at both 1280×720 and 960×720 without clipped controls or overlapping content.
 

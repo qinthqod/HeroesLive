@@ -69,6 +69,8 @@ expect(source.includes("runDeck.forEach((card)") && source.includes("discovered.
 expect(source.includes("未收录术法") && source.includes("collection-progress"), "藏经阁必须区分未知卡牌并展示职业收集进度");
 expect(source.includes("流派图谱") && source.includes("BuildRecipeCard"), "藏经阁必须提供可浏览的流派图谱");
 expect(source.includes("未收录组件") && source.includes("recipe.cards.every"), "流派图谱必须显示缺失组件并计算真实完成度");
+expect(source.includes("build-target-panel") && source.includes("下一卷追踪") && source.includes("优先在战利、坊市和异闻中寻找这些关键词"), "流派图谱必须展示下一套最接近成卷的构筑追踪目标");
+expect(source.includes("未收录组件 · ${card.keyword}") && source.includes("优先留意"), "未完成流派必须保留未知感但展示类型/关键词线索");
 expect(source.includes("generateRewardChoices") && source.includes("reward-build-direction"), "战利选择必须接入流派图谱并展示当前构筑方向");
 expect(source.includes("reward-reveal-panel") && source.includes("reward-card-seal") && source.includes("rewardRarityPlan"), "战利页必须保留自动揭示、牌背封印和奖励池说明");
 expect(source.includes("reward-contract") && source.includes("本次保底") && source.includes("重整代价") && source.includes("兜底选择"), "战利页必须公开保底、可变奖励、重整代价与兜底选择");
@@ -99,6 +101,7 @@ expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 expect(styles.includes(".class-system-grid") && styles.includes(".starter-handbook") && styles.includes(".class-recipe-preview") && styles.includes(".device-desktop .mechanic-panel"), "职业选择页必须拥有移动/PC 的起手牌与构筑预览样式");
 expect(styles.includes(".chapter-casefile") && styles.includes(".casefile-lore") && styles.includes(".device-desktop .chapter-casefile"), "章节案卷预览必须拥有移动/PC 样式");
+expect(styles.includes(".build-target-panel") && styles.includes(".device-desktop .build-library") && styles.includes(".device-desktop .build-target-panel"), "流派图谱追踪目标必须拥有移动/PC 样式");
 for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite", "moon-debt"]) {
   expect(source.includes(`market.special.id === "${trade}"`), `坊市缺少 ${trade} 专属交易运行时`);
 }

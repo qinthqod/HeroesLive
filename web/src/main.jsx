@@ -2770,7 +2770,16 @@ function CollectionScreen({ origin, setOrigin, profile, onBack }) {
   const currentDiscovered = current.cards.filter((card) => discovered.has(card.id)).length;
   const refinedDiscovered = current.cards.filter((card) => card.refined && discovered.has(card.id)).length;
   const recipes = DECK_RECIPES.filter((recipe) => recipe.job === current.id);
-  const completedRecipes = recipes.filter((recipe) => recipe.cards.every((cardId) => discovered.has(cardId))).length;
+  const recipeStates = recipes.map((recipe, index) => {
+    const components = recipe.cards.map((cardId) => current.cards.find((card) => card.id === cardId)).filter(Boolean);
+    const known = components.filter((card) => discovered.has(card.id));
+    const missing = components.filter((card) => !discovered.has(card.id));
+    return { recipe, index, components, known, missing, complete: known.length === components.length };
+  });
+  const completedRecipes = recipeStates.filter((state) => state.complete).length;
+  const nextRecipe = recipeStates
+    .filter((state) => !state.complete)
+    .sort((a, b) => b.known.length - a.known.length || a.index - b.index)[0] || recipeStates[0];
   const totalCompletedRecipes = DECK_RECIPES.filter((recipe) => recipe.cards.every((cardId) => discovered.has(cardId))).length;
   return (
     <section className="mobile-shell collection-screen screen-content">
@@ -2796,8 +2805,24 @@ function CollectionScreen({ origin, setOrigin, profile, onBack }) {
             <div><small>{current.name} · 构筑研习</small><strong>{completedRecipes}<i>/18</i></strong></div>
             <p>每卷由五张核心术法构成。收录全部组件即可成卷，并获得一条清晰的出牌思路。</p>
           </div>
+          {nextRecipe && <section className={`build-target-panel ${nextRecipe.complete ? "complete" : ""}`} aria-label="下一套流派追踪">
+            <div>
+              <span>{nextRecipe.complete ? "已成卷示范" : "下一卷追踪"}</span>
+              <strong>{nextRecipe.recipe.name}</strong>
+              <p>{nextRecipe.complete ? nextRecipe.recipe.strategy : `${nextRecipe.recipe.focus} · 还缺 ${nextRecipe.missing.length} 张核心术法。优先在战利、坊市和异闻中寻找这些关键词。`}</p>
+            </div>
+            <div className="build-target-missing">
+              {(nextRecipe.complete ? nextRecipe.components : nextRecipe.missing).slice(0, 5).map((card) => (
+                <span className={discovered.has(card.id) ? "known" : ""} key={card.id}>
+                  <b>{discovered.has(card.id) ? card.name : "未收录"}</b>
+                  <small>{card.type} · {card.rarity} · {card.keyword}</small>
+                </span>
+              ))}
+            </div>
+            <i className="build-target-bar"><b style={{ width: `${nextRecipe.known.length * 20}%` }} /></i>
+          </section>}
           <div className="build-library">
-            {recipes.map((recipe, index) => <BuildRecipeCard key={recipe.id} recipe={recipe} index={index} cards={current.cards} discovered={discovered} />)}
+            {recipeStates.map((state) => <BuildRecipeCard key={state.recipe.id} state={state} discovered={discovered} />)}
           </div>
         </>
       )}
@@ -2805,10 +2830,8 @@ function CollectionScreen({ origin, setOrigin, profile, onBack }) {
   );
 }
 
-function BuildRecipeCard({ recipe, index, cards, discovered }) {
-  const components = recipe.cards.map((cardId) => cards.find((card) => card.id === cardId)).filter(Boolean);
-  const known = components.filter((card) => discovered.has(card.id));
-  const complete = known.length === components.length;
+function BuildRecipeCard({ state, discovered }) {
+  const { recipe, index, components, known, complete } = state;
   const missing = components.length - known.length;
   return (
     <article className={`build-recipe ${complete ? "complete" : ""}`}>
@@ -2823,12 +2846,12 @@ function BuildRecipeCard({ recipe, index, cards, discovered }) {
         {components.map((card) => (
           <div className={discovered.has(card.id) ? "known" : "unknown"} key={card.id}>
             <img src={discovered.has(card.id) ? card.art : "/card_back_qinglan_trial.png"} alt="" />
-            <small>{discovered.has(card.id) ? card.name : "未收录组件"}</small>
+            <small>{discovered.has(card.id) ? card.name : `未收录组件 · ${card.keyword}`}</small>
           </div>
         ))}
       </div>
       <div className="build-progress"><i><b style={{ width: `${known.length * 20}%` }} /></i><span>{known.length}/5</span></div>
-      <p className="build-strategy">{complete ? recipe.strategy : `继续在战利、坊市或异闻中寻找 ${missing} 张核心术法。`}</p>
+      <p className="build-strategy">{complete ? recipe.strategy : `继续在战利、坊市或异闻中寻找 ${missing} 张核心术法；优先留意 ${components.filter((card) => !discovered.has(card.id)).map((card) => card.keyword).slice(0, 3).join("、")} 关键词。`}</p>
     </article>
   );
 }
