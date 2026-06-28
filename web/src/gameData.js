@@ -11,7 +11,16 @@ const arts = [
   "/card_thunder_body.png",
   "/card_moon_eclipse_slash.png",
   "/card_foundation_surge.png",
+  "/generated/card_fate_page_fragment.png",
+  "/generated/card_moon_tide_slash.png",
 ];
+
+const CARD_ART_OVERRIDES = {
+  "逐月连斩": "/generated/card_moon_tide_slash.png",
+  "万剑归岚": "/generated/card_moon_tide_slash.png",
+  "黄泉引路": "/generated/card_fate_page_fragment.png",
+  "百鬼夜行": "/generated/card_fate_page_fragment.png",
+};
 
 const classBlueprints = [
   {
@@ -206,7 +215,7 @@ function makeCards(job) {
       type: base.type,
       rarity: refined ? (base.rarity === "普通" ? "精良" : base.rarity === "精良" ? "稀有" : "传说") : base.rarity,
       tier,
-      art: arts[base.art],
+      art: CARD_ART_OVERRIDES[base.name] || arts[base.art],
       keyword: base.keyword,
       text: refined ? upgradedText(base) : base.text,
       combo: base.combo,
@@ -451,7 +460,7 @@ export const CHAPTER_BOSS_PRELUDES = {
   1: {
     eyebrow: "首领前夜 · 山门石阶",
     name: "第七盏灯等候点燃",
-    art: "/ui/bg_act1_valley.png",
+    art: "/generated/enemy_seventh_lantern.png",
     setting: "雨势忽然停了。二十三盏弟子灯依次熄灭，唯独山门最高处那一盏，正用与你相同的命火呼吸。",
     beats: [
       { speaker: "陆观", text: "别看灯罩。它会把你最想救回的人映在里面，然后问你愿不愿意替她留下。" },
@@ -484,7 +493,7 @@ export const CHAPTER_BOSS_PRELUDES = {
   4: {
     eyebrow: "首领前夜 · 照夜莲台",
     name: "全城的噩梦一同回家",
-    art: "/bg_dark_forge.png",
+    art: "/generated/enemy_shadowless_city_lord.png",
     setting: "黑莲每合拢一片花瓣，城中便少一声哭泣。莲台之下，无数影子却在替主人无声尖叫。",
     beats: [
       { speaker: "茶楼女童", text: "城主说没有噩梦的人才会幸福。可我已经想不起，自己为什么想画一片海。" },
@@ -506,7 +515,7 @@ export const CHAPTER_BOSS_PRELUDES = {
   6: {
     eyebrow: "首领前夜 · 倒悬月宫",
     name: "所有未行之路要求结局",
-    art: "/bg_spirit_rift.png",
+    art: "/generated/enemy_moon_eclipse_scribe.png",
     setting: "归墟海面升到天空，倒悬之月从潮水里睁眼。每个人未曾选择的人生都站在月光中，等待取代现实。",
     beats: [
       { speaker: "归墟摆渡使", text: "司命替众生收容遗憾太久，久到那些可能忘了自己从未真正发生。" },
@@ -567,7 +576,7 @@ export const ENCOUNTER_ENEMIES = {
   1: {
     1: { name: "野狼妖影", hp: 34, max: 34, art: "/enemy_wolf_shadow.png", archetype: "伏击者", trait: "闻血追猎", counter: "它会先试探、再蓄势扑杀；趁蓄势回合进攻，或为扑杀预留护盾。" },
     2: { name: "雾竹巡山妖", hp: 48, max: 48, art: "/enemy_rogue_cultivator.png", archetype: "破盾者", trait: "竹刃连环", counter: "连击擅长拆散薄盾。集中护盾抵挡连斩，并在其藏身时扩大输出。" },
-    3: { name: "第七盏灯", hp: 72, max: 72, art: "/enemy_black_cult_deacon.png", archetype: "守灯人", trait: "灯火试心", counter: "灯障回合会累积护体；提前铺设持续伤害，重击前保留防御。" },
+    3: { name: "第七盏灯", hp: 72, max: 72, art: "/generated/enemy_seventh_lantern.png", archetype: "守灯人", trait: "灯火试心", counter: "灯障回合会累积护体；提前铺设持续伤害，重击前保留防御。" },
   },
   2: {
     1: { name: "玄阴灯侍", hp: 42, max: 42, art: "/enemy_xuanyin_guide.png", archetype: "夺气者", trait: "借名引路", counter: "它会削减下一回合灵气。优先用低费牌运转，夺气前不要留下昂贵手牌。" },
@@ -582,7 +591,7 @@ export const ENCOUNTER_ENEMIES = {
   4: {
     1: { name: "失梦游魂", hp: 56, max: 56, art: "/enemy_xuanyin_guide.png", archetype: "窃牌者", trait: "吞食清梦", counter: "窃梦会让下回合少抽一张。当前回合尽量完成联动，不要把关键组件寄望于下一次抽牌。" },
     2: { name: "黑莲织梦师", hp: 78, max: 78, art: "/enemy_black_cult_deacon.png", archetype: "回复者", trait: "梦茧回生", counter: "梦茧同时护体与恢复。用燃烧、丹毒或高额爆发阻止它反复拉长战斗。" },
-    3: { name: "无影城主", hp: 112, max: 112, art: "/enemy_black_cult_deacon.png", archetype: "梦境领主", trait: "万梦归莲", counter: "少抽牌会打乱组合，黑莲合瓣又会恢复。保留抽牌与持续伤害手段，避免陷入消耗战。" },
+    3: { name: "无影城主", hp: 112, max: 112, art: "/generated/enemy_shadowless_city_lord.png", archetype: "梦境领主", trait: "万梦归莲", counter: "少抽牌会打乱组合，黑莲合瓣又会恢复。保留抽牌与持续伤害手段，避免陷入消耗战。" },
   },
   5: {
     1: { name: "旧命残影", hp: 64, max: 64, art: "/enemy_rogue_cultivator.png", archetype: "改写者", trait: "未行之路", counter: "残影会把命册缺页写入牌堆。尽快结束战斗，或准备净心与额外抽牌降低污染。" },
@@ -592,7 +601,7 @@ export const ENCOUNTER_ENEMIES = {
   6: {
     1: { name: "逐月溺魂", hp: 72, max: 72, art: "/enemy_xuanyin_guide.png", archetype: "追忆者", trait: "未行之潮", counter: "它会削减抽牌并把未选择的道路化为攻击。当前回合尽量完成联动，不要过度依赖下一手。" },
     2: { name: "归墟摆渡使", hp: 98, max: 98, art: "/enemy_black_cult_deacon.png", archetype: "渡劫者", trait: "借命行舟", counter: "摆渡使以护体拖延，再用多段潮击收割。持续伤害和集中爆发能阻止它反复沉舟再起。" },
-    3: { name: "月蚀司命", hp: 148, max: 148, art: "/enemy_thunder_pool_guardian.png", archetype: "归墟天官", trait: "万途求终", counter: "首相削减抽牌并积累潮壁；半血后月蚀开眼，心魔与多段潮击同时出现。保留净心、抽牌和完整防线。" },
+    3: { name: "月蚀司命", hp: 148, max: 148, art: "/generated/enemy_moon_eclipse_scribe.png", archetype: "归墟天官", trait: "万途求终", counter: "首相削减抽牌并积累潮壁；半血后月蚀开眼，心魔与多段潮击同时出现。保留净心、抽牌和完整防线。" },
   },
 };
 
@@ -1102,9 +1111,9 @@ export const CHAPTER_STORIES = {
   ],
   6: [
     { speaker: "沈砚秋", role: "新命册的第一位守页人", text: "天门之后，所有人都开始梦见自己没走过的路。昨夜起，那些路开始从梦里爬出来。", art: "/bg_spirit_rift.png" },
-    { speaker: "归墟摆渡使", role: "在月海上等候千年的船夫", text: "命册替众生舍弃的可能，都沉在归墟。如今你放开了闸，它们自然要回来讨一个名字。", art: "/bg_secret_realm.png" },
+    { speaker: "归墟摆渡使", role: "在月海上等候千年的船夫", text: "命册替众生舍弃的可能，都沉在归墟。如今你放开了闸，它们自然要回来讨一个名字。", art: "/generated/bg_moon_ferry_crossing.png" },
     { speaker: "你", role: "不再握笔的执笔者", text: "自由不是让所有可能同时发生。人可以后悔，却仍要承认自己真正走过的那一条路。", art: "/ui/bg_act3_thunder.png" },
-    { speaker: "月蚀司命", role: "归墟中最后一位旧天官", text: "既然选择必然舍弃，你所谓的自由与命册有何不同？至少旧册替他们承担了后悔。", art: "/bg_dark_forge.png" },
+    { speaker: "月蚀司命", role: "归墟中最后一位旧天官", text: "既然选择必然舍弃，你所谓的自由与命册有何不同？至少旧册替他们承担了后悔。", art: "/generated/enemy_moon_eclipse_scribe.png" },
     { speaker: "沈砚秋", role: "与你并肩走到月海尽头的人", text: "不同在于，这一次没有人替别人落笔。走吧，把归墟还给那些愿意回望、也愿意继续走的人。", art: "/bg_spirit_rift.png" },
   ],
 };
@@ -1326,7 +1335,7 @@ export const ROUTE_ROWS = [
     { id: "market", kind: "坊市", name: "灯下鬼市", desc: "用灵石交换卡牌、法宝和旧闻。", art: "/bg_market_stall.png" },
   ],
   [
-    { id: "boss", kind: "首领", name: "第七盏灯", desc: "野狼妖影守着通往内门的石阶。", art: "/bg_thunder_pool.png" },
+    { id: "boss", kind: "首领", name: "第七盏灯", desc: "野狼妖影守着通往内门的石阶。", art: "/generated/enemy_seventh_lantern.png" },
   ],
 ];
 
@@ -1381,16 +1390,16 @@ export const CHAPTER_ROUTES = {
     [{ id: "boss", kind: "首领", name: "命册末页", desc: "守门真君等待你决定天下人的前路。", art: "/bg_secret_realm.png" }],
   ],
   6: [
-    [{ id: "story", kind: "剧情", name: "月海渡口", desc: "摆渡使要你先说出此生最后悔没有走的路。", art: "/bg_spirit_rift.png" }],
+    [{ id: "story", kind: "剧情", name: "月海渡口", desc: "摆渡使要你先说出此生最后悔没有走的路。", art: "/generated/bg_moon_ferry_crossing.png" }],
     [
       { id: "battle", kind: "战斗", name: "逐月潮滩", desc: "未行之路从潮水中长出人的形状。", art: "/bg_secret_realm.png" },
-      { id: "event", kind: "奇遇", name: "月海遗舟", desc: "一艘空船载着沈砚秋本可拥有的人生。", art: "/bg_soul_shrine.png" },
+      { id: "event", kind: "奇遇", name: "月海遗舟", desc: "一艘空船载着沈砚秋本可拥有的人生。", art: "/generated/bg_moon_ferry_crossing.png" },
     ],
     [
       { id: "elite", kind: "精英", name: "归墟摆渡台", desc: "老船夫要求你证明选择不是另一种残酷。", art: "/bg_dark_forge.png" },
       { id: "market", kind: "坊市", name: "月下浮市", desc: "这里出售已经消失、却仍被人怀念的未来。", art: "/bg_market_stall.png" },
     ],
-    [{ id: "boss", kind: "首领", name: "倒悬月宫", desc: "月蚀司命要把所有道路重新收回唯一的天命。", art: "/bg_spirit_rift.png" }],
+    [{ id: "boss", kind: "首领", name: "倒悬月宫", desc: "月蚀司命要把所有道路重新收回唯一的天命。", art: "/generated/enemy_moon_eclipse_scribe.png" }],
   ],
 };
 
@@ -1459,7 +1468,7 @@ export const CHAPTER_EVENTS = {
     eyebrow: "归墟异闻",
     name: "月海遗舟",
     description: "船舱里摆着两套餐具、一封没有寄出的家书，以及沈砚秋从未穿过的青岚内门衣。",
-    art: "/bg_spirit_rift.png",
+    art: "/generated/bg_moon_ferry_crossing.png",
     options: [
       { id: "read-letter", label: "读完未寄出的家书", title: "稀有职业牌 · 生命 -8", detail: "从另一种人生里带回一门术法，也承受那份从未发生的离别。", tone: "遗憾换术", effect: { cardRarity: "稀有", hpLoss: 8 }, revealsClue: true },
       { id: "moor-boat", label: "把遗舟系回渡口", title: "恢复 14 · 清神粉 +1", detail: "让这段可能停在可以被看见的地方，而不是继续追逐生者。", tone: "安放旧路", effect: { heal: 14, consumables: { clarity: 1 } }, revealsClue: true },
@@ -1524,7 +1533,7 @@ export const CHAPTER_ROUTE_STORIES = {
     eyebrow: "途中剧情 · 月海",
     name: "沈砚秋没有回谷的人生",
     description: "月潮映出她留在无灯城、成为一名普通医者的未来。那里的她不认识你，却过着平静而完整的一生。",
-    art: "/bg_spirit_rift.png",
+    art: "/generated/bg_moon_ferry_crossing.png",
     options: [
       { id: "bless-other-life", label: "向那段人生道别", title: "恢复 14 · 清神粉 +1", detail: "承认未发生的人生也值得被祝福，然后让它安静沉回月海。", tone: "安放遗憾", effect: { heal: 14, consumables: { clarity: 1 } }, revealsClue: true, echo: "你向沈砚秋没有回谷的人生道别，月海第一次没有把遗憾变成索命的潮。" },
       { id: "take-remedy", label: "记下另一个她的药方", title: "稀有职业牌 · 生命 -8", detail: "带回从未存在过的医术，也承受两个沈砚秋互相遗忘的痛楚。", tone: "可能换术", effect: { cardRarity: "稀有", hpLoss: 8 }, revealsClue: true, echo: "另一个沈砚秋的药方被记下，未发生的人生以伤口的方式留在现实。" },

@@ -98,3 +98,28 @@ Color palette: low-saturation jade cyan, cinnabar red, aged gold, night blue, re
 Materials/textures: old fibrous talisman paper, brushed cinnabar strokes that are symbolic marks but not readable text, jade slip cracks, ash motes
 Constraints: generic early-stage cultivation fantasy; avoid protected characters, canon locations, direct IP likeness, readable text, logo, watermark, modern items, excessive divine grandeur, giant celestial spectacle
 ```
+
+## 2026-06-28 - HeroesLive web imagegen content expansion
+
+- Mode: built-in ImageGen tool
+- Result: 6 usable PNG files were generated under `$CODEX_HOME/generated_images/019edab8-27b2-7683-afa3-5ff4683d6102/`, then copied into project-bound assets under `assets/generated/`.
+- Project action: the new assets are wired into `web/src/gameData.js` for chapter bosses, boss preludes, chapter 6 story/route/event surfaces, and card art overrides for moon/fate themed cards.
+- Saved project paths:
+  - `assets/generated/enemy_seventh_lantern.png`
+  - `assets/generated/enemy_shadowless_city_lord.png`
+  - `assets/generated/enemy_moon_eclipse_scribe.png`
+  - `assets/generated/card_fate_page_fragment.png`
+  - `assets/generated/card_moon_tide_slash.png`
+  - `assets/generated/bg_moon_ferry_crossing.png`
+- Validation: `web/scripts/check-game-design.mjs` now checks that these dedicated imagegen assets exist and that the chapter 1/4/6 bosses do not fall back to reused enemy portraits.
+
+Prompt themes used:
+
+```text
+The Seventh Lantern: Chinese dark-fantasy roguelike deckbuilder boss portrait; lantern cult boss, cracked cyan soul lamp, moonlit forest shrine, jade/cinnabar/aged-gold/night-blue palette, no text.
+Shadowless City Lord: elegant uncanny city ruler with robe of folded black roofs and shadow ribbons, ruined walled night city, lantern rain, no text.
+Moon Eclipse Fate Scribe: final boss registrar with cracked jade brush and floating fate book, eclipse tribunal, grounded mythic tone, no text.
+Fate Page Fragment: torn forbidden fate page, jade fire, cinnabar seal cracks, talismans orbiting, vertical card illustration, no readable text.
+Moon Tide Slash: crescent moonlight and jade-water sword arc over dark river, vertical card illustration, no text.
+Moon Ferry Crossing: wooden ferry with cyan lanterns crossing a black river under a large moon, responsive 16:9 event background, no text.
+```

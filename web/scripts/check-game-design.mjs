@@ -42,6 +42,12 @@ const failures = [];
 const expect = (condition, message) => {
   if (!condition) failures.push(message);
 };
+const expectAsset = (reference, label) => {
+  expect(Boolean(reference), `${label} 缺少素材路径`);
+  if (!reference) return;
+  const artPath = fileURLToPath(new URL(`../../assets${reference}`, import.meta.url));
+  expect(existsSync(artPath), `${label} 素材不存在：${reference}`);
+};
 
 expect(PROFESSIONS.length >= 6, "至少需要 6 个职业");
 expect(ALL_CARDS.length >= 120, "至少需要 120 张职业卡牌");
@@ -87,6 +93,7 @@ for (const chapter of CHAPTERS) {
   for (const stage of [1, 2, 3]) {
     const enemy = enemies[stage];
     expect(Boolean(enemy?.name && enemy?.art && enemy?.archetype && enemy?.trait && enemy?.counter), `${chapter.name} 第 ${stage} 战缺少敌人身份或反制提示`);
+    expectAsset(enemy?.art, `${chapter.name} 第 ${stage} 战敌人`);
     expect(Number.isFinite(enemy?.hp) && enemy.hp === enemy.max && enemy.hp > 0, `${chapter.name} 第 ${stage} 战生命配置非法`);
   }
   for (const stage of [1, 2]) {
@@ -133,6 +140,7 @@ for (const chapter of CHAPTERS) {
   const prelude = CHAPTER_BOSS_PRELUDES[chapter.id];
   const dossier = CHAPTER_BOSS_DOSSIERS[chapter.id];
   expect(Boolean(prelude?.eyebrow && prelude?.name && prelude?.setting && prelude?.art), `${chapter.name} 缺少首领前夜场景`);
+  expectAsset(prelude?.art, `${chapter.name} 首领前夜`);
   expect(prelude?.beats?.length === 3, `${chapter.name} 首领前夜必须包含三段序破急对白`);
   expect(prelude?.beats?.every((beat) => beat.speaker && beat.text), `${chapter.name} 首领前夜对白缺少角色或文本`);
   expect(Boolean(dossier?.origin && dossier?.obsession && dossier?.weakness), `${chapter.name} 缺少首领宗卷来历、执念或破绽`);
@@ -156,6 +164,7 @@ for (const chapter of CHAPTERS) {
   }
   const event = CHAPTER_EVENTS[chapter.id];
   expect(Boolean(event?.eyebrow && event?.name && event?.description && event?.art), `${chapter.name} 缺少独立奇遇场景`);
+  expectAsset(event?.art, `${chapter.name} 奇遇`);
   expect(event?.options?.length === 4, `${chapter.name} 奇遇必须提供四个清晰选项`);
   expect(new Set((event?.options || []).map((option) => option.id)).size === 4, `${chapter.name} 奇遇选项 ID 必须唯一`);
   expect(new Set((event?.options || []).map((option) => JSON.stringify(option.effect))).size >= 3, `${chapter.name} 奇遇后果差异不足`);
@@ -163,6 +172,7 @@ for (const chapter of CHAPTERS) {
   expect((event?.options || []).some((option) => !option.revealsClue && Object.keys(option.effect).length === 0), `${chapter.name} 奇遇需要一个无收益无风险的离开选项`);
   const routeStory = CHAPTER_ROUTE_STORIES[chapter.id];
   expect(Boolean(routeStory?.eyebrow && routeStory?.name && routeStory?.description && routeStory?.art), `${chapter.name} 缺少独立途中剧情`);
+  expectAsset(routeStory?.art, `${chapter.name} 途中剧情`);
   expect(routeStory?.options?.length === 2, `${chapter.name} 途中剧情必须提供两个可执行抉择`);
   expect((routeStory?.options || []).every((option) => option.label && option.title && option.detail && option.tone && option.revealsClue && Object.keys(option.effect || {}).length > 0), `${chapter.name} 途中剧情抉择缺少真实后果`);
   expect((routeStory?.options || []).every((option) => option.echo && option.echo.length >= 20), `${chapter.name} 途中剧情抉择必须提供章末可读的回响文本`);
@@ -206,8 +216,18 @@ for (const job of PROFESSIONS) {
       expect(Boolean(card[field]), `${card.id} 缺少 ${field}`);
     }
     expect(Number.isInteger(card.cost) && card.cost >= 0 && card.cost <= 3, `${card.id} 费用非法`);
+    expectAsset(card.art, `${card.id} 卡牌`);
   }
 }
+
+const dedicatedImagegenBosses = [
+  ENCOUNTER_ENEMIES[1]?.[3]?.art,
+  ENCOUNTER_ENEMIES[4]?.[3]?.art,
+  ENCOUNTER_ENEMIES[6]?.[3]?.art,
+];
+expect(dedicatedImagegenBosses.every((art) => art?.startsWith("/generated/")), "第 1、4、6 章首领必须使用本轮 imagegen 专属素材，避免复用旧敌人图");
+expect(ALL_CARDS.some((card) => card.art === "/generated/card_fate_page_fragment.png"), "命册/魂灯系卡牌必须接入新增命册缺页插画");
+expect(ALL_CARDS.some((card) => card.art === "/generated/card_moon_tide_slash.png"), "逐月/月相系卡牌必须接入新增月潮斩插画");
 
 if (failures.length) {
   console.error(`Game design check failed (${failures.length})`);

@@ -21,6 +21,7 @@
 - Run summary: replaced the vertically stacked text report with an illustrated result scroll, rank plaque, resource tiles and a scrollable detailed recap.
 - Title detail pages: added contextual art banners and ornamental scroll surfaces for guide, codex, legacy, records and settings content.
 - Core late-run art: added dedicated illustrations for 镇魂符、雷纹护体、月蚀斩、玄阴引路鬼 and 雷池守阵者; card and enemy surfaces now prefer these assets automatically.
+- Imagegen expansion pass: added project-bound art for 第七盏灯、无影城主、月蚀司命、命册缺页、逐月月潮斩 and 月海渡口; chapter 1/4/6 bosses, boss preludes, chapter 6 route/story/event nodes and moon/fate themed cards now use these dedicated assets instead of fallback reuse.
 - Pile/detail overlay: moved deck inspection into a centered lacquer scroll with scene artwork, click-outside dismissal and a full-screen dimming scrim.
 - Responsive pass: verified combat and result screens at both 1280×720 and 960×720 without clipped controls or overlapping content.
 
