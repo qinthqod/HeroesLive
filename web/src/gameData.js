@@ -476,7 +476,7 @@ export const CHAPTER_BOSS_PRELUDES = {
   2: {
     eyebrow: "首领前夜 · 玄阴灯冢",
     name: "旧名在灯油中苏醒",
-    art: "/ui/bg_act2_mountain.png",
+    art: "/generated/enemy_writing_name_ghost_lantern.png",
     setting: "整条山道的鬼灯同时转向你。灯油里浮起二十四年前的名字，最后一个正缓慢长成你的笔迹。",
     beats: [
       { speaker: "纸灯童子", text: "我替每一盏灯记得它原来的主人，可他们走完别人的余生后，就没人记得自己了。" },
@@ -509,7 +509,7 @@ export const CHAPTER_BOSS_PRELUDES = {
   5: {
     eyebrow: "首领前夜 · 命册末页",
     name: "真正的执笔者走出纸背",
-    art: "/bg_secret_realm.png",
+    art: "/generated/enemy_gatekeeping_true_lord.png",
     setting: "天门之后没有仙境，只有一张铺满天地的旧纸。众生的道路被墨线牵引，汇向守门真君手中的笔。",
     beats: [
       { speaker: "沈砚秋", text: "走到这里才发现，所谓天命不过是有人比所有人更早拿到了笔。" },
@@ -586,7 +586,7 @@ export const ENCOUNTER_ENEMIES = {
   2: {
     1: { name: "玄阴灯侍", hp: 42, max: 42, art: "/enemy_xuanyin_guide.png", archetype: "夺气者", trait: "借名引路", counter: "它会削减下一回合灵气。优先用低费牌运转，夺气前不要留下昂贵手牌。" },
     2: { name: "断碑护灯长老", hp: 60, max: 60, art: "/enemy_black_cult_deacon.png", archetype: "镇魂者", trait: "旧名成碑", counter: "长老以护体拖延，再用旧名压制灵气。护体形成前爆发，或准备破盾与持续伤害。" },
-    3: { name: "写名鬼灯", hp: 84, max: 84, art: "/enemy_xuanyin_guide.png", archetype: "替命灯", trait: "名字即燃料", counter: "灵气压制与双段攻击交替出现。保留低费防御，避免被虚弱后的连击击穿。" },
+    3: { name: "写名鬼灯", hp: 84, max: 84, art: "/generated/enemy_writing_name_ghost_lantern.png", archetype: "替命灯", trait: "名字即燃料", counter: "灵气压制与双段攻击交替出现。保留低费防御，避免被虚弱后的连击击穿。" },
   },
   3: {
     1: { name: "雷云劫影", hp: 50, max: 50, art: "/enemy_thunder_pool_guardian.png", archetype: "连击者", trait: "雷痕导引", counter: "先以雷痕施加虚弱，再落下双雷。虚弱回合优先护体，完整护盾比零散防御更可靠。" },
@@ -601,7 +601,7 @@ export const ENCOUNTER_ENEMIES = {
   5: {
     1: { name: "旧命残影", hp: 64, max: 64, art: "/enemy_rogue_cultivator.png", archetype: "改写者", trait: "未行之路", counter: "残影会把命册缺页写入牌堆。尽快结束战斗，或准备净心与额外抽牌降低污染。" },
     2: { name: "执笔者遗念", hp: 88, max: 88, art: "/enemy_xuanyin_guide.png", archetype: "封锁者", trait: "删名断章", counter: "它交替削减灵气、污染牌堆并施加虚弱。低费循环和净心是稳定突破口。" },
-    3: { name: "守门真君", hp: 128, max: 128, art: "/enemy_thunder_pool_guardian.png", archetype: "命册执笔", trait: "天门定命", counter: "最终考验同时覆盖灵气、牌堆与生命。不要只依赖单一爆发回合，准备可持续的完整构筑。" },
+    3: { name: "守门真君", hp: 128, max: 128, art: "/generated/enemy_gatekeeping_true_lord.png", archetype: "命册执笔", trait: "天门定命", counter: "最终考验同时覆盖灵气、牌堆与生命。不要只依赖单一爆发回合，准备可持续的完整构筑。" },
   },
   6: {
     1: { name: "逐月溺魂", hp: 72, max: 72, art: "/enemy_xuanyin_guide.png", archetype: "追忆者", trait: "未行之潮", counter: "它会削减抽牌并把未选择的道路化为攻击。当前回合尽量完成联动，不要过度依赖下一手。" },

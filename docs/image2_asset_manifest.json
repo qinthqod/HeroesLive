@@ -35,6 +35,22 @@
       "prompt_focus": "阴冷执事服、黑雾护体、筑基门槛压迫"
     },
     {
+      "id": "enemy_writing_name_ghost_lantern",
+      "kind": "boss",
+      "name": "写名鬼灯",
+      "path": "res://assets/generated/enemy_writing_name_ghost_lantern.png",
+      "status": "generated",
+      "prompt_focus": "玄阴灯冢、替命鬼灯、无字姓名纸条与墨色命火"
+    },
+    {
+      "id": "enemy_gatekeeping_true_lord",
+      "kind": "boss",
+      "name": "守门真君",
+      "path": "res://assets/generated/enemy_gatekeeping_true_lord.png",
+      "status": "generated",
+      "prompt_focus": "太虚天门、命册执笔者、旧笔与众生命线"
+    },
+    {
       "id": "card_iron_sword",
       "kind": "card",
       "card_id": "iron_sword",

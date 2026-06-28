@@ -112,6 +112,22 @@ for (const chapter of CHAPTERS) {
   }
 }
 expect(new Set(encounterMoveNames).size === encounterMoveNames.length, "十场普通与精英战的招式名称必须保持唯一");
+const dedicatedBossArt = {
+  "第七盏灯": "/generated/enemy_seventh_lantern.png",
+  "写名鬼灯": "/generated/enemy_writing_name_ghost_lantern.png",
+  "雷池守阵者": "/enemy_thunder_pool_guardian.png",
+  "无影城主": "/generated/enemy_shadowless_city_lord.png",
+  "守门真君": "/generated/enemy_gatekeeping_true_lord.png",
+  "月蚀司命": "/generated/enemy_moon_eclipse_scribe.png",
+};
+for (const chapter of CHAPTERS) {
+  const boss = ENCOUNTER_ENEMIES[chapter.id]?.[3];
+  const expectedArt = dedicatedBossArt[boss?.name];
+  expect(Boolean(expectedArt), `${chapter.name} 首领缺少专属美术登记`);
+  expect(boss?.art === expectedArt, `${chapter.name} 首领「${boss?.name}」必须使用专属 Boss 图 ${expectedArt}`);
+  expect(CHAPTER_BOSS_PRELUDES[chapter.id]?.art === expectedArt || CHAPTER_BOSS_PRELUDES[chapter.id]?.art?.startsWith("/ui/"), `${chapter.name} 首领前夜必须使用专属 Boss 图或章节专属场景图`);
+  expectAsset(expectedArt, `${chapter.name} 首领专属图`);
+}
 expect(new Set(TREASURES.map((treasure) => treasure.id)).size === TREASURES.length, "法宝 ID 必须唯一");
 expect(new Set(TREASURES.map((treasure) => treasure.name)).size === TREASURES.length, "法宝名称必须唯一");
 const supportedTreasureEffects = new Set(["firstTurnQi", "firstAttackDamage", "firstSkillDraw", "battleHeal", "marketDiscount", "startShield", "battleConsumable", "burnDamage", "battleStones", "maxQi", "firstTurnDraw"]);
