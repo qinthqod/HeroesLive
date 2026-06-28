@@ -141,6 +141,15 @@
       "prompt_focus": "灵压凝成沉重剑芒、筑基前压迫"
     },
     {
+      "id": "card_soul_rending_sword",
+      "kind": "card",
+      "card_id": "sword-7",
+      "name": "裂魂剑",
+      "path": "res://assets/generated/card_soul_rending_sword.png",
+      "status": "generated",
+      "prompt_focus": "夜竹溪谷、青玉剑弧劈开魂影裂隙、破绽暴露"
+    },
+    {
       "id": "card_thunder_decree",
       "kind": "card",
       "card_id": "talisman-6",
@@ -148,6 +157,15 @@
       "path": "res://assets/generated/card_thunder_decree.png",
       "status": "generated",
       "prompt_focus": "雨夜石坛、旧黄符环形敕令、雷丝引爆符印"
+    },
+    {
+      "id": "card_shadow_binding_seal",
+      "kind": "card",
+      "card_id": "talisman-3",
+      "name": "缚影法印",
+      "path": "res://assets/generated/card_shadow_binding_seal.png",
+      "status": "generated",
+      "prompt_focus": "雨夜古庙石地、旧黄符、朱砂法线钉住黑影"
     },
     {
       "id": "card_corrupting_poison_mist",
@@ -184,6 +202,15 @@
       "path": "res://assets/generated/card_artificer_creation.png",
       "status": "generated",
       "prompt_focus": "洞中工坊、铜竹机关核心、铜雀与雷枢联动"
+    },
+    {
+      "id": "card_copper_sparrow_shuttle",
+      "kind": "card",
+      "card_id": "artificer-1",
+      "name": "铜雀飞梭",
+      "path": "res://assets/generated/card_copper_sparrow_shuttle.png",
+      "status": "generated",
+      "prompt_focus": "山中旧工坊、铜竹雀形飞梭、木袖机括与青玉火花"
     },
     {
       "id": "card_hundred_ghosts",

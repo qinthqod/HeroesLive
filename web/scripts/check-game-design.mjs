@@ -206,10 +206,13 @@ expect(new Set(Object.values(CHAPTER_MARKETS).map((market) => market.bias)).size
 expect(new Set(Object.values(CHAPTER_MARKETS).map((market) => market.special.id)).size === CHAPTERS.length, "各章坊市专属交易必须唯一");
 
 const dedicatedCardArt = {
+  "裂魂剑": "/generated/card_soul_rending_sword.png",
   "玄雷敕令": "/generated/card_thunder_decree.png",
+  "缚影法印": "/generated/card_shadow_binding_seal.png",
   "腐脉毒雾": "/generated/card_corrupting_poison_mist.png",
   "阴阳大还丹": "/generated/card_yinyang_great_pill.png",
   "山海盟誓": "/generated/card_beast_oath.png",
+  "铜雀飞梭": "/generated/card_copper_sparrow_shuttle.png",
   "天工开物": "/generated/card_artificer_creation.png",
   "百鬼夜行": "/generated/card_hundred_ghosts.png",
 };
