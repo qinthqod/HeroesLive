@@ -123,6 +123,60 @@
       "path": "res://assets/card_foundation_surge.png",
       "status": "generated",
       "prompt_focus": "灵压凝成沉重剑芒、筑基前压迫"
+    },
+    {
+      "id": "card_thunder_decree",
+      "kind": "card",
+      "card_id": "talisman-6",
+      "name": "玄雷敕令",
+      "path": "res://assets/generated/card_thunder_decree.png",
+      "status": "generated",
+      "prompt_focus": "雨夜石坛、旧黄符环形敕令、雷丝引爆符印"
+    },
+    {
+      "id": "card_corrupting_poison_mist",
+      "kind": "card",
+      "card_id": "alchemy-7",
+      "name": "腐脉毒雾",
+      "path": "res://assets/generated/card_corrupting_poison_mist.png",
+      "status": "generated",
+      "prompt_focus": "废弃药圃、破丹瓶、贴地侵蚀灵脉的毒雾"
+    },
+    {
+      "id": "card_yinyang_great_pill",
+      "kind": "card",
+      "card_id": "alchemy-10",
+      "name": "阴阳大还丹",
+      "path": "res://assets/generated/card_yinyang_great_pill.png",
+      "status": "generated",
+      "prompt_focus": "旧丹房、裂铜炉、寒热两性药气调和"
+    },
+    {
+      "id": "card_beast_oath",
+      "kind": "card",
+      "card_id": "beast-10",
+      "name": "山海盟誓",
+      "path": "res://assets/generated/card_beast_oath.png",
+      "status": "generated",
+      "prompt_focus": "月下山祠、玉印立誓、狼鹿鸾狐猿灵契环绕"
+    },
+    {
+      "id": "card_artificer_creation",
+      "kind": "card",
+      "card_id": "artificer-10",
+      "name": "天工开物",
+      "path": "res://assets/generated/card_artificer_creation.png",
+      "status": "generated",
+      "prompt_focus": "洞中工坊、铜竹机关核心、铜雀与雷枢联动"
+    },
+    {
+      "id": "card_hundred_ghosts",
+      "kind": "card",
+      "card_id": "soul-10",
+      "name": "百鬼夜行",
+      "path": "res://assets/generated/card_hundred_ghosts.png",
+      "status": "generated",
+      "prompt_focus": "雨夜旧街、裂魂灯、墨影百鬼沿湿石路成阵"
     }
   ],
   "planned_assets": [

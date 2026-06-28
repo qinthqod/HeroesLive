@@ -18,8 +18,13 @@ const arts = [
 const CARD_ART_OVERRIDES = {
   "逐月连斩": "/generated/card_moon_tide_slash.png",
   "万剑归岚": "/generated/card_moon_tide_slash.png",
+  "玄雷敕令": "/generated/card_thunder_decree.png",
+  "腐脉毒雾": "/generated/card_corrupting_poison_mist.png",
+  "阴阳大还丹": "/generated/card_yinyang_great_pill.png",
+  "山海盟誓": "/generated/card_beast_oath.png",
+  "天工开物": "/generated/card_artificer_creation.png",
   "黄泉引路": "/generated/card_fate_page_fragment.png",
-  "百鬼夜行": "/generated/card_fate_page_fragment.png",
+  "百鬼夜行": "/generated/card_hundred_ghosts.png",
 };
 
 const classBlueprints = [

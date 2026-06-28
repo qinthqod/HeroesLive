@@ -187,6 +187,21 @@ expect(new Set(Object.values(CHAPTER_MARKETS).map((market) => market.name)).size
 expect(new Set(Object.values(CHAPTER_MARKETS).map((market) => market.bias)).size === CHAPTERS.length, "各章坊市货架倾向必须唯一");
 expect(new Set(Object.values(CHAPTER_MARKETS).map((market) => market.special.id)).size === CHAPTERS.length, "各章坊市专属交易必须唯一");
 
+const dedicatedCardArt = {
+  "玄雷敕令": "/generated/card_thunder_decree.png",
+  "腐脉毒雾": "/generated/card_corrupting_poison_mist.png",
+  "阴阳大还丹": "/generated/card_yinyang_great_pill.png",
+  "山海盟誓": "/generated/card_beast_oath.png",
+  "天工开物": "/generated/card_artificer_creation.png",
+  "百鬼夜行": "/generated/card_hundred_ghosts.png",
+};
+for (const [cardName, art] of Object.entries(dedicatedCardArt)) {
+  const cards = ALL_CARDS.filter((card) => card.baseName === cardName);
+  expect(cards.length === 2, `${cardName} 必须同时覆盖基础牌与真解牌`);
+  expect(cards.every((card) => card.art === art), `${cardName} 必须使用专属 imagegen 卡图 ${art}`);
+  expectAsset(art, `${cardName} 专属卡图`);
+}
+
 for (const job of PROFESSIONS) {
   const names = new Set(job.cards.map((card) => card.name));
   const effects = new Set(job.cards.map((card) => `${card.text}|${card.combo}`));
