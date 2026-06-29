@@ -1664,6 +1664,234 @@ export const CHAPTER_MARKETS = {
   },
 };
 
+const EXPANSION_CHAPTERS = [
+  { id: 7, name: "星砂驿", region: "星砂古道", boss: "星砂驿主", art: "/generated/chapters/ch07_star_sand_post.webp", token: "星砂路引", motif: "星砂", market: "坠星驿市", clue: "星砂路引 · 驿墙上的旧命价 · 沈砚秋的第三封信", summary: "从归墟倒灌的人生没有散去，第一封新信却把你引向一座在沙海中移动的驿站。" },
+  { id: 8, name: "镜湖旧盟", region: "镜湖", boss: "镜湖盟影", art: "/generated/chapters/ch08_mirror_lake_oath.webp", token: "镜湖旧誓", motif: "镜湖", market: "湖心镜市", clue: "倒影盟书 · 无脸盟友 · 湖底第二轮月", summary: "湖面只映出愿意背叛你的人，而沈砚秋的倒影先一步拔剑相向。" },
+  { id: 9, name: "白骨药市", region: "白骨药市", boss: "白骨药王", art: "/generated/chapters/ch09_bone_herb_market.webp", token: "还魂药契", motif: "骨药", market: "白骨药棚", clue: "药契残章 · 不死药价 · 缝在骨上的姓名", summary: "有人用被删除的寿数炼药，换来的却不是复活，而是没有结局的延命。" },
+  { id: 10, name: "龙门断潮", region: "断潮龙门", boss: "断潮龙君", art: "/generated/chapters/ch10_broken_dragon_gate.webp", token: "断潮龙鳞", motif: "断潮", market: "龙门潮市", clue: "逆流龙鳞 · 断闸石印 · 不肯入海的河", summary: "通往人间诸河的龙门被斩断，所有选择开始倒流回最初的那一刻。" },
+  { id: 11, name: "纸鹤王庭", region: "纸鹤王庭", boss: "千纸鹤王", art: "/generated/chapters/ch11_paper_crane_court.webp", token: "纸鹤王令", motif: "纸鹤", market: "折羽王市", clue: "王令折痕 · 千封未寄信 · 空庭上的脚印", summary: "千万只纸鹤替失踪者寄出遗言，却没有一封真正抵达活人手中。" },
+  { id: 12, name: "铜雀机关城", region: "铜雀城", boss: "铜雀城主", art: "/generated/chapters/ch12_bronze_sparrow_city.webp", token: "铜雀机心", motif: "铜雀", market: "机关零市", clue: "机心蓝图 · 铜雀鸣钟 · 不会老去的工匠", summary: "城中机关替居民完成所有选择，久而久之，人们忘记自己还可以伸手。" },
+  { id: 13, name: "雾海听潮", region: "雾海钟崖", boss: "听潮钟师", art: "/generated/chapters/ch13_fog_sea_bells.webp", token: "听潮钟舌", motif: "雾潮", market: "雾崖潮市", clue: "钟舌裂纹 · 雾中旧航线 · 第七声潮", summary: "雾海每次涨潮都会带回一段旧对白，其中有一句来自尚未死去的人。" },
+  { id: 14, name: "断剑雪原", region: "断剑雪原", boss: "雪原剑冢", art: "/generated/chapters/ch14_broken_sword_snowfield.webp", token: "断剑铭", motif: "雪剑", market: "雪线剑市", clue: "断剑铭文 · 雪下万人名 · 剑冢回声", summary: "所有失败的道途被埋在雪下，等待一个仍敢承认败局的人拔剑。" },
+  { id: 15, name: "赤炉天井", region: "赤炉天井", boss: "赤炉丹魇", art: "/generated/chapters/ch15_red_furnace_court.webp", token: "赤炉火种", motif: "赤炉", market: "炉边丹市", clue: "火种灰烬 · 丹井逆影 · 炉壁上的忏词", summary: "能炼成完美人生的赤炉开口索价：先投入一个真实犯过错的人。" },
+  { id: 16, name: "沉香梦塔", region: "沉香梦塔", boss: "沉香塔主", art: "/generated/chapters/ch16_incense_dream_tower.webp", token: "沉香梦钉", motif: "沉香", market: "塔下香市", clue: "梦钉香灰 · 九层睡塔 · 醒不来的守夜人", summary: "梦塔让每个人睡在最想抵达的明天，却把醒来的代价藏在塔顶。" },
+  { id: 17, name: "青鸾旧巢", region: "青鸾旧巢", boss: "青鸾遗君", art: "/generated/chapters/ch17_qingluan_old_nest.webp", token: "青鸾羽书", motif: "青鸾", market: "羽巢遗市", clue: "羽书断句 · 旧巢余温 · 不再归来的传信鸟", summary: "青鸾曾替命册传递所有改写，如今最后一只青鸾拒绝把信送到未来。" },
+  { id: 18, name: "黑潮碑林", region: "黑潮碑林", boss: "黑潮碑灵", art: "/generated/chapters/ch18_black_tide_tablets.webp", token: "黑潮碑拓", motif: "黑潮", market: "碑阴拓市", clue: "黑潮碑拓 · 被淹没的宗门谱 · 反复出现的空名", summary: "潮水每夜淹没碑林，天亮后又多出一批从未存在过的亡者姓名。" },
+  { id: 19, name: "万灯归航", region: "万灯河港", boss: "归航灯母", art: "/generated/chapters/ch19_ten_thousand_lanterns.webp", token: "归航灯芯", motif: "万灯", market: "河港灯市", clue: "归航灯芯 · 河港无船 · 万盏灯下的同一张脸", summary: "无数灯船驶向同一座河港，每一盏都说自己载着真正的沈砚秋。" },
+  { id: 20, name: "太岁肉城", region: "太岁根城", boss: "太岁城心", art: "/generated/chapters/ch20_taisui_root_city.webp", token: "太岁根契", motif: "太岁", market: "根城肉市", clue: "根契肉印 · 会呼吸的城墙 · 不肯死亡的愿望", summary: "一座活着的城替居民吞下伤痛，也一点点吞掉他们仍想改变的部分。" },
+  { id: 21, name: "天书裂隙", region: "天书裂隙", boss: "裂隙书灵", art: "/generated/chapters/ch21_celestial_book_rift.webp", token: "天书裂页", motif: "天书", market: "裂页书市", clue: "天书裂页 · 逆写的战报 · 纸外来的脚步", summary: "天书裂开后，尚未编写的未来开始反过来修改已经发生的过去。" },
+  { id: 22, name: "无名天街", region: "无名天街", boss: "无名街主", art: "/generated/chapters/ch22_nameless_sky_street.webp", token: "无名街牌", motif: "天街", market: "天街无名市", clue: "无名街牌 · 悬空旧铺 · 谁都读不出的招牌", summary: "天街只接纳不被任何命册记录的人，而你第一次在街口看见自己的空白墓碑。" },
+  { id: 23, name: "归墟心海", region: "归墟心海", boss: "心海司渡", art: "/generated/chapters/ch23_guixu_heart_sea.webp", token: "心海渡印", motif: "心海", market: "心海浮市", clue: "心海渡印 · 潮下心声 · 沈砚秋未说出口的答案", summary: "归墟深处不是海，而是每个人不敢承认的真实愿望汇成的心潮。" },
+  { id: 24, name: "命册炉心", region: "命册炉心", boss: "炉心执命者", art: "/generated/chapters/ch24_fate_furnace_core.webp", token: "命册炉钥", motif: "炉心", market: "炉心铸市", clue: "炉钥残温 · 熔化的旧命 · 第一位执笔者的手骨", summary: "命册真正的炉心仍在跳动，它不再等待执笔者，而是开始替自己选择主人。" },
+  { id: 25, name: "自在人间", region: "自在人间", boss: "最后执笔人", art: "/generated/chapters/ch25_free_mortal_world.webp", token: "自在终卷", motif: "人间", market: "人间终市", clue: "自在终卷 · 万家灯火 · 不再需要结局的路", summary: "当所有规则被拆开，最后的敌人不是天命，而是仍想替众生写下完美结局的你自己。" },
+];
+
+const choiceEffectA = (id) => id % 3 === 0 ? { maxQi: 1, hpLoss: 4 } : id % 3 === 1 ? { heal: 10 + (id % 4) * 2 } : { stones: 8 + id };
+const choiceEffectB = (id) => id % 2 === 0 ? { addRarityCard: "稀有", hpLoss: 6 } : { stones: 12 + id, enemyShield: 4 + (id % 4) };
+
+for (const spec of EXPANSION_CHAPTERS) {
+  const next = EXPANSION_CHAPTERS.find((item) => item.id === spec.id + 1);
+  const act = spec.id - 6;
+  const stageOneHp = 58 + spec.id * 7;
+  const stageTwoHp = 76 + spec.id * 8;
+  const bossHp = 116 + spec.id * 11;
+  const defendChoice = `守住${spec.token}`;
+  const severChoice = `斩断${spec.token}`;
+  const recordChoice = `记下${spec.token}`;
+  const returnChoice = `归还${spec.token}`;
+
+  CHAPTERS.push({
+    id: spec.id,
+    name: spec.name,
+    region: spec.region,
+    level: `推荐 ${40 + act * 7} 级`,
+    art: spec.art,
+    boss: spec.boss,
+    summary: spec.summary,
+    status: "locked",
+  });
+
+  BOSS_MOVE_PATTERNS[spec.id] = [
+    { name: `${spec.id}·${spec.motif}试探`, damage: 9 + Math.floor(spec.id / 2), shield: 4 + (spec.id % 5), note: `${spec.boss}以${spec.token}试探你的选择，未破护体会拖慢终局节奏。` },
+    { name: `${spec.id}·${spec.motif}成壁`, damage: 11 + Math.floor(spec.id / 2), drawPenalty: spec.id % 2 === 0 ? 1 : 0, drainQi: spec.id % 2 === 1 ? 1 : 0, note: `${spec.motif}化作旧日回声，逼你在过牌与灵气之间取舍。` },
+    { name: `${spec.id}·${spec.motif}裁决`, damage: 15 + Math.floor(spec.id / 2), curse: spec.id % 4 === 0 ? 1 : 0, note: `若前路被拖入${spec.region}的规则，下一轮将更难维持手牌质量。` },
+  ];
+  BOSS_PHASES[spec.id] = {
+    name: `${spec.motif}终律`,
+    threshold: 0.5,
+    line: `${spec.boss}低声说：若众生仍会后悔，凭什么相信他们能自择？`,
+    moves: [
+      { name: `${spec.id}·终律回照`, damage: 13 + Math.floor(spec.id / 3), shield: 6 + (spec.id % 6), note: `${spec.token}倒映一路选择，短暂加固首领护体。` },
+      { name: `${spec.id}·终律索名`, damage: 14 + Math.floor(spec.id / 3), drainQi: 1, note: `索回一缕灵气，迫使你提前规划爆发回合。` },
+      { name: `${spec.id}·终律无归`, damage: 18 + Math.floor(spec.id / 3), drawPenalty: 1, note: `终式压低下回合抽牌，考验牌组稳定与防御余量。` },
+    ],
+  };
+  BOSS_CHOICE_RESPONSES[spec.id] = {
+    [defendChoice]: { line: `你守住${spec.token}，${spec.boss}第一次无法把旧规则写成唯一答案。`, playerShield: 14 + (spec.id % 5), bossShieldDelta: 0, effect: `${spec.token}化为 ${14 + (spec.id % 5)} 点护盾` },
+    [severChoice]: { line: `你斩断${spec.token}，${spec.region}的旧约在首领身上裂开一道破绽。`, playerShield: 0, bossShieldDelta: -10 - (spec.id % 6), effect: `${spec.token}断裂，首领转相护体 ${-10 - (spec.id % 6)}` },
+  };
+  CHAPTER_BOSS_DOSSIERS[spec.id] = {
+    origin: `${spec.boss}原本只是${spec.region}的守望者，命册倒灌后被迫把所有人的遗憾压成${spec.token}。`,
+    obsession: `它相信只要把${spec.motif}规则固定下来，众生便不会再因自由而受伤。`,
+    weakness: `${spec.token}只承认“唯一答案”，当你带着不同抉择抵达终点时，它的护体会自行松动。`,
+  };
+  CHAPTER_BOSS_PRELUDES[spec.id] = {
+    eyebrow: `首领前夜 · ${spec.region}`,
+    name: spec.boss,
+    setting: `${spec.art}`,
+    art: spec.art,
+    beats: [
+      { speaker: spec.boss, text: `${spec.token}已经替你写好下一步，何必再让自己受苦？` },
+      { speaker: "沈砚秋", text: `若答案只能由${spec.region}给出，那我们从归墟带回来的自由就只是另一种锁。` },
+      { speaker: "你", text: `我会带着一路错漏走到这里，也会亲手承担它们。` },
+    ],
+    choiceBeats: {
+      [defendChoice]: { speaker: spec.boss, text: `你竟要守住${spec.token}？那便证明守护不是新的占有。` },
+      [severChoice]: { speaker: spec.boss, text: `你竟要斩断${spec.token}？那便证明破局之后仍有人愿意收拾余烬。` },
+    },
+  };
+  ENCOUNTER_ENEMIES[spec.id] = {
+    1: { name: `${spec.motif}巡影`, art: spec.art, archetype: "牵制", trait: `以${spec.token}扰乱抽牌与灵气节奏。`, counter: "优先保留低费防护，别把全部爆发交给单回合。", hp: stageOneHp, max: stageOneHp },
+    2: { name: `${spec.motif}执契者`, art: spec.art, archetype: "精英", trait: `会叠护体并用${spec.motif}规则惩罚拖延。`, counter: "用破甲或多段伤害先拆护体，再进入爆发。", hp: stageTwoHp, max: stageTwoHp },
+    3: { name: spec.boss, art: spec.art, archetype: "首领", trait: `二阶段会把${spec.token}变成终律，限制抽牌与灵气。`, counter: "在二阶段前留下至少一张防御牌或清神资源。", hp: bossHp, max: bossHp },
+  };
+  ENCOUNTER_PRELUDES[spec.id] = {
+    1: {
+      eyebrow: `遭遇 · ${spec.region}`,
+      title: `${spec.motif}巡影拦住去路`,
+      setting: `通往${spec.region}的第一段路被${spec.token}照亮。`,
+      lesson: "这一战提醒玩家保留低费牌，避免被章节机制打断节奏。",
+      beats: [
+        { speaker: `${spec.motif}巡影`, text: `把名字交出来，你便不用再决定下一步。` },
+        { speaker: "你", text: `我来这里不是求一条省事的路。` },
+      ],
+    },
+    2: {
+      eyebrow: `精英 · ${spec.region}`,
+      title: `${spec.motif}执契者展开旧约`,
+      setting: `${spec.token}在半空结成密密麻麻的契纹。`,
+      lesson: "这一战强调拆护体与提前规划爆发窗口。",
+      beats: [
+        { speaker: `${spec.motif}执契者`, text: `每个自由的人最终都会回来请求规则。` },
+        { speaker: "沈砚秋", text: `也许会。但请求帮助，不等于交出一生。` },
+      ],
+    },
+  };
+  BATTLE_AFTERMATHS[spec.id] = {
+    1: { title: `${spec.motif}巡影散去`, narration: `巡影碎成细小的${spec.motif}光点，露出一行被反复擦除的路标。`, finalWords: `别相信终点。终点最擅长伪装成归宿。`, rewardSource: `${spec.token}残屑` },
+    2: { title: `${spec.motif}旧约开裂`, narration: `执契者倒下后，旧约没有消失，只是在你的选择旁边多留出一条空白。`, finalWords: `原来规则也会害怕被询问。`, rewardSource: `${spec.region}旧契匣` },
+  };
+  ENCOUNTER_MOVE_PATTERNS[spec.id] = {
+    1: [
+      { name: `${spec.id}·巡影轻啮`, damage: 7 + Math.floor(spec.id / 3), note: "低压试探，用来逼出早期防御。" },
+      { name: `${spec.id}·巡影缚步`, damage: 6 + Math.floor(spec.id / 4), weak: 1, note: "附加虚弱，让玩家意识到拖延会变危险。" },
+      { name: `${spec.id}·巡影回砂`, damage: 8 + Math.floor(spec.id / 3), drawPenalty: 1, note: "干扰下回合抽牌，强化章节差异。" },
+    ],
+    2: [
+      { name: `${spec.id}·执契立壁`, damage: 9 + Math.floor(spec.id / 3), shield: 7 + (spec.id % 5), note: "精英护体，要求拆盾规划。" },
+      { name: `${spec.id}·执契索息`, damage: 10 + Math.floor(spec.id / 4), drainQi: 1, note: "抽走灵气，打断贪婪爆发。" },
+      { name: `${spec.id}·执契重判`, damage: 12 + Math.floor(spec.id / 3), hits: 2, note: "双段压血，惩罚无防御牌组。" },
+    ],
+  };
+  CHAPTER_TRANSITIONS[spec.id] = next
+    ? { eyebrow: `下一卷 · ${next.name}`, title: `${spec.region}的旧约刚裂开，${next.region}已经传来新的回声。`, text: `${spec.boss}消散前把${spec.token}交给你。它并不是钥匙，而是一段指向${next.region}的未完证词。`, speaker: `${spec.region}残卷`, hook: `前往${next.region}，追查${next.clue.split(" · ")[0]}` }
+    : { eyebrow: "主线第二部 · 已结卷", title: "人间仍会后悔，但不再需要谁替众生落笔。", text: "最后执笔人放下笔后，万家灯火没有变得完美，却第一次允许每个人把错误也写进自己的路。", speaker: "《青岚夜行·自在终卷》", hook: "重返二十五章补全宗卷、构筑、劫数与人物后记" };
+  CHAPTER_HOME_STATES[spec.id] = {
+    kicker: `主线第${spec.id}卷 · ${spec.region}`,
+    title: `${spec.motif}未定，\n自择其路。`,
+    text: spec.summary,
+  };
+  CHAPTER_STORIES[spec.id] = [
+    { speaker: "沈砚秋", role: "同行的守页人", text: `${spec.region}不是命册留下的地名，而是众生后悔汇聚后长出的伤口。`, art: spec.art },
+    { speaker: `${spec.region}引路人`, role: "旧规则的见证者", text: `带着${spec.token}进入这里的人，最后都会承认自由太重。`, art: spec.art },
+    { speaker: "你", role: "不再握笔的修士", text: `重不代表要交给别人。若路会压弯肩膀，那就停下喘息，而不是跪下认命。`, art: spec.art },
+    { speaker: spec.boss, role: "章节首领", text: `我见过太多人在选择后哭求重来。你凭什么替他们拒绝一个完美答案？`, art: spec.art },
+    { speaker: "沈砚秋", role: "把信收回袖中的人", text: `因为完美答案最先删掉的，永远是那个不肯完美的人。`, art: spec.art },
+  ];
+  CHAPTER_STORY_CHOICES[spec.id] = {
+    1: [
+      { label: `守住${spec.token}`, value: defendChoice, consequence: `获得章节护持；${spec.boss}会在终战承认这份守护`, effect: choiceEffectA(spec.id) },
+      { label: `斩断${spec.token}`, value: severChoice, consequence: `换取破局线索；下一场敌人获得少量护体`, effect: choiceEffectB(spec.id) },
+    ],
+    3: [
+      { label: `记下${spec.region}的证词`, value: recordChoice, consequence: "获得一张精良职业牌；生命 -4", effect: { addRarityCard: "精良", hpLoss: 4 } },
+      { label: `把证词交还给当地人`, value: returnChoice, consequence: "恢复 8 生命；清神粉 +1", effect: { heal: 8, consumables: { clarity: 1 } } },
+    ],
+  };
+  CHAPTER_EPILOGUES[spec.id] = [
+    { id: `ch${spec.id}-defend`, choice: defendChoice, title: `${spec.token}被安放，而不是被占有。`, text: `你没有夺走${spec.token}，只在其旁写下“可问、可改、可拒绝”。后来${spec.region}的人仍会迷路，却终于能向彼此求助。`, character: `${spec.region}众人` },
+    { id: `ch${spec.id}-sever`, choice: severChoice, title: `${spec.motif}旧约断成新的路标。`, text: `${spec.token}断裂后，${spec.region}短暂陷入混乱。沈砚秋把碎片收成一册，提醒后来者：破局不是结束，是开始负责。`, character: "沈砚秋" },
+  ];
+  CHAPTER_ROUTE_COPY[spec.id] = {
+    title: spec.name,
+    beats: [`${spec.token}指向${spec.region}。`, `${spec.motif}巡影与旧约同时逼近。`, `坊市里有人低价出售悔意。`, `${spec.boss}在终点等待你的答案。`],
+    clue: spec.clue,
+    storyConsequence: `调查${spec.token}会改变${spec.boss}对你的第一句质问。`,
+    bossConsequence: `带着${spec.region}线索进入终战，可触发守护或破局回应。`,
+  };
+  CHAPTER_INVESTIGATIONS[spec.id] = {
+    objective: `查明${spec.token}为何会把众生遗憾固定成${spec.region}的规则。`,
+    opening: `${spec.clue.split(" · ")[0]}在你靠近时发烫，似乎正等待一个不肯交出选择的人。`,
+    conclusion: `${spec.region}的真相被记入宗卷：自由不会消灭后悔，但可以拒绝让后悔变成统治。`,
+    routes: [
+      { story: `剧情节点揭示${spec.token}的来历。` },
+      { battle: `普通战敌人携带${spec.motif}扰动。`, event: `奇遇可追查${spec.clue.split(" · ")[1] || spec.token}。` },
+      { elite: `精英战证明${spec.motif}旧约仍在运转。`, market: `${spec.market}出售与${spec.token}相关的补给。` },
+      { boss: `${spec.boss}掌握${spec.region}最后一段证词。` },
+    ],
+  };
+  CHAPTER_ROUTES[spec.id] = [
+    [{ id: "story", kind: "剧情", name: `${spec.motif}入境`, desc: `${spec.token}在掌心发烫，显出第一段证词。`, art: spec.art }],
+    [
+      { id: "battle", kind: "战斗", name: `${spec.motif}巡影`, desc: `巡影沿${spec.region}边界搜寻仍有姓名的人。`, art: spec.art },
+      { id: "event", kind: "奇遇", name: `${spec.motif}旧龛`, desc: `龛中压着${spec.clue.split(" · ")[1] || spec.token}。`, art: spec.art },
+    ],
+    [
+      { id: "elite", kind: "精英", name: `${spec.motif}执契台`, desc: `执契者在此维护${spec.region}的旧规则。`, art: spec.art },
+      { id: "market", kind: "坊市", name: spec.market, desc: `摊主出售从${spec.token}上剥落的术法。`, art: spec.art },
+    ],
+    [{ id: "boss", kind: "首领", name: spec.boss, desc: `${spec.boss}要求你证明自由不会再次伤人。`, art: spec.art }],
+  ];
+  CHAPTER_EVENTS[spec.id] = {
+    eyebrow: `奇遇 · ${spec.region}`,
+    name: `${spec.motif}旧龛`,
+    description: `旧龛里供着${spec.token}，旁边散落着许多写到一半便被划掉的愿望。`,
+    art: spec.art,
+    options: [
+      { id: `ch${spec.id}-read`, label: `读完${spec.token}`, title: "精良职业牌 · 生命 -4", detail: `以伤口读懂${spec.region}的规则，带回一门与你道途相合的术法。`, tone: "真相换术", effect: { cardRarity: "精良", hpLoss: 4 }, revealsClue: true },
+      { id: `ch${spec.id}-rest`, label: "替旧龛添一炷香", title: "恢复 12 点生命", detail: "承认此地的伤痛，而不是立刻把它变成战利品。", tone: "稳健修整", effect: { heal: 12 }, revealsClue: true },
+      { id: `ch${spec.id}-sell`, label: `取走${spec.motif}碎片`, title: `灵石 +${14 + spec.id} · 敌方护体 +${4 + (spec.id % 5)}`, detail: "坊市会高价收购碎片，但失衡的规则会依附下一名敌人。", tone: "高收益代价", effect: { stones: 14 + spec.id, enemyShield: 4 + (spec.id % 5) }, revealsClue: true },
+      { id: `ch${spec.id}-leave`, label: "不惊动旧龛", title: "无收益 · 无风险", detail: "保持当前状态离开，也放弃这条线索的即时收益。", tone: "谨慎离开", effect: {}, revealsClue: false },
+    ],
+  };
+  CHAPTER_ROUTE_STORIES[spec.id] = {
+    eyebrow: `途中剧情 · ${spec.region}`,
+    name: `${spec.motif}回声`,
+    description: `${spec.token}映出一个你从未经历、却差点被命册写成现实的片段。`,
+    art: spec.art,
+    options: [
+      { id: `ch${spec.id}-comfort`, label: "承认这段回声", title: "恢复 10 · 清神粉 +1", detail: "让它作为遗憾留下，而不是化成追兵。", tone: "安放遗憾", effect: { heal: 10, consumables: { clarity: 1 } }, revealsClue: true, echo: `${spec.region}的回声被你承认，${spec.token}不再急着把遗憾伪装成另一个现实。` },
+      { id: `ch${spec.id}-learn`, label: "从回声中取术", title: "稀有职业牌 · 生命 -6", detail: "带回未发生人生里的术法，也承担它留下的刺痛。", tone: "可能换术", effect: { cardRarity: "稀有", hpLoss: 6 }, revealsClue: true, echo: `你从${spec.motif}回声中取回一门术法，未发生的人生以疼痛的方式留在牌组里。` },
+    ],
+  };
+  CHAPTER_MARKETS[spec.id] = {
+    eyebrow: `${spec.region}坊市`,
+    name: spec.market,
+    description: `这里交易从${spec.token}上剥落的术法、悔意与仍未寄出的信。`,
+    stall: `${spec.motif}秘卷`,
+    stockNote: spec.id % 3 === 0 ? "偏向稀有、真解与爆发构筑" : spec.id % 3 === 1 ? "偏向防护、净心与稳定循环" : "偏向过牌、低费与资源转换",
+    bias: `expansion-${spec.id}-${spec.motif}`,
+    cardPrice: 2 + (spec.id % 3),
+    removeCost: 4 + (spec.id % 5),
+    refineCost: 7 + (spec.id % 6),
+    treasureCost: 18 + (spec.id % 7),
+    special: { id: `ch${spec.id}-trade-${spec.motif}`, label: `交换${spec.motif}证词`, title: "8 灵石 · 精研一张基础牌", detail: `若已无可精研术法，则改为获得 1 份清神粉。${spec.market}只承认一次交易。`, cost: "8 灵石" },
+  };
+}
+
+CHAPTER_TRANSITIONS[6] = { eyebrow: "下一卷 · 星砂驿", title: "归墟月潮退去后，沙海里出现一座写满命价的驿站。", text: "月蚀司命消散时留下的不是终点，而是一封新的路引：若想让自由真正落入人间，先去看看人们愿意用什么换一个确定答案。", speaker: "沈砚秋折好的新信", hook: "前往星砂驿，追查命册之外的第二部残卷" };
+CHAPTER_HOME_STATES.complete = { kicker: "主线第二部 · 自在终卷", title: "灯火在人间，\n诸路自择。", text: "二十五章主线已经结卷。重返旧路补全调查宗卷、人物后记、职业构筑与高阶劫数，让每一次选择都留下不同答案。" };
+
 export const META_TALENTS = [
   { id: "meridian", name: "开脉", level: 2, max: 10, effect: "初始生命 +4", art: "/ui/insights/open_meridians.png" },
   { id: "mind", name: "守心", level: 1, max: 10, effect: "初始灵石 +2", art: "/ui/insights/guarded_mind.png" },

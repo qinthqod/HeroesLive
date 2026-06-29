@@ -52,7 +52,7 @@ const expectAsset = (reference, label) => {
 expect(PROFESSIONS.length >= 6, "至少需要 6 个职业");
 expect(ALL_CARDS.length >= 120, "至少需要 120 张职业卡牌");
 expect(DECK_RECIPES.length >= 100, "至少需要 100 套构筑配方");
-expect(CHAPTERS.length >= 6, "扩展版至少需要 6 章主线");
+expect(CHAPTERS.length >= 25, "扩展版至少需要 25 章主线");
 expect(TRIBULATION_LEVELS.length === 4, "终局劫数必须提供标准、风劫、心劫、命劫四档");
 expect(TRIBULATION_LEVELS[0].level === 0 && TRIBULATION_LEVELS[0].enemyHpMultiplier === 1 && TRIBULATION_LEVELS[0].enemyDamageBonus === 0, "无劫必须保持普通剧情标准数值");
 expect(TRIBULATION_LEVELS.every((item, index, list) => index === 0 || (item.enemyHpMultiplier > list[index - 1].enemyHpMultiplier && item.enemyDamageBonus >= list[index - 1].enemyDamageBonus)), "劫数风险必须随层级清晰递增");
@@ -122,9 +122,12 @@ const dedicatedBossArt = {
 };
 for (const chapter of CHAPTERS) {
   const boss = ENCOUNTER_ENEMIES[chapter.id]?.[3];
-  const expectedArt = dedicatedBossArt[boss?.name];
+  const expectedArt = dedicatedBossArt[boss?.name] || boss?.art;
   const bossRouteNode = (CHAPTER_ROUTES[chapter.id] || []).flat().find((node) => node.id === "boss");
   expect(Boolean(expectedArt), `${chapter.name} 首领缺少专属美术登记`);
+  if (!dedicatedBossArt[boss?.name]) {
+    expect(expectedArt?.startsWith("/generated/chapters/"), `${chapter.name} 扩展章节首领必须使用专属章节 imagegen 图`);
+  }
   expect(boss?.art === expectedArt, `${chapter.name} 首领「${boss?.name}」必须使用专属 Boss 图 ${expectedArt}`);
   expect(CHAPTER_BOSS_PRELUDES[chapter.id]?.art === expectedArt, `${chapter.name} 首领前夜必须使用与首领战一致的身份图 ${expectedArt}`);
   expect(bossRouteNode?.art === expectedArt, `${chapter.name} 路线终点必须使用与首领战一致的身份图 ${expectedArt}`);
