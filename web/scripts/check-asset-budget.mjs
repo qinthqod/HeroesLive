@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const failures = [];
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const generatedRoot = fileURLToPath(new URL("../../assets/generated/", import.meta.url));
+const maxCard = { width: 640, height: 960, bytes: 1.25 * 1024 * 1024 };
 const maxVertical = { width: 768, height: 1152, bytes: 1.75 * 1024 * 1024 };
 const maxEnemy = { width: 768, height: 1152, bytes: 1.75 * 1024 * 1024 };
 const maxWide = { width: 1366, height: 768, bytes: 1.75 * 1024 * 1024 };
@@ -22,6 +23,7 @@ const pngFiles = (dir) => {
 const budgetFor = (metadata, path) => {
   const name = path.split("/").at(-1) || "";
   if (metadata.width >= metadata.height) return maxWide;
+  if (name.startsWith("card_")) return maxCard;
   if (name.startsWith("enemy_")) return maxEnemy;
   return maxVertical;
 };
