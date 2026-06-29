@@ -399,7 +399,8 @@ function App() {
   const debugPlayedCard = import.meta.env.DEV
     ? ALL_CARDS.find((card) => card.id === query.get("playedCard") || card.baseName === query.get("playedCard"))
     : null;
-  const debugNumber = (key, fallback = 0) => import.meta.env.DEV ? Math.max(0, Number(query.get(key)) || fallback) : fallback;
+  const queryNumber = (key, fallback = 0) => Math.max(0, Number(query.get(key)) || fallback);
+  const debugNumber = (key, fallback = 0) => import.meta.env.DEV ? queryNumber(key, fallback) : fallback;
   const debugAutoplay = import.meta.env.DEV && query.get("autoplay") === "1";
   const debugAutoClick = import.meta.env.DEV && query.get("autoclick") === "1";
   const debugAutoEnd = import.meta.env.DEV && query.get("autoend") === "1";
@@ -418,7 +419,7 @@ function App() {
   const hasDebugFailures = import.meta.env.DEV && query.has("failures");
   const debugFailures = hasDebugFailures ? Math.min(3, debugNumber("failures")) : 0;
   const debugResetFailure = import.meta.env.DEV && query.get("resetFailure") === "1";
-  const debugTribulationLevel = import.meta.env.DEV ? Math.min(3, debugNumber("tribulation")) : 0;
+  const debugTribulationLevel = Math.min(3, queryNumber("tribulation"));
   const makeEnemy = (chapter, encounterStage, trial = null, tribulation = null) => {
     const enemyData = { ...ENCOUNTER_ENEMIES[chapter][encounterStage] };
     const moves = buildEnemyMoves(chapter, encounterStage);
