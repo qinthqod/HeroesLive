@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { ENCOUNTER_ENEMIES } from "../src/gameData.js";
+import { CHAPTERS, ENCOUNTER_ENEMIES } from "../src/gameData.js";
 import { TRIBULATION_LEVELS } from "../src/tribulation.js";
 
 const base = "http://127.0.0.1:5174/";
@@ -11,11 +11,11 @@ const postgameProfile = {
   xp: 420,
   jade: 860,
   spirit: 32,
-  chapter: 7,
+  chapter: CHAPTERS.length,
   unlockedJobs: ["sword", "talisman", "alchemy", "beast", "artificer", "soul"],
   talentLevels: { meridian: 2, mind: 1, edge: 0 },
   jobMastery: {},
-  unlockedEndings: ["chapter_1_ending", "chapter_2_ending", "chapter_3_ending", "chapter_4_ending", "restore_fate", "chapter_6_ending"],
+  unlockedEndings: CHAPTERS.map((chapter) => `chapter_${chapter.id}_ending`),
   completedTribulations: [],
   completedDailyTrials: [],
   discoveredCards: [],
@@ -63,7 +63,7 @@ await withProfile(postgameProfile, async (page) => {
     await page.goto(`${base}?screen=chapters`, { waitUntil: "networkidle" });
     await page.locator(".tribulation-panel").waitFor();
     await page.locator(".tribulation-options button").filter({ hasText: "心劫" }).click();
-    await page.locator(".chapter-card").nth(5).click();
+    await page.locator(".chapter-card").nth(4).click();
     await page.locator(".story-screen").waitFor();
     await page.waitForFunction(() => JSON.parse(localStorage.getItem("qinglan-run-v1") || "null")?.runTribulation?.level === 2);
     const savedRun = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-run-v1") || "null"));

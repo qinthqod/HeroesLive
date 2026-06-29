@@ -13,7 +13,7 @@ const failures = [];
 const states = [
   { label: "新档", chapter: 1, endings: [], current: 1 },
   { label: "中期", chapter: 4, endings: ["chapter_1_ending", "chapter_2_ending", "chapter_3_ending"], current: 4 },
-  { label: "终局", chapter: 6, endings: ["chapter_1_ending", "chapter_2_ending", "chapter_3_ending", "chapter_4_ending", "restore_fate", "chapter_6_ending"], current: 6, complete: true },
+  { label: "终局", chapter: CHAPTERS.length, endings: CHAPTERS.map((chapter) => `chapter_${chapter.id}_ending`), current: CHAPTERS.length, complete: true },
 ];
 
 for (const state of states) {
@@ -68,11 +68,13 @@ for (const state of states) {
     const completedCount = await page.locator(".chapter-card.completed").count();
     if (!state.complete && currentCount !== 1) throw new Error(`当前主线卡数量为 ${currentCount}`);
     if (state.complete && currentCount !== 0) throw new Error("终局仍标记当前主线");
-    if (completedCount !== state.endings.length) throw new Error(`已结卷数量为 ${completedCount}`);
+    if (completedCount !== Math.min(5, state.endings.length)) throw new Error(`当前部卷已结卷数量为 ${completedCount}`);
     if (state.complete && await page.locator(".chapter-main-complete").count() !== 1) throw new Error("终局缺少自由重访说明");
     const replayGoalCount = await page.locator(".chapter-replay-goals").count();
+    const volumeCount = await page.locator(".chapter-volume-nav button").count();
     const firstReplayText = await page.locator(".chapter-card").first().innerText();
-    if (replayGoalCount !== CHAPTERS.length) throw new Error(`章节复玩目标数量为 ${replayGoalCount}`);
+    if (volumeCount !== Math.ceil(CHAPTERS.length / 5)) throw new Error(`章节部卷数量为 ${volumeCount}`);
+    if (replayGoalCount !== Math.min(5, CHAPTERS.length)) throw new Error(`当前部卷复玩目标数量为 ${replayGoalCount}`);
     for (const phrase of ["证据", "后记", "劫数", "下一目标"]) {
       if (!firstReplayText.includes(phrase)) throw new Error(`章节卡缺少复玩字段 ${phrase}`);
     }

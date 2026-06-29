@@ -2360,7 +2360,7 @@ function ChallengeGoalCard({ goal, claimProgressReward, compact = false }) {
 }
 
 function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resumeRun, claimProgressReward, dailyTrial }) {
-  const mainComplete = (profile.unlockedEndings || []).includes("chapter_6_ending");
+  const mainComplete = (profile.unlockedEndings || []).includes(`chapter_${CHAPTERS.length}_ending`);
   const currentChapterId = mainComplete ? CHAPTERS.length : Math.min(CHAPTERS.length, Math.max(1, profile.chapter || 1));
   const currentChapter = CHAPTERS[currentChapterId - 1];
   const worldState = CHAPTER_HOME_STATES[mainComplete ? "complete" : currentChapterId];
@@ -2524,10 +2524,26 @@ function DailyTrialScreen({ trial, profile, savedRun, onBack, onResume, onStart 
 }
 
 function ChapterScreen({ profile, onBack, onChoose }) {
-  const mainComplete = (profile.unlockedEndings || []).includes("chapter_6_ending");
+  const mainComplete = (profile.unlockedEndings || []).includes(`chapter_${CHAPTERS.length}_ending`);
   const [tribulationLevel, setTribulationLevel] = useState(0);
   const initialPreviewChapter = Math.min(CHAPTERS.length, Math.max(1, profile.chapter || 1));
   const [previewChapterId, setPreviewChapterId] = useState(initialPreviewChapter);
+  const totalChapterVolumes = Math.ceil(CHAPTERS.length / 5);
+  const chapterVolumes = Array.from({ length: totalChapterVolumes }, (_, index) => {
+    const chapters = CHAPTERS.slice(index * 5, index * 5 + 5);
+    const start = chapters[0]?.id || 1;
+    const end = chapters[chapters.length - 1]?.id || start;
+    return {
+      id: index + 1,
+      title: index === 0 ? "命册残卷" : index === totalChapterVolumes - 1 ? "自在终卷" : `第${index + 1}部`,
+      range: `卷 ${String(start).padStart(2, "0")}–${String(end).padStart(2, "0")}`,
+      chapters,
+    };
+  });
+  const initialVolumeIndex = Math.min(chapterVolumes.length - 1, Math.floor((initialPreviewChapter - 1) / 5));
+  const [activeVolumeIndex, setActiveVolumeIndex] = useState(initialVolumeIndex);
+  const activeVolume = chapterVolumes[activeVolumeIndex] || chapterVolumes[0];
+  const visibleChapters = activeVolume?.chapters || CHAPTERS.slice(0, 5);
   const selectedTribulation = mainComplete ? tribulationForLevel(tribulationLevel) : tribulationForLevel(0);
   const previewChapter = CHAPTERS.find((chapter) => chapter.id === previewChapterId) || CHAPTERS[0];
   const previewUnlocked = previewChapter.id === 1 || profile.chapter > previewChapter.id - 1;
@@ -2616,9 +2632,32 @@ function ChapterScreen({ profile, onBack, onChoose }) {
           </section>
         </div>
       </article>
+      <nav className="chapter-volume-nav" aria-label="主线部卷筛选">
+        {chapterVolumes.map((volume, index) => {
+          const unlockedCount = volume.chapters.filter((chapter) => chapter.id === 1 || profile.chapter > chapter.id - 1 || mainComplete).length;
+          const completedCount = volume.chapters.filter((chapter) => (profile.unlockedEndings || []).some((ending) => ending === `chapter_${chapter.id}_ending` || (chapter.id === 5 && ["restore_fate", "rewrite_fate"].includes(ending)))).length;
+          const active = index === activeVolumeIndex;
+          return (
+            <button
+              key={volume.id}
+              className={active ? "active" : ""}
+              onClick={() => {
+                const firstUnlocked = volume.chapters.find((chapter) => chapter.id === 1 || profile.chapter > chapter.id - 1 || mainComplete) || volume.chapters[0];
+                setActiveVolumeIndex(index);
+                if (firstUnlocked) setPreviewChapterId(firstUnlocked.id);
+              }}
+            >
+              <span>{volume.title}</span>
+              <strong>{volume.range}</strong>
+              <small>{completedCount}/{volume.chapters.length} 已结卷 · {unlockedCount}/{volume.chapters.length} 可进入</small>
+            </button>
+          );
+        })}
+      </nav>
       <div className="chapter-list">
-        {CHAPTERS.map((chapter, index) => {
-          const unlocked = index === 0 || profile.chapter > index;
+        {visibleChapters.map((chapter) => {
+          const index = chapter.id - 1;
+          const unlocked = index === 0 || profile.chapter > index || mainComplete;
           const completed = (profile.unlockedEndings || []).some((ending) => ending === `chapter_${chapter.id}_ending` || (chapter.id === 5 && ["restore_fate", "rewrite_fate"].includes(ending)));
           const current = unlocked && !completed && chapter.id === Math.min(CHAPTERS.length, profile.chapter || 1);
           const tribulationStatus = tribulationRewardStatus(profile, chapter.id, selectedTribulation.level);
@@ -2654,7 +2693,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
             </button>
           );
         })}
-        {mainComplete && <div className="chapter-main-complete"><span>命册残卷 · 第一部完成</span><strong>所有篇章已开放自由重访</strong><p>另一条路线、另一种抉择和另一门道途仍会留下不同证据与后记。</p></div>}
+        {mainComplete && <div className="chapter-main-complete"><span>自在终卷 · 主线完成</span><strong>所有篇章已开放自由重访</strong><p>另一条路线、另一种抉择和另一门道途仍会留下不同证据与后记。</p></div>}
       </div>
     </section>
   );

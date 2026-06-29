@@ -1811,6 +1811,17 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   min-height: 360px;
   margin-bottom: 20px;
 }
+.device-desktop .chapter-volume-nav {
+  max-width: 1220px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0 auto 16px;
+  padding: 0;
+  overflow: visible;
+}
+.device-desktop .chapter-volume-nav button {
+  min-width: 0;
+  min-height: 86px;
+}
 .device-desktop .casefile-main { align-self: end; padding: 34px; }
 .device-desktop .casefile-main h2 { font-size: 48px; }
 .device-desktop .casefile-main button { max-width: 280px; }
@@ -2337,6 +2348,42 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .casefile-enemies b { color: #ddd0a8; font-size: 9px; }
 .casefile-enemies small { color: #73897f; font-size: 8px; }
 .chapter-casefile.locked { filter: grayscale(.85) brightness(.7); }
+.chapter-volume-nav {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(148px, 1fr);
+  gap: 8px;
+  margin: -4px 0 14px;
+  padding: 0 18px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chapter-volume-nav::-webkit-scrollbar { display: none; }
+.chapter-volume-nav button {
+  min-height: 78px;
+  padding: 11px 12px;
+  border: 1px solid rgba(128,158,142,.18);
+  border-radius: 16px 2px 16px 2px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(213,171,72,.12), transparent 42%),
+    linear-gradient(130deg, rgba(4,17,14,.82), rgba(11,32,25,.72));
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 12px 26px rgba(0,0,0,.22);
+}
+.chapter-volume-nav button.active {
+  border-color: rgba(226,177,69,.62);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(226,177,69,.26), transparent 44%),
+    linear-gradient(130deg, rgba(67,43,12,.82), rgba(6,31,23,.86));
+  box-shadow: 0 14px 32px rgba(0,0,0,.28), inset 0 0 0 1px rgba(232,196,104,.12);
+}
+.chapter-volume-nav span,
+.chapter-volume-nav strong,
+.chapter-volume-nav small { display: block; }
+.chapter-volume-nav span { color: #d7b766; font-size: 8px; letter-spacing: .14em; }
+.chapter-volume-nav strong { margin-top: 5px; color: #eee0bb; font-family: "STKaiti", serif; font-size: 18px; font-weight: 400; }
+.chapter-volume-nav small { margin-top: 6px; color: #82978e; font-size: 8px; line-height: 1.35; }
 .chapter-list { display: grid; gap: 13px; padding: 0 18px 38px; }
 .chapter-card { position: relative; height: 252px; overflow: hidden; padding: 0; border: 1px solid rgba(163,191,173,.25); border-radius: 3px 18px 3px 18px; background: #08110f; text-align: left; cursor: pointer; box-shadow: 0 15px 35px rgba(0,0,0,.35); }
 .chapter-card > img { width: 100%; height: 100%; object-fit: cover; filter: brightness(.62) saturate(.7); transition: .3s; }

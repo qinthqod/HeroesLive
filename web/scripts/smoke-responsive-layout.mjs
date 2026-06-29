@@ -97,6 +97,8 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
   const casefileBox = await page.locator(".chapter-casefile").boundingBox();
   const bossCardBox = await page.locator(".casefile-boss-card").boundingBox();
   const loreCards = await page.locator(".casefile-lore section").count();
+  const volumeButtons = await page.locator(".chapter-volume-nav button").count();
+  const chapterCards = await page.locator(".chapter-card").count();
   const firstCardText = await page.locator(".chapter-card").first().innerText();
   const firstCardBox = await page.locator(".chapter-card").first().boundingBox();
   const firstBossSigil = await page.locator(".chapter-boss-sigil").first().innerText();
@@ -108,6 +110,8 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
   if (!casefileBox || casefileBox.width < 1000 || casefileBox.height < 330) throw new Error(`PC 章节案卷尺寸异常：${casefileBox?.width}×${casefileBox?.height}`);
   if (!bossCardBox || bossCardBox.width < 480) throw new Error(`PC 首领现形卡过窄：${bossCardBox?.width}`);
   if (loreCards !== 5) throw new Error(`PC 章节案卷信息块数量异常：${loreCards}`);
+  if (volumeButtons !== 5) throw new Error(`PC 部卷筛选数量为 ${volumeButtons}`);
+  if (chapterCards !== 5) throw new Error(`PC 当前部卷章节卡数量为 ${chapterCards}`);
   if (layout.chapterRows !== 1) throw new Error("前三个章节卡没有排成同一行");
   if (!firstBossSigil.includes("第七盏灯") || !firstBossSigil.includes("灯火试心")) throw new Error("PC 章节卡缺少 Boss 身份签");
   if (!firstBossSigilBox || firstBossSigilBox.width < 130) throw new Error(`PC 章节 Boss 签过窄：${firstBossSigilBox?.width}`);
@@ -122,6 +126,8 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   const casefileText = await page.locator(".chapter-casefile").innerText();
   const casefileBox = await page.locator(".chapter-casefile").boundingBox();
   const bossCardBox = await page.locator(".casefile-boss-card").boundingBox();
+  const volumeButtons = await page.locator(".chapter-volume-nav button").count();
+  const chapterCards = await page.locator(".chapter-card").count();
   const firstCardText = await page.locator(".chapter-card").first().innerText();
   const firstBossSigil = await page.locator(".chapter-boss-sigil").first().innerText();
   const firstBossSigilBox = await page.locator(".chapter-boss-sigil").first().boundingBox();
@@ -132,6 +138,8 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   }
   if (!casefileBox || casefileBox.width > 402) throw new Error(`移动章节案卷过宽：${casefileBox?.width}`);
   if (!bossCardBox || bossCardBox.width > 366) throw new Error(`移动首领现形卡过宽：${bossCardBox?.width}`);
+  if (volumeButtons !== 5) throw new Error(`移动部卷筛选数量为 ${volumeButtons}`);
+  if (chapterCards !== 5) throw new Error(`移动当前部卷章节卡数量为 ${chapterCards}`);
   if (!firstBossSigil.includes("第七盏灯") || !firstBossSigil.includes("灯火试心")) throw new Error("移动章节卡缺少 Boss 身份签");
   if (!firstBossSigilBox || firstBossSigilBox.width > 290) throw new Error(`移动章节 Boss 签过宽：${firstBossSigilBox?.width}`);
   if (!firstCardText.includes("证据") || !firstCardText.includes("后记") || !firstCardText.includes("劫数") || !firstCardText.includes("下一目标")) throw new Error("移动章节卡缺少复玩目标");
