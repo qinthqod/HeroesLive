@@ -1591,7 +1591,20 @@ function App() {
       setDiscardPile(purged.discardPile);
       setDrawPile(instructionDiscovery.remaining);
     }
-    setCombatFx({ card, index, kind, damage, shieldGain: resolution.shield, heal: resolution.heal, qiGain: resolution.qi, phase: "cast" });
+    const effectBursts = [
+      damage > 0 ? { kind, label: `−${damage}`, detail: resolution.ignoreShield ? "穿透" : "命中" } : null,
+      resolution.shield > 0 ? { kind: "guard", label: `+${resolution.shield}`, detail: "护盾" } : null,
+      resolution.heal > 0 ? { kind: "heal", label: `+${resolution.heal}`, detail: "生命" } : null,
+      resolution.draw + firstSkillBonus > 0 ? { kind: "draw", label: `+${resolution.draw + firstSkillBonus}`, detail: "抽牌" } : null,
+      resolution.qi > 0 ? { kind: "spirit", label: `+${resolution.qi}`, detail: "灵气" } : null,
+      resolution.edge > 0 ? { kind: "spirit", label: `+${resolution.edge}`, detail: "剑势" } : null,
+      resolution.burn > 0 ? { kind: "fire", label: `+${resolution.burn}`, detail: "燃烧" } : null,
+      resolution.poison > 0 ? { kind: "poison", label: `+${resolution.poison}`, detail: "丹毒" } : null,
+      resolution.weak > 0 ? { kind: "weak", label: `+${resolution.weak}`, detail: "虚弱" } : null,
+      purged.removed.length > 0 ? { kind: "cleanse", label: `−${purged.removed.length}`, detail: "心魔" } : null,
+      instructionDiscovery.discovered.length > 0 ? { kind: "draw", label: `+${instructionDiscovery.discovered.length}`, detail: "发现" } : null,
+    ].filter(Boolean);
+    setCombatFx({ card, index, kind, damage, shieldGain: resolution.shield, heal: resolution.heal, qiGain: resolution.qi, effectBursts, phase: "cast" });
     setLog(`${card.name} · 引诀`);
     later(() => setCombatFx((value) => value ? { ...value, phase: "impact" } : value), 360);
     later(() => {
@@ -3654,6 +3667,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         {combatFx?.phase === "impact" && combatFx.damage > 0 && <div className={`damage-number damage-${combatFx.kind}`}>−{combatFx.damage}</div>}
         {combatFx?.phase === "impact" && combatFx.kind === "guard" && <div className="effect-number effect-guard">+{combatFx.shieldGain} 护盾</div>}
         {combatFx?.phase === "impact" && combatFx.kind === "heal" && <div className="effect-number effect-heal">+{combatFx.heal} 生命</div>}
+        {combatFx?.phase === "impact" && combatFx.effectBursts?.length > 0 && <CombatEffectBursts bursts={combatFx.effectBursts} />}
         <p className="combat-log">{log}</p>
       </div>
       {combatFx?.card && <PlayedCardFx fx={combatFx} />}
@@ -3726,12 +3740,26 @@ function DrawSequence({ fx }) {
           <img src="/card_back_qinglan_trial.png" alt="" />
           <article>
             <span>{card.cost}</span>
+            <img src={card.art} alt="" />
             <strong>{card.name}</strong>
             <small>{card.keyword}</small>
           </article>
         </div>
       ))}
       <div className="draw-ink-bloom" />
+    </div>
+  );
+}
+
+function CombatEffectBursts({ bursts }) {
+  return (
+    <div className="combat-effect-bursts" aria-hidden="true">
+      {bursts.slice(0, 8).map((burst, index) => (
+        <span className={`effect-burst effect-burst-${burst.kind}`} style={{ "--burst-index": index }} key={`${burst.kind}-${burst.detail}-${index}`}>
+          <b>{burst.label}</b>
+          <small>{burst.detail}</small>
+        </span>
+      ))}
     </div>
   );
 }

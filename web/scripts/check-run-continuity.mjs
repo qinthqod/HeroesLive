@@ -94,10 +94,12 @@ expect(source.includes("rewardFit(card, deck, origin.id)") && source.includes("m
 expect(source.includes("market-economy") && source.includes("economyAdvice") && source.includes("买后余") && source.includes("sourceSinkLine"), "坊市必须展示预算状态、买后余量和资源收放提示");
 expect(source.includes("cardPlayStatus") && source.includes("cardRequirementHint") && source.includes("card-play-state"), "战斗卡牌必须公开可出、联动、灵气不足和条件未满等即时状态");
 expect(source.includes("TurnFlowFx") && source.includes("turn-flow") && source.includes("手牌入弃") && source.includes("洗牌后抽取"), "回合结束必须公开敌方行动、弃牌、洗牌与抽牌的流转节奏");
+expect(source.includes("effectBursts") && source.includes("CombatEffectBursts") && source.includes("card.art"), "出牌和抽牌必须展示空间化效果浮字与真实卡图反馈");
 expect(source.includes("detectDeviceMode") && source.includes("data-device={deviceMode}") && source.includes("data-layout={deviceMode === \"desktop\" ? \"wide-desktop\" : \"compact-mobile\"}") && source.includes("device-mode-badge"), "页面必须判断 PC/移动设备并公开当前适配模式");
 expect(source.includes("DesktopModePanel") && source.includes("desktop-mode-panel") && source.includes("PC ADAPTIVE"), "PC 非战斗页面必须拥有桌面端专属状态栏");
 expect(source.includes("desktop-control-hints") && source.includes("Space 结束回合") && source.includes("单击卡牌立即出牌"), "PC 战斗页必须提供桌面端操作提示");
 expect(styles.includes(".device-desktop .combat-screen") && styles.includes(".device-desktop .player-rail") && styles.includes(".device-desktop .progress-rail") && styles.includes(".device-desktop .hand"), "PC 战斗页必须拥有桌面端左中右战局与宽手牌区");
+expect(styles.includes(".combat-effect-bursts") && styles.includes(".effect-burst") && styles.includes(".draw-ghost article img"), "战斗必须拥有多效果浮字和抽牌翻面真实卡图样式");
 expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile .desktop-mode-panel") && styles.includes(".device-desktop .desktop-control-hints"), "PC 专属面板和战斗提示必须具备桌面/移动端样式隔离");
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 expect(styles.includes(".class-system-grid") && styles.includes(".starter-handbook") && styles.includes(".class-recipe-preview") && styles.includes(".device-desktop .mechanic-panel"), "职业选择页必须拥有移动/PC 的起手牌与构筑预览样式");
