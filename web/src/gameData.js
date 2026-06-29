@@ -590,13 +590,13 @@ export const ENCOUNTER_ENEMIES = {
     3: { name: "第七盏灯", hp: 72, max: 72, art: "/generated/enemy_seventh_lantern.png", archetype: "守灯人", trait: "灯火试心", counter: "灯障回合会累积护体；提前铺设持续伤害，重击前保留防御。" },
   },
   2: {
-    1: { name: "玄阴灯侍", hp: 42, max: 42, art: "/enemy_xuanyin_guide.png", archetype: "夺气者", trait: "借名引路", counter: "它会削减下一回合灵气。优先用低费牌运转，夺气前不要留下昂贵手牌。" },
+    1: { name: "玄阴灯侍", hp: 42, max: 42, art: "/generated/enemy_xuanyin_lantern_attendant.png", archetype: "夺气者", trait: "借名引路", counter: "它会削减下一回合灵气。优先用低费牌运转，夺气前不要留下昂贵手牌。" },
     2: { name: "断碑护灯长老", hp: 60, max: 60, art: "/enemy_black_cult_deacon.png", archetype: "镇魂者", trait: "旧名成碑", counter: "长老以护体拖延，再用旧名压制灵气。护体形成前爆发，或准备破盾与持续伤害。" },
     3: { name: "写名鬼灯", hp: 84, max: 84, art: "/generated/enemy_writing_name_ghost_lantern.png", archetype: "替命灯", trait: "名字即燃料", counter: "灵气压制与双段攻击交替出现。保留低费防御，避免被虚弱后的连击击穿。" },
   },
   3: {
     1: { name: "雷云劫影", hp: 50, max: 50, art: "/enemy_thunder_pool_guardian.png", archetype: "连击者", trait: "雷痕导引", counter: "先以雷痕施加虚弱，再落下双雷。虚弱回合优先护体，完整护盾比零散防御更可靠。" },
-    2: { name: "问心劫使", hp: 70, max: 70, art: "/enemy_black_cult_deacon.png", archetype: "节奏考官", trait: "三问雷罚", counter: "三段雷罚专破护盾，阵壁回合则是输出窗口。用减伤或恢复跨过连续落雷。" },
+    2: { name: "问心劫使", hp: 70, max: 70, art: "/generated/enemy_heart_trial_examiner.png", archetype: "节奏考官", trait: "三问雷罚", counter: "三段雷罚专破护盾，阵壁回合则是输出窗口。用减伤或恢复跨过连续落雷。" },
     3: { name: "雷池守阵者", hp: 100, max: 100, art: "/enemy_thunder_pool_guardian.png", archetype: "阵眼", trait: "三劫并落", counter: "虚弱、三段雷击与阵壁构成固定循环。读清下一式，在阵雷齐鸣前建立完整防线。" },
   },
   4: {
@@ -611,7 +611,7 @@ export const ENCOUNTER_ENEMIES = {
   },
   6: {
     1: { name: "逐月溺魂", hp: 72, max: 72, art: "/enemy_xuanyin_guide.png", archetype: "追忆者", trait: "未行之潮", counter: "它会削减抽牌并把未选择的道路化为攻击。当前回合尽量完成联动，不要过度依赖下一手。" },
-    2: { name: "归墟摆渡使", hp: 98, max: 98, art: "/enemy_black_cult_deacon.png", archetype: "渡劫者", trait: "借命行舟", counter: "摆渡使以护体拖延，再用多段潮击收割。持续伤害和集中爆发能阻止它反复沉舟再起。" },
+    2: { name: "归墟摆渡使", hp: 98, max: 98, art: "/generated/enemy_guixu_ferryman.png", archetype: "渡劫者", trait: "借命行舟", counter: "摆渡使以护体拖延，再用多段潮击收割。持续伤害和集中爆发能阻止它反复沉舟再起。" },
     3: { name: "月蚀司命", hp: 148, max: 148, art: "/generated/enemy_moon_eclipse_scribe.png", archetype: "归墟天官", trait: "万途求终", counter: "首相削减抽牌并积累潮壁；半血后月蚀开眼，心魔与多段潮击同时出现。保留净心、抽牌和完整防线。" },
   },
 };
@@ -1355,7 +1355,7 @@ export const CHAPTER_ROUTES = {
   2: [
     [{ id: "story", kind: "剧情", name: "替灯人旧亭", desc: "纸灯童子等着你接过一盏旧灯。", art: "/ui/bg_act2_mountain.png" }],
     [
-      { id: "battle", kind: "战斗", name: "阴魂拦道", desc: "失去名字的山魂在灯后游荡。", art: "/bg_spirit_rift.png" },
+      { id: "battle", kind: "战斗", name: "阴魂拦道", desc: "失去名字的山魂在灯后游荡。", art: "/generated/enemy_xuanyin_lantern_attendant.png" },
       { id: "event", kind: "奇遇", name: "镇魂古龛", desc: "残符下压着师父当年的路引。", art: "/bg_soul_shrine.png" },
     ],
     [
@@ -1371,7 +1371,7 @@ export const CHAPTER_ROUTES = {
       { id: "event", kind: "奇遇", name: "洗雷池", desc: "以雷淬体，或借池水寻找阵眼。", art: "/bg_spirit_rift.png" },
     ],
     [
-      { id: "elite", kind: "精英", name: "问心石阶", desc: "每一级石阶都会唤出一种悔意。", art: "/ui/bg_act3_thunder.png" },
+      { id: "elite", kind: "精英", name: "问心石阶", desc: "每一级石阶都会唤出一种悔意。", art: "/generated/enemy_heart_trial_examiner.png" },
       { id: "market", kind: "坊市", name: "云端散市", desc: "渡劫前的修士交换最后一件法器。", art: "/bg_market_stall.png" },
     ],
     [{ id: "boss", kind: "首领", name: "改命雷阵", desc: "守阵者不允许任何人带着疑问筑基。", art: "/enemy_thunder_pool_guardian.png" }],
@@ -1407,7 +1407,7 @@ export const CHAPTER_ROUTES = {
       { id: "event", kind: "奇遇", name: "月海遗舟", desc: "一艘空船载着沈砚秋本可拥有的人生。", art: "/generated/bg_moon_ferry_crossing.png" },
     ],
     [
-      { id: "elite", kind: "精英", name: "归墟摆渡台", desc: "老船夫要求你证明选择不是另一种残酷。", art: "/bg_dark_forge.png" },
+      { id: "elite", kind: "精英", name: "归墟摆渡台", desc: "老船夫要求你证明选择不是另一种残酷。", art: "/generated/enemy_guixu_ferryman.png" },
       { id: "market", kind: "坊市", name: "月下浮市", desc: "这里出售已经消失、却仍被人怀念的未来。", art: "/bg_market_stall.png" },
     ],
     [{ id: "boss", kind: "首领", name: "倒悬月宫", desc: "月蚀司命要把所有道路重新收回唯一的天命。", art: "/generated/enemy_moon_eclipse_scribe.png" }],

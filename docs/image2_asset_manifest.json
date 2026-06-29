@@ -35,6 +35,30 @@
       "prompt_focus": "阴冷执事服、黑雾护体、筑基门槛压迫"
     },
     {
+      "id": "enemy_xuanyin_lantern_attendant",
+      "kind": "enemy",
+      "name": "玄阴灯侍",
+      "path": "res://assets/generated/enemy_xuanyin_lantern_attendant.png",
+      "status": "generated",
+      "prompt_focus": "玄阴山道、无面灯侍、旧黄纸灯与借名灯绳"
+    },
+    {
+      "id": "enemy_heart_trial_examiner",
+      "kind": "enemy",
+      "name": "问心劫使",
+      "path": "res://assets/generated/enemy_heart_trial_examiner.png",
+      "status": "generated",
+      "prompt_focus": "雷云石阶、劫使旧袍、三枚雷印化作三问雷罚"
+    },
+    {
+      "id": "enemy_guixu_ferryman",
+      "kind": "enemy",
+      "name": "归墟摆渡使",
+      "path": "res://assets/generated/enemy_guixu_ferryman.png",
+      "status": "generated",
+      "prompt_focus": "月海归墟、旧船老摆渡、沉没可能与青灯船首"
+    },
+    {
       "id": "enemy_writing_name_ghost_lantern",
       "kind": "boss",
       "name": "写名鬼灯",

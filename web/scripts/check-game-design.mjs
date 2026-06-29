@@ -226,6 +226,20 @@ for (const [cardName, art] of Object.entries(dedicatedCardArt)) {
   expectAsset(art, `${cardName} 专属卡图`);
 }
 
+const dedicatedEncounterArt = [
+  { chapter: 2, stage: 1, name: "玄阴灯侍", art: "/generated/enemy_xuanyin_lantern_attendant.png", routeNode: "阴魂拦道" },
+  { chapter: 3, stage: 2, name: "问心劫使", art: "/generated/enemy_heart_trial_examiner.png", routeNode: "问心石阶" },
+  { chapter: 6, stage: 2, name: "归墟摆渡使", art: "/generated/enemy_guixu_ferryman.png", routeNode: "归墟摆渡台" },
+];
+for (const item of dedicatedEncounterArt) {
+  const enemy = ENCOUNTER_ENEMIES[item.chapter]?.[item.stage];
+  const routeNode = CHAPTER_ROUTES[item.chapter]?.flat().find((node) => node.name === item.routeNode);
+  expect(enemy?.name === item.name, `第 ${item.chapter} 章第 ${item.stage} 战应为 ${item.name}`);
+  expect(enemy?.art === item.art, `${item.name} 必须使用专属 imagegen 敌人图 ${item.art}`);
+  expect(routeNode?.art === item.art, `${item.routeNode} 路线节点必须预告 ${item.name} 专属图`);
+  expectAsset(item.art, `${item.name} 专属敌人图`);
+}
+
 for (const job of PROFESSIONS) {
   const names = new Set(job.cards.map((card) => card.name));
   const effects = new Set(job.cards.map((card) => `${card.text}|${card.combo}`));

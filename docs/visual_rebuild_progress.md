@@ -27,6 +27,7 @@
 - Career defense card art pass: split the most-reused body-ward fallback by adding dedicated imagegen cards for 锋芒护身、玉液护心 and 幽灯守魄, so sword, alchemy and soul defensive loops now read as different professions at a glance.
 - Boss identity art pass: added dedicated imagegen portraits for 写名鬼灯 and 守门真君, wiring them into both their boss fights and boss-prelude scenes so chapter 2 and 5 no longer reuse generic guide/guardian artwork.
 - Boss route consistency pass: route-map boss nodes, boss preludes and boss combat portraits now share the same chapter boss identity art, so the final node visually foreshadows the exact enemy the player is about to confront.
+- Encounter identity art pass: added dedicated imagegen portraits for 玄阴灯侍、问心劫使 and 归墟摆渡使, wiring them into both combat encounters and route previews so mid-run enemies no longer read as generic reused figures.
 - Chapter boss preview pass: chapter casefiles now include a "boss revealed" dossier card with the boss portrait, archetype, trait, weakness context and counter-advice before the player commits to a chapter.
 - Chapter card landmark pass: each chapter tile now carries a compact boss sigil with portrait, name and trait, giving the chapter list a clear final-threat landmark without adding more top-level choices.
 - Asset budget pass: resized oversized project-bound imagegen PNGs to card/boss/background display budgets and added a generated-asset source-size gate, keeping the Web build under the 10 MiB production limit while leaving room for more card and boss art.
