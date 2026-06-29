@@ -24,6 +24,7 @@
 - Imagegen expansion pass: added project-bound art for 第七盏灯、无影城主、月蚀司命、命册缺页、逐月月潮斩 and 月海渡口; chapter 1/4/6 bosses, boss preludes, chapter 6 route/story/event nodes and moon/fate themed cards now use these dedicated assets instead of fallback reuse.
 - Career card art pass: added six project-bound imagegen cards for 玄雷敕令、腐脉毒雾、阴阳大还丹、山海盟誓、天工开物 and 百鬼夜行; the talisman/alchemy/beast/artificer/soul capstone loops now have dedicated card illustrations instead of reusing generic sword, shield or moon art.
 - Career midcore card art pass: added dedicated imagegen cards for 裂魂剑、缚影法印 and 铜雀飞梭, giving sword flaw, talisman binding and artificer shuttle loops distinct readable art before the late-run capstones.
+- Career defense card art pass: split the most-reused body-ward fallback by adding dedicated imagegen cards for 锋芒护身、玉液护心 and 幽灯守魄, so sword, alchemy and soul defensive loops now read as different professions at a glance.
 - Boss identity art pass: added dedicated imagegen portraits for 写名鬼灯 and 守门真君, wiring them into both their boss fights and boss-prelude scenes so chapter 2 and 5 no longer reuse generic guide/guardian artwork.
 - Boss route consistency pass: route-map boss nodes, boss preludes and boss combat portraits now share the same chapter boss identity art, so the final node visually foreshadows the exact enemy the player is about to confront.
 - Chapter boss preview pass: chapter casefiles now include a "boss revealed" dossier card with the boss portrait, archetype, trait, weakness context and counter-advice before the player commits to a chapter.

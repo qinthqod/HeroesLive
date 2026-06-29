@@ -141,6 +141,15 @@
       "prompt_focus": "灵压凝成沉重剑芒、筑基前压迫"
     },
     {
+      "id": "card_edge_guard",
+      "kind": "card",
+      "card_id": "sword-4",
+      "name": "锋芒护身",
+      "path": "res://assets/generated/card_edge_guard.png",
+      "status": "generated",
+      "prompt_focus": "雨夜竹台、剑气锋芒内折成护身屏障"
+    },
+    {
       "id": "card_soul_rending_sword",
       "kind": "card",
       "card_id": "sword-7",
@@ -177,6 +186,15 @@
       "prompt_focus": "废弃药圃、破丹瓶、贴地侵蚀灵脉的毒雾"
     },
     {
+      "id": "card_jade_elixir_heartguard",
+      "kind": "card",
+      "card_id": "alchemy-8",
+      "name": "玉液护心",
+      "path": "res://assets/generated/card_jade_elixir_heartguard.png",
+      "status": "generated",
+      "prompt_focus": "旧丹房、玉液药气护住心脉、灰弱烟雾消散"
+    },
+    {
       "id": "card_yinyang_great_pill",
       "kind": "card",
       "card_id": "alchemy-10",
@@ -211,6 +229,15 @@
       "path": "res://assets/generated/card_copper_sparrow_shuttle.png",
       "status": "generated",
       "prompt_focus": "山中旧工坊、铜竹雀形飞梭、木袖机括与青玉火花"
+    },
+    {
+      "id": "card_soul_lantern_guard",
+      "kind": "card",
+      "card_id": "soul-2",
+      "name": "幽灯守魄",
+      "path": "res://assets/generated/card_soul_lantern_guard.png",
+      "status": "generated",
+      "prompt_focus": "雨巷旧祠、幽灯护住魂影、墨色阴影被挡在圈外"
     },
     {
       "id": "card_hundred_ghosts",
