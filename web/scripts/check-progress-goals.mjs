@@ -5,6 +5,7 @@ import {
   nextProgressGoals,
   progressSummaries,
 } from "../src/progressGoals.js";
+import { CHAPTERS } from "../src/gameData.js";
 
 const failures = [];
 const expect = (condition, message) => {
@@ -21,7 +22,12 @@ const sampleProfile = {
   claimedProgressGoals: [],
 };
 
-expect(PROGRESS_GOALS.length >= 7, "挑战卷至少需要覆盖主线、收集、调查、流派、熟练度和评阶");
+expect(CHAPTERS.length >= 25, "挑战卷校验必须运行在 25 章主线版本上");
+expect(PROGRESS_GOALS.length >= 12, "挑战卷至少需要覆盖 25 章主线阶梯、收集、调查、流派、熟练度和评阶");
+for (const milestone of [5, 10, 15, 20, 25]) {
+  expect(PROGRESS_GOALS.some((goal) => goal.target === milestone && goal.metric({ unlockedEndings: Array.from({ length: milestone }, (_, index) => `chapter_${index + 1}_ending`) }) === milestone), `挑战卷缺少 ${milestone} 章主线里程碑`);
+}
+expect(PROGRESS_GOALS.some((goal) => goal.id === "grand_casebooks" && goal.target >= 100), "二十五章宗卷需要百证级长期目标");
 for (const goal of PROGRESS_GOALS) {
   expect(goal.id && goal.title && goal.hook && Number.isFinite(goal.target) && goal.reward, `${goal.id || "unknown"} 缺少目标或奖励配置`);
   expect(formatProgressReward(goal.reward).includes("称号"), `${goal.id} 奖励缺少可见称号反馈`);
@@ -61,6 +67,12 @@ const duplicateFateProfile = {
 };
 const fivePaths = progressSummaries(duplicateFateProfile).find((goal) => goal.id === "five_paths");
 expect(fivePaths.current === 4, "第五章两个结局不得被误算成两个已完成章节");
+const fullStoryProfile = {
+  ...sampleProfile,
+  unlockedEndings: CHAPTERS.map((chapter) => `chapter_${chapter.id}_ending`),
+};
+const finalMilestone = progressSummaries(fullStoryProfile).find((goal) => goal.id === "twenty_five_free_world");
+expect(finalMilestone?.complete && finalMilestone.current === 25, "完成 25 章后必须点亮自在终卷挑战");
 
 if (failures.length) {
   console.error(`Progress goal check failed (${failures.length})`);
