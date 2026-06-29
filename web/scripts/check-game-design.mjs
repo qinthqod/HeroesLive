@@ -116,8 +116,8 @@ const dedicatedBossArt = {
   "第七盏灯": "/generated/enemy_seventh_lantern.png",
   "写名鬼灯": "/generated/enemy_writing_name_ghost_lantern.png",
   "雷池守阵者": "/enemy_thunder_pool_guardian.png",
-  "无影城主": "/generated/enemy_shadowless_city_lord.png",
-  "守门真君": "/generated/enemy_gatekeeping_true_lord.png",
+  "无影城主": "/generated/enemy_black_lotus_dreamweaver.webp",
+  "守门真君": "/generated/enemy_taixu_scribe_echo.webp",
   "月蚀司命": "/generated/enemy_moon_eclipse_scribe.png",
 };
 for (const chapter of CHAPTERS) {
@@ -212,8 +212,8 @@ const dedicatedCardArt = {
   "缚影法印": "/generated/card_shadow_binding_seal.png",
   "腐脉毒雾": "/generated/card_corrupting_poison_mist.png",
   "玉液护心": "/generated/card_jade_elixir_heartguard.png",
-  "阴阳大还丹": "/generated/card_yinyang_great_pill.png",
-  "山海盟誓": "/generated/card_beast_oath.png",
+  "阴阳大还丹": "/generated/card_yinyang_alchemy_cauldron.webp",
+  "山海盟誓": "/generated/card_beast_oath_circle.webp",
   "铜雀飞梭": "/generated/card_copper_sparrow_shuttle.png",
   "天工开物": "/generated/card_artificer_creation.png",
   "幽灯守魄": "/generated/card_soul_lantern_guard.png",
