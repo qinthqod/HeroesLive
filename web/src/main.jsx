@@ -383,13 +383,11 @@ function App() {
   const debugTreasures = import.meta.env.DEV
     ? (query.get("treasures") || "").split(",").map((id) => TREASURES.find((treasure) => treasure.id === id)).filter(Boolean)
     : [];
-  const debugOverlay = import.meta.env.DEV && ["guide", "codex", "settings", "map", "deck"].includes(query.get("overlay"))
+  const debugOverlay = ["guide", "codex", "settings", "map", "deck"].includes(query.get("overlay"))
     ? query.get("overlay")
     : null;
   const debugChoice = import.meta.env.DEV ? query.get("choice") : null;
-  const debugRunChoices = import.meta.env.DEV
-    ? (query.get("runChoices") || "").split(",").map((choice) => choice.trim()).filter(Boolean)
-    : [];
+  const debugRunChoices = (query.get("runChoices") || "").split(",").map((choice) => choice.trim()).filter(Boolean);
   const debugCard = import.meta.env.DEV
     ? ALL_CARDS.find((card) => card.id === query.get("card") || card.baseName === query.get("card"))
     : null;
@@ -409,10 +407,10 @@ function App() {
   const debugMoon = import.meta.env.DEV ? query.get("moon") : null;
   const debugMastery = import.meta.env.DEV ? debugNumber("mastery") : 0;
   const debugMoveIndex = import.meta.env.DEV ? debugNumber("move") : 0;
-  const debugClueCount = import.meta.env.DEV ? Math.min(5, debugNumber("clues")) : 0;
-  const debugRouteProgress = import.meta.env.DEV ? Math.min(3, debugNumber("routeProgress")) : 0;
-  const debugPendingRoute = import.meta.env.DEV ? Math.min(3, debugNumber("pendingRoute")) : 0;
-  const debugPendingNode = import.meta.env.DEV ? query.get("pendingNode") : null;
+  const debugClueCount = Math.min(5, queryNumber("clues"));
+  const debugRouteProgress = Math.min(3, queryNumber("routeProgress"));
+  const debugPendingRoute = Math.min(3, queryNumber("pendingRoute"));
+  const debugPendingNode = query.get("pendingNode");
   const debugArchiveChapter = import.meta.env.DEV ? Math.min(CHAPTERS.length, Math.max(1, debugNumber("archiveChapter", initialChapter))) : 0;
   const debugArchiveCount = import.meta.env.DEV ? Math.min(7, debugNumber("archiveCount")) : 0;
   const debugEventChoice = import.meta.env.DEV && query.has("eventChoice") ? Math.min(3, debugNumber("eventChoice")) : null;
@@ -2827,7 +2825,7 @@ function GrowthScreen({ profile, setProfile, onBack }) {
 
 function CollectionScreen({ origin, setOrigin, profile, onBack }) {
   const current = getProfession(origin);
-  const queryView = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("collectionView") : null;
+  const queryView = new URLSearchParams(window.location.search).get("collectionView");
   const [view, setView] = useState(queryView === "builds" ? "builds" : "cards");
   const [rarity, setRarity] = useState("全部");
   const shown = rarity === "全部" ? current.cards : current.cards.filter((card) => card.rarity === rarity);
