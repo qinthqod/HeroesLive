@@ -80,6 +80,7 @@ expect(source.includes("if (stage < 3) setHp") && source.includes("不取战利 
 expect(source.includes("路线 ${routeStep}/4") && source.includes("routeStep * 25"), "路线顶栏必须与四层章节地图保持一致");
 expect(source.includes("combat-build-tracker") && source.includes("route-build-goal") && source.includes("deck-build-state"), "局内流派目标必须贯穿战斗、路线和牌组卷册");
 expect(source.includes("investigation-strip") && source.includes("summary-investigation"), "章节调查必须贯穿路线进度与章末结论");
+expect(source.includes("route-causality-strip") && source.includes("上一因") && source.includes("当前证") && source.includes("下一果") && source.includes("nextEnemyShield"), "路线页必须把命途回响、当前证据和下一战代价串成因果线索条");
 expect(source.includes("中断调查") && source.includes("pendingClue?.text"), "失败复盘必须指出未能带回的待查证线索");
 expect(source.includes("investigationArchive") && source.includes("investigationRewards"), "章节调查宗卷必须跨局保存完成度与奖励状态");
 expect(source.includes("investigation-archive") && source.includes("章调查宗卷"), "异闻录必须展示永久调查宗卷");
@@ -104,6 +105,7 @@ expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 expect(styles.includes(".class-system-grid") && styles.includes(".starter-handbook") && styles.includes(".class-recipe-preview") && styles.includes(".device-desktop .mechanic-panel"), "职业选择页必须拥有移动/PC 的起手牌与构筑预览样式");
 expect(styles.includes(".chapter-casefile") && styles.includes(".casefile-lore") && styles.includes(".device-desktop .chapter-casefile"), "章节案卷预览必须拥有移动/PC 样式");
+expect(styles.includes(".route-causality-strip") && styles.includes(".device-desktop .route-causality-strip"), "路线因果线索条必须拥有移动/PC 样式");
 expect(styles.includes(".build-target-panel") && styles.includes(".device-desktop .build-library") && styles.includes(".device-desktop .build-target-panel"), "流派图谱追踪目标必须拥有移动/PC 样式");
 for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite", "moon-debt"]) {
   expect(source.includes(`market.special.id === "${trade}"`), `坊市缺少 ${trade} 专属交易运行时`);

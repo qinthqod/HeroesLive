@@ -2109,6 +2109,7 @@ function App() {
           chronicle={runChronicle}
           clues={runClues}
           pendingClue={pendingClue}
+          nextEnemyShield={nextEnemyShield}
           profile={profile}
           treasures={treasures}
           deck={runDeck}
@@ -2980,7 +2981,7 @@ function RunNotebook({ notebook, compact = false, className = "" }) {
   );
 }
 
-function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openEncounterPrelude, openBossPrelude, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, pendingClue, profile, treasures, deck, origin, runMode, runSeed, runTrial, runTribulation, onChooseNode }) {
+function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, openEncounterPrelude, openBossPrelude, openMarket, openRest, openTraining, routeProgress, choices, chronicle, clues, pendingClue, nextEnemyShield = 0, profile, treasures, deck, origin, runMode, runSeed, runTrial, runTribulation, onChooseNode }) {
   const chapterRoutes = CHAPTER_ROUTES[chapter] || ROUTE_ROWS;
   const baseChoices = chapterRoutes[Math.min(routeProgress, chapterRoutes.length - 1)];
   const currentChoices = [
@@ -2999,6 +3000,13 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
     { beat: "急", mood: "临门", tension: 94, cue: "所有选择都将导向首领前夜，确认资源、线索与命途回响。" },
   ][Math.min(routeProgress, 3)];
   const nextKinds = chapterRoutes.slice(routeProgress + 1).map((row) => row.map((node) => node.kind).join(" / "));
+  const latestEcho = chronicle.at(-1) || choices.at(-1) || "尚未留下本局抉择，下一处节点会成为本章第一枚回响。";
+  const currentEvidence = pendingClue?.text || clues.at(-1) || investigation?.opening || "本章证据尚未带回。";
+  const nextConsequence = nextEnemyShield > 0
+    ? `下一战敌方开局护体 +${nextEnemyShield}`
+    : routeProgress >= 3
+      ? chapterCopy.bossConsequence
+      : chapterCopy.beats[Math.min(routeProgress + 1, chapterCopy.beats.length - 1)];
   const routeMeta = {
     story: { risk: "无战斗", reward: "剧情线索", consequence: chapterCopy.storyConsequence },
     battle: { risk: "危险 · 低", reward: "职业卡牌", consequence: "稳定补强牌组" },
@@ -3039,6 +3047,20 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
         <i><b style={{ width: `${Math.min(100, clues.length * 20)}%` }} /></i>
         <p>{clues.at(-1) || "完成开场剧情后获得第一条线索。"}</p>
       </div>}
+      <div className="route-causality-strip" aria-label="本章因果线索">
+        <article>
+          <small>上一因</small>
+          <strong>{latestEcho}</strong>
+        </article>
+        <article>
+          <small>当前证</small>
+          <strong>{currentEvidence}</strong>
+        </article>
+        <article className={nextEnemyShield > 0 ? "debt" : ""}>
+          <small>下一果</small>
+          <strong>{nextConsequence}</strong>
+        </article>
+      </div>
       <RunNotebook notebook={notebook} className="map-notebook" />
       <div className="route-journey">
         <div className="route-pacing" aria-label={`当前路线节奏：${routePacing.beat}，${routePacing.mood}`}>
