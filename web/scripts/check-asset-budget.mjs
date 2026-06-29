@@ -6,17 +6,17 @@ import { fileURLToPath } from "node:url";
 const failures = [];
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const generatedRoot = fileURLToPath(new URL("../../assets/generated/", import.meta.url));
-const maxCard = { width: 640, height: 960, bytes: 1.25 * 1024 * 1024 };
+const maxCard = { width: 768, height: 1152, bytes: 1.25 * 1024 * 1024 };
 const maxVertical = { width: 768, height: 1152, bytes: 1.75 * 1024 * 1024 };
 const maxEnemy = { width: 768, height: 1152, bytes: 1.75 * 1024 * 1024 };
 const maxWide = { width: 1366, height: 768, bytes: 1.75 * 1024 * 1024 };
 
-const pngFiles = (dir) => {
+const imageFiles = (dir) => {
   const entries = readdirSync(dir, { withFileTypes: true });
   return entries.flatMap((entry) => {
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) return pngFiles(path);
-    return entry.name.endsWith(".png") ? [path] : [];
+    if (entry.isDirectory()) return imageFiles(path);
+    return /\.(png|webp)$/i.test(entry.name) ? [path] : [];
   });
 };
 
@@ -28,7 +28,8 @@ const budgetFor = (metadata, path) => {
   return maxVertical;
 };
 
-for (const path of pngFiles(generatedRoot)) {
+const files = imageFiles(generatedRoot);
+for (const path of files) {
   const metadata = await sharp(path).metadata();
   const budget = budgetFor(metadata, path);
   const size = statSync(path).size;
@@ -46,4 +47,4 @@ if (failures.length) {
   throw new Error(`Generated asset budget failed: ${failures.length} issue(s).`);
 }
 
-console.log(`Generated asset budget check passed: ${pngFiles(generatedRoot).length} generated PNG files stay within source limits.`);
+console.log(`Generated asset budget check passed: ${files.length} generated image files stay within source limits.`);

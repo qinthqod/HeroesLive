@@ -115,7 +115,7 @@ expect(new Set(encounterMoveNames).size === encounterMoveNames.length, "十场�
 const dedicatedBossArt = {
   "第七盏灯": "/generated/enemy_seventh_lantern.png",
   "写名鬼灯": "/generated/enemy_writing_name_ghost_lantern.png",
-  "雷池守阵者": "/enemy_thunder_pool_guardian.png",
+  "雷池守阵者": "/generated/enemy_thunder_array_warden.webp",
   "无影城主": "/generated/enemy_black_lotus_dreamweaver.webp",
   "守门真君": "/generated/enemy_taixu_scribe_echo.webp",
   "月蚀司命": "/generated/enemy_moon_eclipse_scribe.png",

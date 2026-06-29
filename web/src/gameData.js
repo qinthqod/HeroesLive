@@ -55,8 +55,12 @@ const CARD_ART_OVERRIDES = {
   "偃师护心镜": "/generated/card_artificer_bastion.webp",
   "机关城垒": "/generated/card_artificer_bastion.webp",
   "天工开物": "/generated/card_artificer_creation.png",
+  "引魂契": "/generated/card_soul_lamp_ghosts.webp",
+  "借命灯": "/generated/card_soul_lamp_ghosts.webp",
   "黄泉引路": "/generated/card_fate_page_fragment.png",
   "幽灯守魄": "/generated/card_soul_lantern_guard.png",
+  "魂火焚身": "/generated/card_soul_lamp_ghosts.webp",
+  "忘川照影": "/generated/card_soul_lamp_ghosts.webp",
   "百鬼夜行": "/generated/card_hundred_ghosts.png",
 };
 
@@ -520,7 +524,7 @@ export const CHAPTER_BOSS_PRELUDES = {
   3: {
     eyebrow: "首领前夜 · 雷池阵眼",
     name: "百年安稳开始崩裂",
-    art: "/enemy_thunder_pool_guardian.png",
+    art: "/generated/enemy_thunder_array_warden.webp",
     setting: "雷云压到触手可及。每一道阵纹都亮着一个被删去的姓名，而守阵者站在所有姓名中央。",
     beats: [
       { speaker: "沈砚秋", text: "这座阵不是为了挡雷，是为了让所有人相信，牺牲少数便能换来永远安稳。" },
@@ -624,7 +628,7 @@ export const ENCOUNTER_ENEMIES = {
   3: {
     1: { name: "雷云劫影", hp: 50, max: 50, art: "/enemy_thunder_pool_guardian.png", archetype: "连击者", trait: "雷痕导引", counter: "先以雷痕施加虚弱，再落下双雷。虚弱回合优先护体，完整护盾比零散防御更可靠。" },
     2: { name: "问心劫使", hp: 70, max: 70, art: "/generated/enemy_heart_trial_examiner.png", archetype: "节奏考官", trait: "三问雷罚", counter: "三段雷罚专破护盾，阵壁回合则是输出窗口。用减伤或恢复跨过连续落雷。" },
-    3: { name: "雷池守阵者", hp: 100, max: 100, art: "/enemy_thunder_pool_guardian.png", archetype: "阵眼", trait: "三劫并落", counter: "虚弱、三段雷击与阵壁构成固定循环。读清下一式，在阵雷齐鸣前建立完整防线。" },
+    3: { name: "雷池守阵者", hp: 100, max: 100, art: "/generated/enemy_thunder_array_warden.webp", archetype: "阵眼", trait: "三劫并落", counter: "虚弱、三段雷击与阵壁构成固定循环。读清下一式，在阵雷齐鸣前建立完整防线。" },
   },
   4: {
     1: { name: "失梦游魂", hp: 56, max: 56, art: "/enemy_xuanyin_guide.png", archetype: "窃牌者", trait: "吞食清梦", counter: "窃梦会让下回合少抽一张。当前回合尽量完成联动，不要把关键组件寄望于下一次抽牌。" },
@@ -1018,7 +1022,7 @@ export const CHAPTERS = [
     name: "灯照玄阴",
     region: "玄阴山道",
     level: "推荐 8 级",
-    art: "/ui/bg_act2_mountain.png",
+    art: "/generated/bg_xuanyin_lantern_tomb.webp",
     boss: "写名鬼灯",
     summary: "山道每隔七年便会多出一盏灯，而今年的灯上写着你的名字。",
     status: "locked",
@@ -1028,7 +1032,7 @@ export const CHAPTERS = [
     name: "雷云问心",
     region: "筑基雷池",
     level: "推荐 16 级",
-    art: "/ui/bg_act3_thunder.png",
+    art: "/generated/bg_foundation_thunder_pool.webp",
     boss: "雷池守阵者",
     summary: "筑基雷劫不是天罚，而是一道被人篡改过的古老阵法。",
     status: "locked",
@@ -1120,18 +1124,18 @@ export const STORY_SCENES = [
 export const CHAPTER_STORIES = {
   1: STORY_SCENES,
   2: [
-    { speaker: "纸灯童子", role: "玄阴山道的引路人", text: "灯上写着谁的名字，谁就必须替上一盏灯走完余下的路。", art: "/ui/bg_act2_mountain.png" },
+    { speaker: "纸灯童子", role: "玄阴山道的引路人", text: "灯上写着谁的名字，谁就必须替上一盏灯走完余下的路。", art: "/generated/bg_xuanyin_lantern_tomb.webp" },
     { speaker: "陆观", role: "守门人", text: "二十四年前的名册也多出过一个名字。那个人，后来成了你的师父。", art: "/bg_soul_shrine.png" },
     { speaker: "你", role: "循灯而行的外门弟子", text: "师姐不是失踪。她在沿着师父当年留下的路线，逐盏熄灯。", art: "/bg_spirit_rift.png" },
-    { speaker: "纸灯童子", role: "从未长大的替灯人", text: "你师父熄到第六盏便停了。他说最后一盏里关着的不是鬼，是青岚谷不敢承认的旧账。", art: "/ui/bg_act2_mountain.png" },
+    { speaker: "纸灯童子", role: "从未长大的替灯人", text: "你师父熄到第六盏便停了。他说最后一盏里关着的不是鬼，是青岚谷不敢承认的旧账。", art: "/generated/bg_xuanyin_lantern_tomb.webp" },
     { speaker: "你", role: "提灯上山的人", text: "那便把灯给我。我不替谁走余生，只借它照清是谁在写名字。", art: "/bg_soul_shrine.png" },
   ],
   3: [
-    { speaker: "雷池守阵者", role: "被困阵中的旧日执念", text: "每一道筑基雷劫，都在替命册挑选一个能够承受改写的人。", art: "/ui/bg_act3_thunder.png" },
-    { speaker: "沈砚秋", role: "隔着雷云传来的声音", text: "我没有让你来救我。我只想让你亲眼看看，青岚谷用什么换来了百年安稳。", art: "/bg_thunder_pool.png" },
-    { speaker: "你", role: "即将筑基的修士", text: "若筑基本身就是一道锁，那我今日要破的便不是境界，而是这座阵。", art: "/ui/bg_act3_thunder.png" },
+    { speaker: "雷池守阵者", role: "被困阵中的旧日执念", text: "每一道筑基雷劫，都在替命册挑选一个能够承受改写的人。", art: "/generated/bg_foundation_thunder_pool.webp" },
+    { speaker: "沈砚秋", role: "隔着雷云传来的声音", text: "我没有让你来救我。我只想让你亲眼看看，青岚谷用什么换来了百年安稳。", art: "/generated/bg_foundation_thunder_pool.webp" },
+    { speaker: "你", role: "即将筑基的修士", text: "若筑基本身就是一道锁，那我今日要破的便不是境界，而是这座阵。", art: "/generated/bg_foundation_thunder_pool.webp" },
     { speaker: "第一替灯人", role: "阵眼深处的残魂", text: "破阵会放回被改写的劫数，守阵则要继续献上后来者。你们口中的安稳，从来有人替你们受着。", art: "/bg_spirit_rift.png" },
-    { speaker: "沈砚秋", role: "在阵外等待的人", text: "别替青岚谷赎罪。让每一个知道真相的人，自己决定还要不要住在这份安稳里。", art: "/bg_thunder_pool.png" },
+    { speaker: "沈砚秋", role: "在阵外等待的人", text: "别替青岚谷赎罪。让每一个知道真相的人，自己决定还要不要住在这份安稳里。", art: "/generated/bg_foundation_thunder_pool.webp" },
   ],
   4: [
     { speaker: "无灯城主", role: "没有影子的城主", text: "城里的人把梦交给黑莲，换来不再害怕的夜晚。你凭什么说他们错了？", art: "/generated/bg_shadow_city_street.webp" },
@@ -1380,7 +1384,7 @@ export const ROUTE_ROWS = [
 export const CHAPTER_ROUTES = {
   1: ROUTE_ROWS,
   2: [
-    [{ id: "story", kind: "剧情", name: "替灯人旧亭", desc: "纸灯童子等着你接过一盏旧灯。", art: "/ui/bg_act2_mountain.png" }],
+    [{ id: "story", kind: "剧情", name: "替灯人旧亭", desc: "纸灯童子等着你接过一盏旧灯。", art: "/generated/bg_xuanyin_lantern_tomb.webp" }],
     [
       { id: "battle", kind: "战斗", name: "阴魂拦道", desc: "失去名字的山魂在灯后游荡。", art: "/generated/enemy_xuanyin_lantern_attendant.png" },
       { id: "event", kind: "奇遇", name: "镇魂古龛", desc: "残符下压着师父当年的路引。", art: "/bg_soul_shrine.png" },
@@ -1392,16 +1396,16 @@ export const CHAPTER_ROUTES = {
     [{ id: "boss", kind: "首领", name: "写名鬼灯", desc: "灯芯燃着你尚未走过的余生。", art: "/generated/enemy_writing_name_ghost_lantern.png" }],
   ],
   3: [
-    [{ id: "story", kind: "剧情", name: "雷纹验骨", desc: "雷池正在辨认你与旧阵的关系。", art: "/ui/bg_act3_thunder.png" }],
+    [{ id: "story", kind: "剧情", name: "雷纹验骨", desc: "雷池正在辨认你与旧阵的关系。", art: "/generated/bg_foundation_thunder_pool.webp" }],
     [
-      { id: "battle", kind: "战斗", name: "雷云压路", desc: "劫影从每一道旧雷痕中苏醒。", art: "/bg_thunder_pool.png" },
+      { id: "battle", kind: "战斗", name: "雷云压路", desc: "劫影从每一道旧雷痕中苏醒。", art: "/generated/bg_foundation_thunder_pool.webp" },
       { id: "event", kind: "奇遇", name: "洗雷池", desc: "以雷淬体，或借池水寻找阵眼。", art: "/bg_spirit_rift.png" },
     ],
     [
       { id: "elite", kind: "精英", name: "问心石阶", desc: "每一级石阶都会唤出一种悔意。", art: "/generated/enemy_heart_trial_examiner.png" },
       { id: "market", kind: "坊市", name: "云端散市", desc: "渡劫前的修士交换最后一件法器。", art: "/bg_market_stall.png" },
     ],
-    [{ id: "boss", kind: "首领", name: "改命雷阵", desc: "守阵者不允许任何人带着疑问筑基。", art: "/enemy_thunder_pool_guardian.png" }],
+    [{ id: "boss", kind: "首领", name: "改命雷阵", desc: "守阵者不允许任何人带着疑问筑基。", art: "/generated/enemy_thunder_array_warden.webp" }],
   ],
   4: [
     [{ id: "story", kind: "剧情", name: "无影城门", desc: "守卫要求你先交出自己的影子。", art: "/generated/bg_shadow_city_street.webp" }],
@@ -1458,7 +1462,7 @@ export const CHAPTER_EVENTS = {
     eyebrow: "玄阴异闻",
     name: "镇魂古龛",
     description: "每张残符都写着一个被鬼灯替换过的名字，师父的名字也在其中。",
-    art: "/ui/bg_act2_mountain.png",
+    art: "/generated/bg_xuanyin_lantern_tomb.webp",
     options: [
       { id: "burn-name", label: "焚去自己的纸名", title: "净除心魔或恢复 6 · 清神粉 +1 · 生命 -4", detail: "有心魔时烧去一张；无心魔时，镇魂余火会转为恢复。", tone: "净心换血", effect: { removeCurse: 1, curseFallbackHeal: 6, consumables: { clarity: 1 }, hpLoss: 4 }, revealsClue: true },
       { id: "old-route", label: "沿师父路引前行", title: "稀有职业牌 · 生命 -6", detail: "循着二十四年前的险路参悟旧术，代价会立刻落在身上。", tone: "冒险构筑", effect: { cardRarity: "稀有", hpLoss: 6 }, revealsClue: true },
@@ -1470,7 +1474,7 @@ export const CHAPTER_EVENTS = {
     eyebrow: "雷云异闻",
     name: "洗雷池",
     description: "池中雷水倒映的不是现在，而是每一次你本可做出不同选择的时刻。",
-    art: "/bg_thunder_pool.png",
+    art: "/generated/bg_foundation_thunder_pool.webp",
     options: [
       { id: "draw-thunder", label: "引雷贯通经脉", title: "灵气上限 +1 · 生命 -10", detail: "灵气上限已满时改为聚气散 +2，确保雷洗不会落空。", tone: "长期爆发", effect: { maxQi: 1, maxQiFallbackConsumables: { spirit: 2 }, hpLoss: 10 }, revealsClue: true },
       { id: "temper", label: "在雷水中推演真解", title: "精研一张基础牌 · 恢复 6", detail: "无可精研术法时改为获得 12 灵石，不增加牌组厚度。", tone: "核心强化", effect: { refine: 1, refineFallbackStones: 12, heal: 6 }, revealsClue: true },
@@ -1531,7 +1535,7 @@ export const CHAPTER_ROUTE_STORIES = {
     eyebrow: "途中剧情 · 旧亭",
     name: "纸灯童子的第七年",
     description: "童子每七年才醒一次。他已经等了你师父四次，却仍把那句“我会回来”当成今天刚听见的话。",
-    art: "/ui/bg_act2_mountain.png",
+    art: "/generated/bg_xuanyin_lantern_tomb.webp",
     options: [
       { id: "finish-message", label: "替师父说完告别", title: "恢复 12 点生命", detail: "童子终于放下旧灯，也把熄灯次序完整告诉你。", tone: "偿还旧诺", effect: { heal: 12 }, revealsClue: true, echo: "纸灯童子听完迟到二十四年的告别，第一次不再替鬼灯数醒来的年份。" },
       { id: "borrow-flame", label: "借走一缕旧灯火", title: "清神粉 +1 · 生命 -4", detail: "灯火能烧去纸名，也会带走一小段属于你的寿数。", tone: "净心代价", effect: { consumables: { clarity: 1 }, hpLoss: 4 }, revealsClue: true, echo: "旧灯火被借入行囊，童子的等待暂时熄灭，却把一小段寿数烧进纸名。" },
@@ -1541,7 +1545,7 @@ export const CHAPTER_ROUTE_STORIES = {
     eyebrow: "途中剧情 · 雷纹",
     name: "第一替灯人的姓名",
     description: "阵眼没有留下英雄名讳，只有一句反复被雷火擦去的话：我也曾以为，牺牲我便能结束牺牲。",
-    art: "/bg_thunder_pool.png",
+    art: "/generated/bg_foundation_thunder_pool.webp",
     options: [
       { id: "carve-name", label: "把无名者刻回阵碑", title: "精研一张基础牌 · 生命 -6", detail: "以自身雷痕补全姓名，也从旧阵裂口中悟出一门真解。", tone: "记名换力", effect: { refine: 1, hpLoss: 6 }, revealsClue: true, echo: "第一替灯人的姓名重回阵碑，雷池安稳第一次拥有可被追问的代价。" },
       { id: "break-tablet", label: "击碎替灯阵碑", title: "灵气上限 +1 · 敌方护体 +8", detail: "阵法不再能借碑续转，但残余雷壁会依附下一名守阵者。", tone: "破阵代价", effect: { maxQi: 1, enemyShield: 8 }, revealsClue: true, echo: "替灯阵碑被击碎，旧阵不再能假借碑名续命，残雷却追上下一场战斗。" },

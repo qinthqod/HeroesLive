@@ -27,13 +27,26 @@ let originalBytes = 0;
 let optimizedBytes = 0;
 let converted = 0;
 
+const resizeBudgetFor = (path) => {
+  const normalized = relative(output, path).replaceAll("\\", "/");
+  const name = normalized.split("/").at(-1) || "";
+  if (name.startsWith("card_") || name.startsWith("enemy_")) return { width: 768, height: 1152 };
+  if (normalized.includes("/bg_") || name.startsWith("bg_")) return { width: 1366, height: 768 };
+  if (normalized.includes("web_combat_reference")) return { width: 1366, height: 768 };
+  return null;
+};
+
 for (const source of imageJobs) {
   const target = source.replace(/\.png$/i, ".webp");
   const temporary = `${target}.tmp`;
   const sourceSize = (await stat(source)).size;
-  await sharp(source)
-    .rotate()
-    .webp({ quality: 84, alphaQuality: 92, effort: 5, smartSubsample: true })
+  const resizeBudget = resizeBudgetFor(source);
+  let pipeline = sharp(source).rotate();
+  if (resizeBudget) {
+    pipeline = pipeline.resize({ ...resizeBudget, fit: "inside", withoutEnlargement: true });
+  }
+  await pipeline
+    .webp({ quality: 82, alphaQuality: 92, effort: 5, smartSubsample: true })
     .toFile(temporary);
   const targetSize = (await stat(temporary)).size;
   originalBytes += sourceSize;
