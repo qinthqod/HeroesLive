@@ -44,10 +44,17 @@ await run("PC 首页进入桌面模式并使用宽屏壳层", { width: 1366, hei
   const layout = await layoutSnapshot(page);
   const badgeText = await page.locator(".device-mode-badge").innerText();
   const panelText = await page.locator(".desktop-mode-panel").innerText();
+  const motivationText = await page.locator(".motivation-path-panel").innerText();
+  const motivationCards = await page.locator(".motivation-path").count();
+  const motivationRows = await page.locator(".motivation-path").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
   if (layout.device !== "desktop" || !layout.className.includes("device-desktop")) throw new Error(`设备模式为 ${layout.device}`);
   if (layout.layout !== "wide-desktop") throw new Error(`PC 布局标识为 ${layout.layout}`);
   if (!badgeText.includes("PC 版")) throw new Error(`PC 页面没有显示设备判断：${badgeText}`);
   if (!panelText.includes("PC ADAPTIVE") || !panelText.includes("桌面端原则")) throw new Error("PC 首页没有桌面端专属状态栏");
+  if (motivationCards !== 3 || motivationRows !== 1) throw new Error(`PC 三线目标没有三列展示：cards=${motivationCards}, rows=${motivationRows}`);
+  for (const phrase of ["三线目标", "稳健", "进取", "长期", "低风险", "高风险", "延迟满足"]) {
+    if (!motivationText.includes(phrase)) throw new Error(`PC 三线目标缺少 ${phrase}`);
+  }
   if (layout.shellWidth < 1200) throw new Error(`桌面壳层仍像移动端：${layout.shellWidth}px`);
   if (layout.navLeft > 80 || layout.navTop < 80 || layout.navBottomGap === 0) throw new Error("PC 导航没有切换为左侧栏");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 首页横向溢出 ${layout.scrollWidth - layout.width}px`);
@@ -55,9 +62,14 @@ await run("PC 首页进入桌面模式并使用宽屏壳层", { width: 1366, hei
 
 await run("移动首页保持移动模式和底部导航", { width: 430, height: 932 }, "", async (page) => {
   const layout = await layoutSnapshot(page);
+  const motivationBox = await page.locator(".motivation-path-panel").boundingBox();
+  const motivationCards = await page.locator(".motivation-path").count();
+  const motivationText = await page.locator(".motivation-path-panel").innerText();
   if (layout.device !== "mobile" || !layout.className.includes("device-mobile")) throw new Error(`设备模式为 ${layout.device}`);
   if (layout.layout !== "compact-mobile") throw new Error(`移动布局标识为 ${layout.layout}`);
   if (await page.locator(".desktop-mode-panel").count()) throw new Error("移动首页不应渲染 PC 专属状态栏");
+  if (motivationCards !== 3 || !motivationText.includes("三线目标")) throw new Error("移动首页缺少三线目标");
+  if (!motivationBox || motivationBox.width > 402) throw new Error(`移动三线目标过宽：${motivationBox?.width}`);
   if (layout.shellWidth > 540) throw new Error(`移动壳层过宽：${layout.shellWidth}px`);
   if (layout.navBottomGap !== 0) throw new Error(`移动导航未贴底：${layout.navBottomGap}px`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动首页横向溢出 ${layout.scrollWidth - layout.width}px`);

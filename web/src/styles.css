@@ -1835,6 +1835,51 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .challenge-code-entry small { margin-top: 3px; color: #71877b; font-size: 8px; }
 .challenge-code-entry > b { color: #9b8657; font-family: serif; font-size: 20px; font-weight: 400; }
 
+.motivation-path-panel {
+  margin-top: 12px;
+  padding: 13px;
+  border: 1px solid rgba(133,166,147,.2);
+  background: linear-gradient(135deg, rgba(7,24,18,.9), rgba(5,14,12,.96));
+}
+.motivation-path-panel header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+.motivation-path-panel header strong { color: #d9c58e; font-family: "STKaiti", serif; font-size: 18px; font-weight: 400; }
+.motivation-path-panel > div { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.motivation-path {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px 10px;
+  padding: 10px 11px;
+  border: 1px solid rgba(255,255,255,.055);
+  background: rgba(255,255,255,.03);
+}
+.motivation-path.steady { border-left: 2px solid #75ad91; }
+.motivation-path.bold { border-left: 2px solid #d2a64d; }
+.motivation-path.long { border-left: 2px solid #8f79c8; }
+.motivation-path.claimable { background: linear-gradient(105deg, rgba(73,49,13,.46), rgba(5,20,15,.76)); box-shadow: inset 0 0 0 1px rgba(218,176,81,.13); }
+.motivation-path.done { opacity: .82; }
+.motivation-path small,
+.motivation-path strong,
+.motivation-path p { display: block; }
+.motivation-path > small { color: #7f9488; font-size: 8px; letter-spacing: .12em; }
+.motivation-path > strong { color: #e1d0a0; font-family: "STKaiti", serif; font-size: 17px; font-weight: 400; }
+.motivation-path p { grid-column: 1 / 3; margin: 0; color: #81948a; font-size: 8px; line-height: 1.45; }
+.motivation-path-risk { grid-column: 1 / 2; display: flex; flex-wrap: wrap; gap: 5px; }
+.motivation-path-risk b { padding: 3px 6px; border: 1px solid rgba(128,168,147,.18); color: #9bb9a9; font-size: 7px; font-weight: 400; }
+.motivation-path i { grid-column: 1 / 2; height: 3px; overflow: hidden; background: rgba(111,145,125,.18); }
+.motivation-path i em { display: block; height: 100%; background: linear-gradient(90deg, #4f846b, #d5aa50); }
+.motivation-path button {
+  grid-column: 2;
+  grid-row: 4 / 6;
+  align-self: end;
+  min-width: 66px;
+  padding: 7px 8px;
+  border: 1px solid rgba(213,172,74,.42);
+  background: rgba(72,49,16,.48);
+  color: #d9bd72;
+  font-size: 8px;
+  cursor: pointer;
+}
+
 .challenge-code-screen { min-height: 100%; padding: 78px 22px 48px; background: radial-gradient(circle at 82% 12%, rgba(74,112,90,.2), transparent 32%), linear-gradient(150deg, #071a13, #050d0b 68%); }
 .challenge-code-screen .mobile-topbar { position: absolute; top: 0; right: 0; left: 0; }
 .challenge-code-heading { margin-top: 22px; padding: 0 3px; }
@@ -2019,6 +2064,9 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .device-desktop .resource-strip span { min-height: 68px; }
 .device-desktop .home-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .device-desktop .home-actions button { min-height: 128px; }
+.device-desktop .motivation-path-panel > div { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.device-desktop .motivation-path { align-content: start; min-height: 166px; }
+.device-desktop .motivation-path button { grid-column: 1 / 3; grid-row: auto; justify-self: start; }
 .device-desktop .progress-board { margin-top: 18px; }
 .device-desktop .mobile-nav {
   position: fixed;

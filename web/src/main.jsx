@@ -2408,6 +2408,32 @@ function ChallengeGoalCard({ goal, claimProgressReward, compact = false }) {
   );
 }
 
+function MotivationPathPanel({ paths }) {
+  return (
+    <section className="motivation-path-panel" aria-label="三条复玩动机路径">
+      <header>
+        <span className="section-index">三线目标</span>
+        <strong>选择今天的节奏</strong>
+      </header>
+      <div>
+        {paths.map((path) => (
+          <article className={`motivation-path ${path.tone}`} key={path.id}>
+            <small>{path.label}</small>
+            <strong>{path.title}</strong>
+            <p>{path.text}</p>
+            <div className="motivation-path-risk">
+              <b>{path.risk}</b>
+              <b>{path.reward}</b>
+            </div>
+            <i><em style={{ width: `${path.percent}%` }} /></i>
+            <button onClick={path.action}>{path.cta}</button>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resumeRun, claimProgressReward, dailyTrial }) {
   const mainComplete = (profile.unlockedEndings || []).includes(`chapter_${CHAPTERS.length}_ending`);
   const currentChapterId = mainComplete ? CHAPTERS.length : Math.min(CHAPTERS.length, Math.max(1, profile.chapter || 1));
@@ -2417,6 +2443,52 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resume
   const archiveFound = profile.investigationArchive?.[String(currentChapterId)]?.length || 0;
   const archiveTotal = investigationEvidence(currentChapterId).length;
   const goals = nextProgressGoals(profile, 2);
+  const goalSummaries = progressSummaries(profile);
+  const dailyStatus = dailyRewardStatus(profile, dailyTrial);
+  const aggressiveGoal = goalSummaries.find((goal) => goal.id === "a_grade")
+    || goals.find((goal) => !goal.claimed)
+    || goals[0];
+  const longGoal = goalSummaries.find((goal) => ["grand_casebooks", "casebooks", "hundred_cards"].includes(goal.id) && !goal.claimed)
+    || goalSummaries.find((goal) => !goal.claimed)
+    || goalSummaries[0];
+  const motivationPaths = [
+    {
+      id: "steady",
+      tone: dailyStatus.claimed ? "steady done" : "steady",
+      label: "稳健",
+      title: dailyStatus.claimed ? "今日试炼已破局" : "今日首胜",
+      text: dailyStatus.claimed ? "今日固定种子已经完成，适合复盘或尝试另一门道途。" : `${getProfession(dailyTrial.origin).short} · 第 ${dailyTrial.chapter} 章 · ${dailyTrial.modifier.name}`,
+      risk: "低风险",
+      reward: dailyStatus.claimed ? "复盘理解" : `灵玉 +${DAILY_TRIAL_REWARD.jade}`,
+      percent: dailyStatus.claimed ? 100 : 0,
+      cta: dailyStatus.claimed ? "再次复盘" : "领取试炼",
+      action: () => setScreen("daily"),
+    },
+    {
+      id: "bold",
+      tone: aggressiveGoal?.claimable ? "bold claimable" : "bold",
+      label: "进取",
+      title: aggressiveGoal?.title || "挑战复刻",
+      text: aggressiveGoal?.hook || "用同一种子比较分数，检验构筑上限。",
+      risk: "高风险",
+      reward: aggressiveGoal?.claimable ? "可领取" : `进度 ${aggressiveGoal?.current || 0}/${aggressiveGoal?.target || 1}`,
+      percent: aggressiveGoal?.percent || 0,
+      cta: aggressiveGoal?.claimable ? "领取落印" : "打开挑战",
+      action: () => aggressiveGoal?.claimable ? claimProgressReward(aggressiveGoal.id) : setScreen("challenge"),
+    },
+    {
+      id: "long",
+      tone: longGoal?.claimable ? "long claimable" : "long",
+      label: "长期",
+      title: longGoal?.title || "宗卷补完",
+      text: longGoal?.hook || "补证据、补后记、补收集，慢慢把二十五章串成完整宗卷。",
+      risk: "延迟满足",
+      reward: longGoal?.claimable ? "可领取" : `进度 ${longGoal?.current || 0}/${longGoal?.target || 1}`,
+      percent: longGoal?.percent || 0,
+      cta: longGoal?.claimable ? "领取落印" : "查看宗卷",
+      action: () => longGoal?.claimable ? claimProgressReward(longGoal.id) : setOverlay("codex"),
+    },
+  ];
   const latestRun = profile.recentRuns?.[0];
   return (
     <section className="mobile-shell home-screen screen-content">
@@ -2467,6 +2539,7 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resume
           <div><strong>挑战码</strong><small>导入好友种子，或抄录最近战绩</small></div>
           <b>›</b>
         </button>
+        <MotivationPathPanel paths={motivationPaths} />
         <section className="progress-board">
           <header><span className="section-index">挑战卷</span><button onClick={() => setOverlay("codex")}>查看全卷</button></header>
           {goals.map((goal) => <ChallengeGoalCard goal={goal} compact claimProgressReward={claimProgressReward} key={goal.id} />)}
