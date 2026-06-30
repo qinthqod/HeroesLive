@@ -537,6 +537,51 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .reward-contract small { color: #8aa293; font-size: 8px; letter-spacing: .12em; }
 .reward-contract strong { margin-top: 5px; color: #e2ce97; font-family: "STKaiti", serif; font-size: 16px; font-weight: 400; line-height: 1.25; }
 .reward-contract span { margin-top: 5px; color: #8c9f95; font-size: 8px; line-height: 1.35; }
+.reward-decision-aid {
+  width: min(650px, calc(100% - 36px));
+  margin: 14px auto -6px;
+  padding: 12px 14px;
+  border: 1px solid rgba(218,176,81,.24);
+  border-left: 2px solid #d8b04f;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(218,176,81,.16), transparent 38%),
+    linear-gradient(105deg, rgba(62,39,10,.7), rgba(5,20,16,.82));
+  text-align: left;
+  box-shadow: 0 16px 32px rgba(0,0,0,.22);
+}
+.reward-decision-aid.sealed {
+  border-color: rgba(128,160,142,.18);
+  border-left-color: #779580;
+  background: linear-gradient(105deg, rgba(16,45,34,.58), rgba(5,20,16,.82));
+}
+.reward-decision-aid span,
+.reward-decision-aid strong,
+.reward-decision-aid small { display: block; }
+.reward-decision-aid span {
+  color: #d6b86a;
+  font-size: 8px;
+  letter-spacing: .14em;
+}
+.reward-decision-aid.sealed span { color: #8fb09d; }
+.reward-decision-aid strong {
+  margin-top: 5px;
+  color: #f0d996;
+  font-family: "STKaiti", serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+.reward-decision-aid p {
+  margin: 5px 0 0;
+  color: #b6ad91;
+  font-size: 10px;
+  line-height: 1.55;
+}
+.reward-decision-aid small {
+  margin-top: 5px;
+  color: #83988c;
+  font-size: 8px;
+  line-height: 1.45;
+}
 .tribulation-reward { width: min(650px, calc(100% - 36px)); margin: 14px auto -8px; padding: 13px 15px; border: 1px solid rgba(205,92,67,.38); border-left: 2px solid #d46b51; background: radial-gradient(circle at 10% 10%, rgba(197,74,53,.24), transparent 42%), linear-gradient(110deg, rgba(56,17,15,.68), rgba(7,20,17,.86)); text-align: left; box-shadow: 0 16px 32px rgba(0,0,0,.22); }
 .tribulation-reward.claimed { border-color: rgba(116,159,139,.32); border-left-color: #75a58b; background: linear-gradient(110deg, rgba(18,53,39,.5), rgba(7,20,17,.82)); }
 .tribulation-reward span, .tribulation-reward strong, .tribulation-reward small { display: block; }
@@ -1363,6 +1408,8 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .reward-contract { width: 100%; grid-template-columns: 1fr 1fr; margin-top: 16px; margin-bottom: -10px; }
   .reward-contract article { min-height: 72px; padding: 9px; }
   .reward-contract strong { font-size: 14px; }
+  .reward-decision-aid { width: 100%; margin-top: 14px; margin-bottom: -8px; padding: 11px; }
+  .reward-decision-aid strong { font-size: 17px; }
   .tribulation-reward { width: 100%; margin-top: 12px; }
   .run-notebook.reward-notebook { width: 100%; margin: 18px 0 -6px; }
   .reward-cards { width: 100%; gap: 5px; margin-top: 24px; }
@@ -2239,6 +2286,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 }
 .device-desktop .reward-reveal-panel { margin-top: 14px; margin-bottom: -2px; }
 .device-desktop .reward-contract { width: min(820px, 60vw); margin-top: 16px; margin-bottom: -4px; }
+.device-desktop .reward-decision-aid { width: min(820px, 60vw); margin-top: 14px; margin-bottom: -4px; }
 .device-desktop .reward-cards {
   width: min(930px, 68vw);
   margin: 18px auto 0;

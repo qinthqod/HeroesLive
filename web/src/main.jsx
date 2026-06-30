@@ -4007,6 +4007,34 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
   const rewardFits = rewards.map((card) => rewardFit(card, deck, origin));
   const guaranteedFit = rewardFits.find((fit) => fit.recipe) || rewardFits[0];
   const highFitCount = rewardFits.filter((fit) => fit.rank === "高").length;
+  const rewardDecisionOptions = rewards
+    .map((card, index) => ({ card, fit: rewardFits[index], index }))
+    .sort((a, b) =>
+      b.fit.score - a.fit.score
+      || Number(Boolean(b.fit.recipe)) - Number(Boolean(a.fit.recipe))
+      || ({ 传说: 4, 稀有: 3, 精良: 2, 普通: 1 }[b.card.rarity] || 0) - ({ 传说: 4, 稀有: 3, 精良: 2, 普通: 1 }[a.card.rarity] || 0)
+      || a.card.cost - b.card.cost
+    );
+  const recommendedReward = rewardDecisionOptions[0];
+  const decisionAction = !rewardRevealed
+    ? "先启封"
+    : recommendedReward?.fit.rank === "高"
+      ? "直接拿"
+      : recommendedReward?.fit.rank === "中"
+        ? "可接受"
+        : stones >= rerollPrice ? "可重整" : "谨慎拿";
+  const decisionReason = !rewardRevealed
+    ? "启封后按构筑契合、当前短板、费用压力三步给出一个够好选择。"
+    : recommendedReward?.fit.recipe
+      ? `优先补「${recommendedReward.fit.recipe.name}」${recommendedReward.fit.recipeProgress}/5。`
+      : recommendedReward?.fit.reason || "独立强度稳定，可作为保守补强。";
+  const decisionFallback = !rewardRevealed
+    ? "不用记三张牌细节，先看推荐条，再决定是否深读。"
+    : highFitCount === 0 && stones >= rerollPrice
+      ? `没有高契合牌；若你在追流派，可花 ${rerollPrice} 灵石重整。`
+      : isBossReward
+        ? "章末可不取战利直接结卷，避免牌组膨胀。"
+        : "若牌组已臃肿，也可以调息离开，换稳定血线。";
   const reroll = () => {
     if (stones < rerollPrice) return;
     setStones((value) => value - rerollPrice);
@@ -4090,6 +4118,12 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
           <span>{isBossReward ? "放弃战利，不影响章节结算" : "用生命换稳定，不扩张牌组"}</span>
         </article>
       </div>
+      <section className={`reward-decision-aid ${rewardRevealed ? "revealed" : "sealed"}`} aria-label="满意即可选择辅助">
+        <span>满意即可 · 四步内决策</span>
+        <strong>{rewardRevealed && recommendedReward ? `${decisionAction}：${recommendedReward.card.name}` : decisionAction}</strong>
+        <p>{decisionReason}</p>
+        <small>{decisionFallback}</small>
+      </section>
       <RunNotebook notebook={notebook} compact className="reward-notebook" />
       <div className="reward-cards">{rewards.map((card, index) => {
         const fit = rewardFits[index];
