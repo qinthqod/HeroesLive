@@ -981,6 +981,55 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .casebook-overview strong { color: #e1bc63; font-family: "STKaiti", serif; font-size: 27px; font-weight: 400; }
 .casebook-overview strong i { color: #70837a; font-size: 10px; font-style: normal; }
 .casebook-overview p { grid-column: 1 / 3; margin: 0; color: #788b80; font-size: 8px; line-height: 1.5; }
+.casebook-focus {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(126,166,144,.2);
+  background: linear-gradient(120deg, rgba(7,26,19,.88), rgba(17,31,22,.72));
+}
+.casebook-focus small,
+.casebook-focus strong,
+.casebook-focus p { display: block; }
+.casebook-focus small { color: #7f9789; font-size: 8px; letter-spacing: .12em; }
+.casebook-focus strong { margin-top: 4px; color: #d9cc9d; font-family: "STKaiti", serif; font-size: 18px; font-weight: 400; line-height: 1.35; }
+.casebook-focus p { margin: 5px 0 0; color: #7f9188; font-size: 8px; line-height: 1.55; }
+.casebook-focus > span {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border: 1px solid rgba(211,166,70,.36);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(211,166,70,.18), rgba(5,20,15,.76));
+  color: #e3c06d;
+  font-family: "STKaiti", serif;
+  font-size: 23px;
+}
+.casebook-focus > span i { color: #70837a; font-size: 10px; font-style: normal; }
+.casebook-volume-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin: 12px 0 4px; }
+.casebook-volume-grid button {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(124,155,138,.18);
+  background: rgba(4,16,12,.72);
+  text-align: left;
+  cursor: pointer;
+}
+.casebook-volume-grid button.active { border-color: rgba(211,166,70,.5); background: linear-gradient(140deg, rgba(75,49,14,.52), rgba(6,22,16,.86)); box-shadow: inset 0 2px #d1a64d; }
+.casebook-volume-grid button.complete { border-color: rgba(127,176,145,.34); }
+.casebook-volume-grid b,
+.casebook-volume-grid small,
+.casebook-volume-grid span,
+.casebook-volume-grid i { display: block; }
+.casebook-volume-grid b { color: #cdbb87; font-family: "STKaiti", serif; font-size: 14px; font-weight: 400; }
+.casebook-volume-grid small { margin-top: 2px; color: #6f8378; font-size: 7px; }
+.casebook-volume-grid i { height: 3px; margin: 7px 0 5px; overflow: hidden; background: rgba(107,140,121,.18); }
+.casebook-volume-grid i em { display: block; height: 100%; background: linear-gradient(90deg, #4d8068, #d2a84e); }
+.casebook-volume-grid span { color: #9d8958; font-size: 8px; }
 .investigation-archive { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .investigation-archive article { padding: 10px 11px; border: 1px solid rgba(119,151,133,.18); background: rgba(4,16,12,.68); }
 .investigation-archive article.complete { border-color: rgba(210,165,70,.38); background: linear-gradient(120deg, rgba(60,41,14,.3), rgba(4,16,12,.72)); }
@@ -1533,6 +1582,18 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .guide-playbook { grid-template-columns: 1fr; }
   .guide-playbook article { min-height: 0; }
   .codex-overlay { max-height: 88vh; }
+  .casebook-focus { grid-template-columns: 1fr; }
+  .casebook-focus > span { width: 54px; height: 54px; }
+  .casebook-volume-grid {
+    display: flex;
+    gap: 7px;
+    margin-inline: -4px;
+    padding: 0 4px 6px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+  }
+  .casebook-volume-grid button { flex: 0 0 112px; scroll-snap-align: start; }
+  .investigation-archive { grid-template-columns: 1fr; }
   .challenge-goal-reward { align-items: flex-end; }
   .challenge-scroll .challenge-goal-reward small { white-space: normal; }
   .codex-treasures { grid-template-columns: 1fr; }

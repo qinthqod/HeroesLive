@@ -4484,14 +4484,14 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
   const analysis = analyzeDeck(deck);
   const build = currentBuildState(deck, origin);
   const [abandonArmed, setAbandonArmed] = useState(false);
+  const defaultArchiveVolumeIndex = Math.min(4, Math.max(0, Math.floor(((profile.chapter || 1) - 1) / 5)));
+  const [archiveVolumeIndex, setArchiveVolumeIndex] = useState(defaultArchiveVolumeIndex);
   useEffect(() => {
     setAbandonArmed(false);
   }, [type, savedRun?.savedAt]);
-  const archiveChapters = [...CHAPTERS].sort((a, b) => {
-    const bCount = (profile.investigationArchive?.[String(b.id)] || []).length;
-    const aCount = (profile.investigationArchive?.[String(a.id)] || []).length;
-    return bCount - aCount || a.id - b.id;
-  });
+  useEffect(() => {
+    if (type === "codex") setArchiveVolumeIndex(defaultArchiveVolumeIndex);
+  }, [type, defaultArchiveVolumeIndex]);
   const content = useMemo(() => ({
     guide: ["试炼札记", "先读敌人意图，再决定护体或进攻。每一幕至少经过一次坊市或修炼，避免牌组失衡。"],
     codex: ["青岚图鉴", "术法、敌情、法宝和山中异闻会在发现后记入此卷。"],
@@ -4550,9 +4550,70 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
         </>}
         {type === "codex" && <>
           {(() => {
-            const totalEvidence = CHAPTERS.reduce((sum, chapter) => sum + investigationEvidence(chapter.id).length, 0);
-            const foundEvidence = CHAPTERS.reduce((sum, chapter) => sum + (profile.investigationArchive?.[String(chapter.id)] || []).length, 0);
-            return <div className="casebook-overview"><span>{CHAPTERS.length} 章调查宗卷</span><strong>{foundEvidence}<i>/{totalEvidence}</i></strong><p>每章单局查明真相后，重返另一条路线可补齐全部分支证据。</p></div>;
+            const archiveStats = CHAPTERS.map((chapter) => {
+              const evidence = investigationEvidence(chapter.id);
+              const found = profile.investigationArchive?.[String(chapter.id)] || [];
+              const complete = evidence.length > 0 && found.length === evidence.length;
+              return {
+                chapter,
+                investigation: CHAPTER_INVESTIGATIONS[chapter.id],
+                evidence,
+                found,
+                complete,
+                rewarded: (profile.investigationRewards || []).includes(`investigation-${chapter.id}-complete`),
+              };
+            });
+            const totalEvidence = archiveStats.reduce((sum, item) => sum + item.evidence.length, 0);
+            const foundEvidence = archiveStats.reduce((sum, item) => sum + item.found.length, 0);
+            const archiveVolumes = Array.from({ length: Math.ceil(CHAPTERS.length / 5) }, (_, index) => {
+              const chapters = archiveStats.slice(index * 5, index * 5 + 5);
+              return {
+                index,
+                label: `第 ${index + 1} 卷`,
+                range: `${chapters[0]?.chapter.id || 1}-${chapters.at(-1)?.chapter.id || 1} 章`,
+                chapters,
+                found: chapters.reduce((sum, item) => sum + item.found.length, 0),
+                total: chapters.reduce((sum, item) => sum + item.evidence.length, 0),
+                complete: chapters.length > 0 && chapters.every((item) => item.complete),
+              };
+            });
+            const activeVolume = archiveVolumes[archiveVolumeIndex] || archiveVolumes[0];
+            const focus = archiveStats.find((item) => !item.complete && item.chapter.id >= Math.min(profile.chapter || 1, CHAPTERS.length))
+              || archiveStats.find((item) => !item.complete)
+              || archiveStats.at(-1);
+            return <>
+              <div className="casebook-overview"><span>{CHAPTERS.length} 章调查宗卷</span><strong>{foundEvidence}<i>/{totalEvidence}</i></strong><p>每章单局查明真相后，重返另一条路线可补齐全部分支证据。</p></div>
+              <section className="casebook-focus" aria-label="当前宗卷追踪">
+                <div>
+                  <small>当前追踪</small>
+                  <strong>第 {focus.chapter.id} 章 · {focus.investigation.objective}</strong>
+                  <p>{focus.complete ? "二十五章宗卷已经圆满，继续挑战高劫数或补职业熟练。" : focus.found.at(-1) || focus.investigation.opening}</p>
+                </div>
+                <span>{focus.found.length}<i>/{focus.evidence.length}</i></span>
+              </section>
+              <nav className="casebook-volume-grid" aria-label="调查宗卷分卷">
+                {archiveVolumes.map((volume) => (
+                  <button className={`${volume.index === activeVolume.index ? "active" : ""} ${volume.complete ? "complete" : ""}`} onClick={() => setArchiveVolumeIndex(volume.index)} key={volume.label}>
+                    <b>{volume.label}</b>
+                    <small>{volume.range}</small>
+                    <i><em style={{ width: `${volume.total ? volume.found / volume.total * 100 : 0}%` }} /></i>
+                    <span>{volume.found}/{volume.total}</span>
+                  </button>
+                ))}
+              </nav>
+              <h3 className="codex-heading">调查宗卷 · {activeVolume.label}</h3>
+              <div className="investigation-archive">
+                {activeVolume.chapters.map(({ chapter, investigation, evidence, found, complete, rewarded }) => (
+                  <article className={complete ? "complete" : ""} key={chapter.id}>
+                    <header><span>第 {chapter.id} 章 · {chapter.region}</span><b>{found.length}/{evidence.length}</b></header>
+                    <strong>{investigation.objective}</strong>
+                    <i><em style={{ width: `${evidence.length ? found.length / evidence.length * 100 : 0}%` }} /></i>
+                    <p>{complete ? investigation.conclusion : found.at(-1) || "尚未带回本章调查证据。"}</p>
+                    <small>{complete ? rewarded ? "宗卷圆满 · 奖励已领取" : "宗卷圆满 · 通关结算时领取奖励" : `尚缺 ${evidence.length - found.length} 条分支证据`}</small>
+                  </article>
+                ))}
+              </div>
+            </>;
           })()}
           <div className="codex-summary">
             <div><small>已收录术法</small><strong>{profile.discoveredCards?.length || 0}/{ALL_CARDS.length}</strong></div>
@@ -4560,7 +4621,6 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
             <div><small>剧情印记</small><strong>{profile.choices?.length || 0}</strong></div>
             <div><small>结局卷</small><strong>{profile.unlockedEndings?.length || 0}/7</strong></div>
           </div>
-          <h3 className="codex-heading">调查宗卷</h3>
           <h3 className="codex-heading">挑战卷</h3>
           <div className="challenge-scroll">
             {progressSummaries(profile).map((goal) => <ChallengeGoalCard goal={goal} claimProgressReward={claimProgressReward} key={goal.id} />)}
@@ -4570,22 +4630,6 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
             {(profile.recentRuns || []).length
               ? profile.recentRuns.map((run) => <article key={run.id}><span>{run.mode === "daily" ? `今日试炼 · ${run.trialName}` : `第 ${run.chapter} 章`} · {getProfession(run.job).short}</span><strong>{run.grade} · {run.score} 分</strong><small>牌组 {run.deckSize} · 线索 {run.clues}/5 · 种子 {run.seed || "旧档"}</small></article>)
               : <p>完成一次章节云游后，战绩会记录在这里。</p>}
-          </div>
-          <div className="investigation-archive">
-            {archiveChapters.map((chapter) => {
-              const investigation = CHAPTER_INVESTIGATIONS[chapter.id];
-              const evidence = investigationEvidence(chapter.id);
-              const found = profile.investigationArchive?.[String(chapter.id)] || [];
-              const complete = evidence.length > 0 && found.length === evidence.length;
-              const rewarded = (profile.investigationRewards || []).includes(`investigation-${chapter.id}-complete`);
-              return <article className={complete ? "complete" : ""} key={chapter.id}>
-                <header><span>第 {chapter.id} 卷</span><b>{found.length}/{evidence.length}</b></header>
-                <strong>{investigation.objective}</strong>
-                <i><em style={{ width: `${evidence.length ? found.length / evidence.length * 100 : 0}%` }} /></i>
-                <p>{complete ? investigation.conclusion : found.at(-1) || "尚未带回本章调查证据。"}</p>
-                <small>{complete ? rewarded ? "宗卷圆满 · 奖励已领取" : "宗卷圆满 · 通关结算时领取奖励" : `尚缺 ${evidence.length - found.length} 条分支证据`}</small>
-              </article>;
-            })}
           </div>
           <h3 className="codex-heading">法宝录</h3>
           <div className="codex-treasures">

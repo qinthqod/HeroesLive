@@ -98,6 +98,7 @@ expect(source.includes("route-causality-strip") && source.includes("上一因") 
 expect(source.includes("中断调查") && source.includes("pendingClue?.text"), "失败复盘必须指出未能带回的待查证线索");
 expect(source.includes("investigationArchive") && source.includes("investigationRewards"), "章节调查宗卷必须跨局保存完成度与奖励状态");
 expect(source.includes("investigation-archive") && source.includes("章调查宗卷"), "异闻录必须展示永久调查宗卷");
+expect(source.includes("casebook-focus") && source.includes("casebook-volume-grid") && source.includes("Math.ceil(CHAPTERS.length / 5)") && source.includes("当前追踪"), "异闻录宗卷必须按五章分卷并提供当前追踪，避免二十五章平铺过载");
 expect(source.includes("rewardClaimedRef.current") && source.includes("if (rewardClaimedRef.current) return"), "战利与宗卷奖励必须防止快速连点重复领取");
 expect(source.includes("CHAPTER_EVENTS[chapter]") && source.includes("event.options.map"), "章节奇遇必须由独立数据驱动而非复用古龛模板");
 for (const effect of ["cardRarity", "refine", "removeCurse", "maxQi", "enemyShield", "consumables"]) {
@@ -119,6 +120,7 @@ expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".a
 expect(styles.includes(".app[data-readability=\"large\"] .game-card p") && styles.includes(".app[data-readability=\"large\"] .card-play-state") && styles.includes(".app[data-readability=\"large\"] .market-fit"), "可读模式必须放大战斗卡牌、状态与高密度决策文本");
 expect(styles.includes(".abandon-confirm") && styles.includes(".abandon-run.armed") && styles.includes(".abandon-cancel"), "放弃存档二次确认必须拥有危险提示、确认态与取消按钮样式");
 expect(styles.includes(".mode-rule-contract") && styles.includes(".device-desktop .mode-rule-contract > div"), "模式规则契约必须拥有移动双列与 PC 四列样式");
+expect(styles.includes(".casebook-focus") && styles.includes(".casebook-volume-grid") && styles.includes(".casebook-volume-grid button.active") && styles.includes("scroll-snap-type: x proximity"), "异闻录分卷导航必须具备当前追踪、激活卷和移动横向浏览样式");
 expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile .desktop-mode-panel") && styles.includes(".device-desktop .desktop-control-hints"), "PC 专属面板和战斗提示必须具备桌面/移动端样式隔离");
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 expect(styles.includes(".reward-decision-aid") && styles.includes(".device-desktop .reward-decision-aid") && styles.includes(".reward-decision-aid.sealed"), "战利满意即可推荐必须拥有移动/PC 和启封前后的视觉状态");

@@ -90,6 +90,38 @@ await run("移动试炼札记单列且不横溢", { width: 430, height: 932 }, "
   if (layout.scrollWidth > layout.width) throw new Error(`移动试炼札记横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 异闻录按五卷组织二十五章宗卷", { width: 1366, height: 768 }, "?overlay=codex", async (page) => {
+  await page.locator(".casebook-volume-grid").waitFor();
+  const layout = await layoutSnapshot(page);
+  const codexText = await page.locator(".codex-overlay").innerText();
+  const volumeCount = await page.locator(".casebook-volume-grid button").count();
+  const visibleArchiveCount = await page.locator(".investigation-archive article").count();
+  const volumeRows = await page.locator(".casebook-volume-grid button").evaluateAll((buttons) => new Set(buttons.map((button) => Math.round(button.getBoundingClientRect().top))).size);
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (volumeCount !== 5) throw new Error(`异闻录分卷数量为 ${volumeCount}`);
+  if (visibleArchiveCount !== 5) throw new Error(`PC 异闻录当前卷没有限制为五章：${visibleArchiveCount}`);
+  if (volumeRows !== 1) throw new Error("PC 异闻录五卷导航没有单行展示");
+  for (const phrase of ["当前追踪", "调查宗卷 · 第 1 卷", "挑战卷", "最近战绩"]) {
+    if (!codexText.includes(phrase)) throw new Error(`PC 异闻录缺少 ${phrase}`);
+  }
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 异闻录横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动异闻录分卷横向导航且宗卷单列", { width: 430, height: 932 }, "?overlay=codex", async (page) => {
+  await page.locator(".casebook-volume-grid").waitFor();
+  const layout = await layoutSnapshot(page);
+  const volumeCount = await page.locator(".casebook-volume-grid button").count();
+  const visibleArchiveCount = await page.locator(".investigation-archive article").count();
+  const archiveBox = await page.locator(".investigation-archive").boundingBox();
+  const volumeDisplay = await page.locator(".casebook-volume-grid").evaluate((node) => getComputedStyle(node).display);
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  if (volumeCount !== 5) throw new Error(`移动异闻录分卷数量为 ${volumeCount}`);
+  if (visibleArchiveCount !== 5) throw new Error(`移动异闻录当前卷没有限制为五章：${visibleArchiveCount}`);
+  if (volumeDisplay !== "flex") throw new Error(`移动异闻录分卷导航没有切换为横向滑动：${volumeDisplay}`);
+  if (!archiveBox || archiveBox.width > 402) throw new Error(`移动宗卷列表过宽：${archiveBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`移动异闻录横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
 await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, "?screen=chapters", async (page) => {
   await page.locator(".chapter-card").first().waitFor();
   const layout = await layoutSnapshot(page);
