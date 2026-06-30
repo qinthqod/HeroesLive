@@ -2514,6 +2514,15 @@ function ChallengeCodeScreen({ profile, savedRun, onBack, onCopy, onStart }) {
           <p>{parsed.trial?.modifier ? `${parsed.trial.modifier.name}：${parsed.trial.modifier.boon} / ${parsed.trial.modifier.hazard}` : "标准云游规则 · 无额外异兆"}</p>
           <small>种子 {parsed.seed}</small>
         </div>}
+        <ModeRuleContract
+          title="挑战复刻规则"
+          rules={[
+            ["固定", "职业、章节、异兆与关键随机结果"],
+            ["自主", "剧情选择与路线取舍仍由你决定"],
+            ["奖励", "不发每日首胜，不继承终局劫数"],
+            ["用途", "适合复盘构筑、比较分数和分享同局"],
+          ]}
+        />
         {blockedBySave && <p className="daily-save-warning">当前有未完成云游。请先继续或主动放弃该存档，再开始复刻挑战。</p>}
         <button className="primary-cta challenge-code-start" disabled={!parsed.valid || blockedBySave} onClick={() => parsed.valid && onStart(parsed)}><span>展开挑战卷</span></button>
       </div>
@@ -2526,6 +2535,17 @@ function ChallengeCodeScreen({ profile, savedRun, onBack, onCopy, onStart }) {
           </article>
         )) : <p>完成带有种子的云游后，可以在这里生成挑战码。</p>}
       </section>
+    </section>
+  );
+}
+
+function ModeRuleContract({ title, rules }) {
+  return (
+    <section className="mode-rule-contract" aria-label={title}>
+      <span>{title}</span>
+      <div>
+        {rules.map(([label, text]) => <p key={label}><b>{label}</b><small>{text}</small></p>)}
+      </div>
     </section>
   );
 }
@@ -2563,6 +2583,15 @@ function DailyTrialScreen({ trial, profile, savedRun, onBack, onResume, onStart 
           <div><small>每日首胜</small><strong>{status.claimed ? "今日奖励已领取" : "首次通关自动结算"}</strong></div>
           <p>灵玉 +{DAILY_TRIAL_REWARD.jade} · 悟道 +{DAILY_TRIAL_REWARD.spirit} · 修为 +{DAILY_TRIAL_REWARD.xp} · 称号「{DAILY_TRIAL_REWARD.title}」</p>
         </section>
+        <ModeRuleContract
+          title="今日试炼规则"
+          rules={[
+            ["固定", `同日同种子 · ${trial.seed}`],
+            ["指定", `${profession.short} · 第 ${trial.chapter} 章 · 不继承终局劫数`],
+            ["奖励", status.claimed ? "今日首胜已领，再战只记录复盘" : "首次通关发放每日首胜"],
+            ["公平", "关键洗牌、坊市和战利由同一种子决定"],
+          ]}
+        />
         {blockedBySave && <p className="daily-save-warning">当前另有未完成云游。请先回到山门继续或放弃该存档，避免覆盖进度。</p>}
         <button className="primary-cta daily-start" disabled={blockedBySave} onClick={resumable ? onResume : onStart}>
           <span>{resumable ? "继续今日试炼" : status.claimed ? "再次挑战 · 不重复发放首胜" : "领取试炼签 · 开始挑战"}</span>

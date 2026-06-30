@@ -1753,6 +1753,37 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .challenge-code-preview strong { margin-top: 4px; color: #d9cda8; font-size: 12px; }
 .challenge-code-preview p { margin: 4px 0 0; color: #85978e; font-size: 8px; line-height: 1.5; }
 .challenge-code-preview small { margin-top: 5px; color: #9c8654; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 7px; }
+.mode-rule-contract {
+  margin-top: 11px;
+  padding: 11px 12px;
+  border: 1px solid rgba(126,160,141,.18);
+  background: linear-gradient(135deg, rgba(5,22,16,.72), rgba(8,16,13,.82));
+  text-align: left;
+}
+.mode-rule-contract > span {
+  display: block;
+  color: #c5a45a;
+  font-size: 8px;
+  letter-spacing: .14em;
+}
+.mode-rule-contract > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 9px;
+}
+.mode-rule-contract p {
+  min-width: 0;
+  min-height: 48px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid rgba(255,255,255,.055);
+  background: rgba(255,255,255,.03);
+}
+.mode-rule-contract b,
+.mode-rule-contract small { display: block; }
+.mode-rule-contract b { color: #8fbea5; font-size: 8px; font-weight: 500; }
+.mode-rule-contract small { margin-top: 4px; color: #8a9b91; font-size: 8px; line-height: 1.45; }
 .challenge-code-start { width: 100%; margin-top: 12px; }
 .challenge-code-start:disabled { opacity: .4; cursor: not-allowed; filter: grayscale(.6); }
 .challenge-code-history { margin-top: 18px; }
@@ -1938,6 +1969,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .device-desktop .chapter-casefile,
 .device-desktop .challenge-code-body,
 .device-desktop .daily-trial-body { max-width: 1220px; margin-inline: auto; }
+.device-desktop .mode-rule-contract > div { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .device-desktop .chapter-heading { padding: 0 0 20px; }
 .device-desktop .chapter-heading h1 { font-size: 56px; }
 .device-desktop .tribulation-panel { max-width: 1220px; margin: 0 auto 18px; }

@@ -60,6 +60,7 @@ expect(source.includes("runMode,") && source.includes("runSeed,") && source.incl
 expect(source.includes("completedDailyTrials") && source.includes("dailyFirstClear"), "每日首胜奖励必须具有永久日期锁");
 expect(source.includes("completedTribulations") && source.includes("tribulationStatus.claimable") && source.includes("settleTribulationClear"), "劫数首破奖励必须具有永久章节锁并在章末结算");
 expect(source.includes("nextMode === \"story\" ? tribulationForLevel(options.tribulationLevel || 0) : tribulationForLevel(0)"), "每日试炼和挑战复刻不得继承终局劫数");
+expect(source.includes("function ModeRuleContract") && source.includes("今日试炼规则") && source.includes("挑战复刻规则") && source.includes("不继承终局劫数") && source.includes("不发每日首胜"), "每日试炼与挑战复刻入口必须公开固定项、奖励边界与劫数继承规则");
 expect(source.includes("createFeedbackEngine") && source.includes("navigator.vibrate"), "战斗必须提供可降级的音效与触觉反馈");
 expect(source.includes("feedback: { sound: true, haptics: true, reducedMotion: false, readableText: false, volume: 0.55"), "反馈偏好必须具有可持久化默认值");
 expect(source.includes("data-motion={profile.feedback?.reducedMotion ? \"reduced\" : \"full\"}") && source.includes("低动效") && source.includes("reducedMotion"), "设置页必须提供可持久化低动效模式并暴露根节点状态");
@@ -117,6 +118,7 @@ expect(styles.includes(".combat-effect-bursts") && styles.includes(".effect-burs
 expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".app[data-motion=\"reduced\"] .impact-streak") && styles.includes(".app[data-motion=\"reduced\"] .reward-cards .game-card:hover"), "低动效模式必须降低全局动画、隐藏强闪烁并保留可读状态反馈");
 expect(styles.includes(".app[data-readability=\"large\"] .game-card p") && styles.includes(".app[data-readability=\"large\"] .card-play-state") && styles.includes(".app[data-readability=\"large\"] .market-fit"), "可读模式必须放大战斗卡牌、状态与高密度决策文本");
 expect(styles.includes(".abandon-confirm") && styles.includes(".abandon-run.armed") && styles.includes(".abandon-cancel"), "放弃存档二次确认必须拥有危险提示、确认态与取消按钮样式");
+expect(styles.includes(".mode-rule-contract") && styles.includes(".device-desktop .mode-rule-contract > div"), "模式规则契约必须拥有移动双列与 PC 四列样式");
 expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile .desktop-mode-panel") && styles.includes(".device-desktop .desktop-control-hints"), "PC 专属面板和战斗提示必须具备桌面/移动端样式隔离");
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 expect(styles.includes(".reward-decision-aid") && styles.includes(".device-desktop .reward-decision-aid") && styles.includes(".reward-decision-aid.sealed"), "战利满意即可推荐必须拥有移动/PC 和启封前后的视觉状态");

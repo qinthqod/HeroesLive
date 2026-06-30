@@ -357,6 +357,34 @@ await run("移动奖励页公开战利契约且不横溢", { width: 430, height:
   if (layout.scrollWidth > layout.width) throw new Error(`移动奖励页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 今日试炼公开同局规则与奖励边界", { width: 1366, height: 768 }, "?screen=daily", async (page) => {
+  await page.locator(".mode-rule-contract").waitFor();
+  const layout = await layoutSnapshot(page);
+  const contractText = await page.locator(".mode-rule-contract").innerText();
+  const columns = await page.locator(".mode-rule-contract p").evaluateAll((items) => new Set(items.map((item) => Math.round(item.getBoundingClientRect().top))).size);
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["今日试炼规则", "同日同种子", "不继承终局劫数", "首次通关", "关键洗牌"]) {
+    if (!contractText.includes(phrase)) throw new Error(`今日试炼规则契约缺少 ${phrase}`);
+  }
+  if (columns !== 1) throw new Error("PC 今日试炼规则没有使用四列契约");
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 今日试炼页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动挑战复刻公开复刻边界且不横溢", { width: 430, height: 932 }, "?screen=challenge", async (page) => {
+  await page.locator(".mode-rule-contract").waitFor();
+  const layout = await layoutSnapshot(page);
+  const contractText = await page.locator(".mode-rule-contract").innerText();
+  const contractBox = await page.locator(".mode-rule-contract").boundingBox();
+  const rows = await page.locator(".mode-rule-contract p").evaluateAll((items) => new Set(items.map((item) => Math.round(item.getBoundingClientRect().top))).size);
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["挑战复刻规则", "不发每日首胜", "不继承终局劫数", "剧情选择", "比较分数"]) {
+    if (!contractText.includes(phrase)) throw new Error(`挑战复刻规则契约缺少 ${phrase}`);
+  }
+  if (!contractBox || contractBox.width > 402) throw new Error(`移动挑战复刻契约过宽：${contractBox?.width}`);
+  if (rows !== 2) throw new Error("移动挑战复刻规则没有使用双列契约");
+  if (layout.scrollWidth > layout.width) throw new Error(`移动挑战复刻页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
 await run("PC 结算页可滚动复盘且不横溢", { width: 1366, height: 768 }, "?screen=summary&chapter=6&runChoices=%E6%89%BF%E6%8B%85%E9%81%97%E6%86%BE&clues=4", async (page) => {
   await page.locator(".summary-screen").waitFor();
   const layout = await layoutSnapshot(page);
