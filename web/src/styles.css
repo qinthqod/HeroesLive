@@ -2137,12 +2137,31 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   overflow-y: auto;
 }
 .device-desktop .chapter-heading,
+.device-desktop .chapter-arc-overview,
 .device-desktop .chapter-casefile,
 .device-desktop .challenge-code-body,
 .device-desktop .daily-trial-body { max-width: 1220px; margin-inline: auto; }
 .device-desktop .mode-rule-contract > div { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .device-desktop .chapter-heading { padding: 0 0 20px; }
 .device-desktop .chapter-heading h1 { font-size: 56px; }
+.device-desktop .chapter-arc-overview { margin-bottom: 18px; padding: 16px; }
+.device-desktop .chapter-arc-overview header {
+  grid-template-columns: auto auto 1fr;
+  align-items: baseline;
+}
+.device-desktop .chapter-arc-overview header p {
+  grid-column: auto;
+  justify-self: end;
+  max-width: 470px;
+  text-align: right;
+}
+.device-desktop .chapter-arc-overview > div {
+  grid-auto-flow: initial;
+  grid-auto-columns: initial;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  overflow: visible;
+}
+.device-desktop .chapter-arc-overview button { min-height: 154px; }
 .device-desktop .tribulation-panel { max-width: 1220px; margin: 0 auto 18px; }
 .device-desktop .growth-summary,
 .device-desktop .growth-economy-ledger,
@@ -2649,6 +2668,115 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .chapter-heading { padding: 26px 22px 18px; }
 .chapter-heading h1 { margin: 5px 0; font-family: "STKaiti", serif; font-size: 44px; font-weight: 400; }
 .chapter-heading p { margin: 0; color: #7d9085; font-size: 11px; line-height: 1.7; }
+.chapter-arc-overview {
+  margin: 0 18px 14px;
+  padding: 13px;
+  overflow: hidden;
+  border: 1px solid rgba(128,164,145,.2);
+  border-radius: 18px 3px 18px 3px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(212,169,70,.14), transparent 32%),
+    linear-gradient(135deg, rgba(5,18,15,.9), rgba(4,13,12,.82));
+}
+.chapter-arc-overview header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+.chapter-arc-overview header span {
+  color: #c8a75f;
+  font-size: 8px;
+  letter-spacing: .16em;
+}
+.chapter-arc-overview header strong {
+  color: #e2d1a4;
+  font-size: 10px;
+  font-weight: 500;
+  text-align: right;
+}
+.chapter-arc-overview header p {
+  grid-column: 1 / -1;
+  max-width: 780px;
+  margin: 0;
+  color: #82978c;
+  font-size: 9px;
+  line-height: 1.55;
+}
+.chapter-arc-overview > div {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(158px, 1fr);
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chapter-arc-overview > div::-webkit-scrollbar { display: none; }
+.chapter-arc-overview button {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid rgba(132,164,146,.14);
+  border-radius: 14px 2px 14px 2px;
+  background: rgba(255,255,255,.035);
+  color: #aebdb4;
+  text-align: left;
+  cursor: pointer;
+}
+.chapter-arc-overview button.active {
+  border-color: rgba(218,176,81,.42);
+  background:
+    radial-gradient(circle at 90% 8%, rgba(218,176,81,.18), transparent 34%),
+    rgba(70,44,12,.28);
+  box-shadow: inset 2px 0 rgba(218,176,81,.72);
+}
+.chapter-arc-overview button.current:not(.active) { border-color: rgba(103,156,125,.36); }
+.chapter-arc-overview button.completed { filter: saturate(.95); }
+.chapter-arc-overview small,
+.chapter-arc-overview b,
+.chapter-arc-overview em,
+.chapter-arc-overview strong,
+.chapter-arc-overview p { display: block; }
+.chapter-arc-overview small {
+  color: #71877d;
+  font-size: 8px;
+}
+.chapter-arc-overview b {
+  margin-top: 4px;
+  color: #ead9ad;
+  font-family: "STKaiti", serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+.chapter-arc-overview em {
+  margin-top: 3px;
+  color: #c5a45d;
+  font-size: 8px;
+  font-style: normal;
+}
+.chapter-arc-overview i {
+  display: block;
+  height: 3px;
+  margin: 8px 0 6px;
+  overflow: hidden;
+  background: rgba(112,143,126,.17);
+}
+.chapter-arc-overview i span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #537c68, #d9ad52);
+}
+.chapter-arc-overview strong {
+  color: #9fb0a7;
+  font-size: 8px;
+  font-weight: 500;
+}
+.chapter-arc-overview p {
+  margin: 6px 0 0;
+  color: #74897f;
+  font-size: 8px;
+  line-height: 1.45;
+}
 .chapter-casefile {
   position: relative;
   min-height: 390px;

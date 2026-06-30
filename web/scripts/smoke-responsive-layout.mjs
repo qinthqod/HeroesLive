@@ -167,6 +167,9 @@ await run("移动异闻录分卷横向导航且宗卷单列", { width: 430, heig
 await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, "?screen=chapters", async (page) => {
   await page.locator(".chapter-card").first().waitFor();
   const layout = await layoutSnapshot(page);
+  const arcText = await page.locator(".chapter-arc-overview").innerText();
+  const arcCards = await page.locator(".chapter-arc-overview button").count();
+  const arcRows = await page.locator(".chapter-arc-overview button").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
   const casefileText = await page.locator(".chapter-casefile").innerText();
   const casefileBox = await page.locator(".chapter-casefile").boundingBox();
   const bossCardBox = await page.locator(".casefile-boss-card").boundingBox();
@@ -178,6 +181,10 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
   const firstBossSigil = await page.locator(".chapter-boss-sigil").first().innerText();
   const firstBossSigilBox = await page.locator(".chapter-boss-sigil").first().boundingBox();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (arcCards !== 5 || arcRows !== 1) throw new Error(`PC 主线五卷弧线没有五列展示：cards=${arcCards}, rows=${arcRows}`);
+  for (const phrase of ["主线五卷弧线", "25 章 · 序破急回", "命册启疑", "归墟自在"]) {
+    if (!arcText.includes(phrase)) throw new Error(`PC 主线弧线缺少 ${phrase}`);
+  }
   for (const phrase of ["案卷预览", "首领现形", "调查目标", "路线节奏", "首领宗卷", "敌情压力"]) {
     if (!casefileText.includes(phrase)) throw new Error(`PC 章节案卷缺少 ${phrase}`);
   }
@@ -198,6 +205,9 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
 await run("移动章节页显示复玩目标且不横溢", { width: 430, height: 932 }, "?screen=chapters", async (page) => {
   await page.locator(".chapter-card").first().waitFor();
   const layout = await layoutSnapshot(page);
+  const arcText = await page.locator(".chapter-arc-overview").innerText();
+  const arcBox = await page.locator(".chapter-arc-overview").boundingBox();
+  const arcCards = await page.locator(".chapter-arc-overview button").count();
   const casefileText = await page.locator(".chapter-casefile").innerText();
   const casefileBox = await page.locator(".chapter-casefile").boundingBox();
   const bossCardBox = await page.locator(".casefile-boss-card").boundingBox();
@@ -208,6 +218,11 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   const firstBossSigilBox = await page.locator(".chapter-boss-sigil").first().boundingBox();
   const goalBox = await page.locator(".chapter-replay-goals").first().boundingBox();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  if (arcCards !== 5) throw new Error(`移动主线五卷弧线数量为 ${arcCards}`);
+  for (const phrase of ["主线五卷弧线", "命册启疑", "归墟自在"]) {
+    if (!arcText.includes(phrase)) throw new Error(`移动主线弧线缺少 ${phrase}`);
+  }
+  if (!arcBox || arcBox.width > 402) throw new Error(`移动主线五卷弧线过宽：${arcBox?.width}`);
   for (const phrase of ["案卷预览", "首领现形", "调查目标", "路线节奏", "首领宗卷"]) {
     if (!casefileText.includes(phrase)) throw new Error(`移动章节案卷缺少 ${phrase}`);
   }

@@ -294,6 +294,39 @@ function chapterDifficultyProfile(chapterId, tribulation = null) {
   return { pressure, tier, tolerance, advice };
 }
 
+const CHAPTER_ARC_THEMES = [
+  { title: "命册启疑", mood: "序 · 失踪与第一盏灯", focus: "学习基础压力，确认命册缺页不是传闻" },
+  { title: "玄阴破局", mood: "破 · 师门旧案外翻", focus: "路线开始分歧，灵气与证据互相牵制" },
+  { title: "雷云问心", mood: "破中转急 · 身世与规则相撞", focus: "多段压力、虚弱与精英组合考核" },
+  { title: "黑莲照夜", mood: "急 · 梦境、影子与城邦代价", focus: "恢复、抽牌削减和牌组污染开始叠加" },
+  { title: "归墟自在", mood: "回 · 自由之后仍要承担", focus: "终局复刷、劫数首破与全部宗卷补完" },
+];
+
+function chapterArcOverview(profile, activeVolumeIndex, mainComplete) {
+  const currentChapterId = mainComplete ? CHAPTERS.length : Math.min(CHAPTERS.length, Math.max(1, profile.chapter || 1));
+  const unlockedEndings = profile.unlockedEndings || [];
+  return Array.from({ length: Math.ceil(CHAPTERS.length / 5) }, (_, index) => {
+    const chapters = CHAPTERS.slice(index * 5, index * 5 + 5);
+    const theme = CHAPTER_ARC_THEMES[index] || { title: `第${index + 1}卷`, mood: "序破急", focus: "继续沿主线推进调查与构筑" };
+    const completed = chapters.filter((chapter) => unlockedEndings.some((ending) => ending === `chapter_${chapter.id}_ending` || (chapter.id === 5 && ["restore_fate", "rewrite_fate"].includes(ending)))).length;
+    const unlocked = chapters.filter((chapter) => mainComplete || chapter.id === 1 || profile.chapter > chapter.id - 1).length;
+    const current = chapters.some((chapter) => chapter.id === currentChapterId);
+    const start = chapters[0]?.id || 1;
+    const end = chapters[chapters.length - 1]?.id || start;
+    return {
+      ...theme,
+      id: index + 1,
+      range: `${String(start).padStart(2, "0")}–${String(end).padStart(2, "0")}`,
+      completed,
+      unlocked,
+      total: chapters.length,
+      current,
+      active: index === activeVolumeIndex,
+      nextChapter: chapters.find((chapter) => mainComplete || chapter.id === 1 || profile.chapter > chapter.id - 1 && !unlockedEndings.includes(`chapter_${chapter.id}_ending`)) || chapters[0],
+    };
+  });
+}
+
 function intentLabel(move) {
   const parts = [];
   if (move.damage) parts.push(`${move.damage}${move.hits ? `×${move.hits}` : ""}`);
@@ -2696,6 +2729,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
   const activeVolume = chapterVolumes[activeVolumeIndex] || chapterVolumes[0];
   const visibleChapters = activeVolume?.chapters || CHAPTERS.slice(0, 5);
   const selectedTribulation = mainComplete ? tribulationForLevel(tribulationLevel) : tribulationForLevel(0);
+  const arcOverview = chapterArcOverview(profile, activeVolumeIndex, mainComplete);
   const previewChapter = CHAPTERS.find((chapter) => chapter.id === previewChapterId) || CHAPTERS[0];
   const previewUnlocked = previewChapter.id === 1 || profile.chapter > previewChapter.id - 1;
   const previewInvestigation = CHAPTER_INVESTIGATIONS[previewChapter.id];
@@ -2722,6 +2756,34 @@ function ChapterScreen({ profile, onBack, onChoose }) {
         <h1>循灯而行</h1>
         <p>每一章包含剧情抉择、分支路线、精英事件与最终首领。</p>
       </div>
+      <section className="chapter-arc-overview" aria-label="主线五卷弧线">
+        <header>
+          <span>主线五卷弧线</span>
+          <strong>25 章 · 序破急回</strong>
+          <p>从命册启疑到归墟自在，每五章形成一个篇章循环；当前卷会连接章节目标、Boss 压力与跨局补完。</p>
+        </header>
+        <div>
+          {arcOverview.map((arc, index) => (
+            <button
+              key={arc.id}
+              className={`${arc.active ? "active" : ""} ${arc.current ? "current" : ""} ${arc.completed >= arc.total ? "completed" : ""}`}
+              onClick={() => {
+                const targetVolume = chapterVolumes[index] || chapterVolumes[0];
+                const firstUnlocked = targetVolume.chapters.find((chapter) => chapter.id === 1 || profile.chapter > chapter.id - 1 || mainComplete) || targetVolume.chapters[0];
+                setActiveVolumeIndex(index);
+                if (firstUnlocked) setPreviewChapterId(firstUnlocked.id);
+              }}
+            >
+              <small>卷 {arc.range}</small>
+              <b>{arc.title}</b>
+              <em>{arc.mood}</em>
+              <i><span style={{ width: `${Math.round((arc.completed / Math.max(1, arc.total)) * 100)}%` }} /></i>
+              <strong>{arc.completed}/{arc.total} 结卷 · {arc.unlocked}/{arc.total} 开放</strong>
+              <p>{arc.focus}</p>
+            </button>
+          ))}
+        </div>
+      </section>
       {mainComplete && <div className="tribulation-panel" data-testid="tribulation-panel">
         <div className="tribulation-heading">
           <span>终局复刷 · 可选劫数</span>
