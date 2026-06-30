@@ -111,6 +111,7 @@ expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 expect(styles.includes(".class-system-grid") && styles.includes(".starter-handbook") && styles.includes(".class-recipe-preview") && styles.includes(".device-desktop .mechanic-panel"), "职业选择页必须拥有移动/PC 的起手牌与构筑预览样式");
 expect(styles.includes(".chapter-casefile") && styles.includes(".casefile-lore") && styles.includes(".device-desktop .chapter-casefile"), "章节案卷预览必须拥有移动/PC 样式");
+expect(styles.includes(".chapter-tempo-contract") && styles.includes(".device-desktop .chapter-tempo-contract div") && styles.includes("grid-template-columns: repeat(4, minmax(0, 1fr))"), "章节节奏契约必须拥有移动双列与 PC 四段式样式");
 expect(styles.includes(".route-causality-strip") && styles.includes(".device-desktop .route-causality-strip"), "路线因果线索条必须拥有移动/PC 样式");
 expect(styles.includes(".build-target-panel") && styles.includes(".device-desktop .build-library") && styles.includes(".device-desktop .build-target-panel"), "流派图谱追踪目标必须拥有移动/PC 样式");
 for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite", "moon-debt"]) {
@@ -133,6 +134,7 @@ expect(source.includes("chapter-volume-nav") && source.includes("visibleChapters
 expect(source.includes("chapter-replay-goals") && source.includes("chapter-next-target") && source.includes("补证据") && source.includes("补后记") && source.includes("破劫数"), "章节列表必须展示证据、后记、劫数复玩目标和下一目标");
 expect(source.includes("chapterDifficultyProfile") && source.includes("chapter-difficulty-tags") && source.includes("敌压") && source.includes("容错") && source.includes("建议"), "章节选择页必须展示难度压力、容错与构筑建议，帮助玩家预判挑战");
 expect(source.includes("chapter-casefile") && source.includes("案卷预览") && source.includes("casefile-boss-card") && source.includes("previewBoss?.art") && source.includes("casefile-route-beats") && source.includes("casefile-enemies"), "章节选择页必须提供案卷预览，展示首领现形、调查、路线节奏、首领宗卷和敌情压力");
+expect(source.includes("previewTempoContract") && source.includes("节奏契约 · 序破急回") && source.includes("预计 10–14 分钟一局") && source.includes("后记 / 证据 / 下一章桥梁"), "章节案卷必须用序破急回说明单局节奏、时间期待与奖励回落点");
 expect(source.includes("chapter-boss-sigil") && source.includes("chapterBoss.art") && source.includes("chapterBoss.trait"), "章节列表卡必须提供首领身份签作为路线终点地标");
 expect(source.includes("CHAPTER_BOSS_DOSSIERS") && source.includes("CHAPTER_ROUTE_COPY[previewChapter.id]?.beats") && source.includes("ENCOUNTER_ENEMIES[previewChapter.id]"), "章节案卷必须读取真实宗卷、路线与遭遇数据");
 expect(source.includes("tribulation-panel") && source.includes("TRIBULATION_LEVELS.map") && source.includes("selectedTribulation.reward.title"), "主线完成后的章节列表必须提供劫数选择、风险预览与首破奖励说明");

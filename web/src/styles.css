@@ -1839,6 +1839,8 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .device-desktop .casefile-main { align-self: end; padding: 34px; }
 .device-desktop .casefile-main h2 { font-size: 48px; }
 .device-desktop .casefile-main button { max-width: 280px; }
+.device-desktop .chapter-tempo-contract { max-width: 560px; }
+.device-desktop .chapter-tempo-contract div { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .device-desktop .casefile-lore {
   grid-column: 2;
   align-self: stretch;
@@ -2354,6 +2356,80 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   margin-right: 5px;
   color: #e2bd64;
   font-weight: 500;
+}
+.chapter-tempo-contract {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(132,164,146,.18);
+  border-radius: 14px 2px 14px 2px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(218,176,81,.12), transparent 34%),
+    rgba(3,14,11,.68);
+}
+.chapter-tempo-contract header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.chapter-tempo-contract header span {
+  color: #c9a65f;
+  font-size: 8px;
+  letter-spacing: .16em;
+}
+.chapter-tempo-contract header strong {
+  color: #d8ceb0;
+  font-size: 9px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.chapter-tempo-contract div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+.chapter-tempo-contract i {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 4px 7px;
+  align-items: center;
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.035);
+  color: #aebdb4;
+  font-style: normal;
+}
+.chapter-tempo-contract b {
+  display: grid;
+  grid-row: span 2;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(211,171,72,.18);
+  color: #e6c475;
+  font-family: "STKaiti", serif;
+  font-size: 15px;
+  font-weight: 400;
+}
+.chapter-tempo-contract em {
+  min-width: 0;
+  overflow: hidden;
+  color: #e4d5b3;
+  font-size: 9px;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chapter-tempo-contract small {
+  min-width: 0;
+  overflow: hidden;
+  color: #7f9689;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .casefile-main button { width: 100%; margin-top: 14px; padding: 13px 14px; border: 1px solid rgba(217,172,72,.46); border-radius: 14px 2px 14px 2px; background: linear-gradient(105deg, rgba(119,75,17,.68), rgba(48,78,57,.52)); color: #f3d991; cursor: pointer; }
 .casefile-main button:disabled { opacity: .46; cursor: not-allowed; filter: grayscale(.6); }

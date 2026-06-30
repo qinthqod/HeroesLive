@@ -2603,6 +2603,13 @@ function ChapterScreen({ profile, onBack, onChoose }) {
   const previewEpilogues = CHAPTER_EPILOGUES[previewChapter.id] || [];
   const previewFoundEpilogues = previewEpilogues.filter((epilogue) => (profile.unlockedEpilogues || []).includes(epilogue.id)).length;
   const previewDifficulty = chapterDifficultyProfile(previewChapter.id, selectedTribulation);
+  const previewRouteBeats = CHAPTER_ROUTE_COPY[previewChapter.id]?.beats || [];
+  const previewTempoContract = [
+    { phase: "序", title: previewRouteBeats[0] || "入局观势", reward: "剧情抉择 · 线索伏笔", energy: "低压铺垫" },
+    { phase: "破", title: previewRouteBeats[1] || "分支变局", reward: "战利三选 · 构筑推进", energy: "压力抬升" },
+    { phase: "急", title: previewRouteBeats[2] || previewChapter.boss, reward: `首领宗卷 · ${previewBoss?.name || previewChapter.boss}`, energy: "爆发决战" },
+    { phase: "回", title: previewRouteBeats[3] || "结卷回山", reward: "后记 / 证据 / 下一章桥梁", energy: "回落结算" },
+  ];
   return (
     <section className="mobile-shell chapter-screen screen-content">
       <MobileTopBar title="云游录" subtitle={`${CHAPTERS.length} 卷主线 · 逐章解锁`} onBack={onBack} profile={profile} />
@@ -2647,6 +2654,21 @@ function ChapterScreen({ profile, onBack, onChoose }) {
             <span><b>容错</b>{previewDifficulty.tolerance}</span>
             <span><b>建议</b>{previewDifficulty.advice}</span>
           </div>
+          <section className="chapter-tempo-contract" aria-label="章节节奏契约">
+            <header>
+              <span>节奏契约 · 序破急回</span>
+              <strong>预计 10–14 分钟一局</strong>
+            </header>
+            <div>
+              {previewTempoContract.map((beat) => (
+                <i key={beat.phase}>
+                  <b>{beat.phase}</b>
+                  <em>{beat.title}</em>
+                  <small>{beat.energy} · {beat.reward}</small>
+                </i>
+              ))}
+            </div>
+          </section>
           <button disabled={!previewUnlocked} onClick={() => onChoose(previewChapter.id, selectedTribulation.level)}>
             {previewUnlocked ? `进入${previewChapter.name}` : "完成前章后解锁"}
           </button>
@@ -2668,7 +2690,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
           <section>
             <span>路线节奏</span>
             <div className="casefile-route-beats">
-              {(CHAPTER_ROUTE_COPY[previewChapter.id]?.beats || []).map((beat, index) => <i key={beat}><b>{index + 1}</b>{beat}</i>)}
+              {previewRouteBeats.map((beat, index) => <i key={beat}><b>{index + 1}</b>{beat}</i>)}
             </div>
           </section>
           <section>
