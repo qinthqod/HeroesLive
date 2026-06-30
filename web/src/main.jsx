@@ -2503,6 +2503,124 @@ function MotivationPathPanel({ paths }) {
   );
 }
 
+function homeActionMandate({ profile, currentChapterId, currentChapter, currentInvestigation, archiveFound, archiveTotal, dailyStatus, dailyTrial, goals, mainComplete, savedRun }) {
+  const claimableGoal = goals.find((goal) => goal.claimable);
+  const epilogues = CHAPTER_EPILOGUES[currentChapterId] || [];
+  const foundEpilogues = epilogues.filter((epilogue) => (profile.unlockedEpilogues || []).includes(epilogue.id)).length;
+  if (savedRun) {
+    return {
+      tone: "resume",
+      title: "先接回断点",
+      hook: `第 ${savedRun.selectedChapter} 章还有一段云游未结，继续会保留当前牌组、生命和路线代价。`,
+      primary: "继续存档",
+      secondary: "查看云游录",
+      secondaryTarget: "chapters",
+      chips: [
+        { label: "注意", text: savedRun.screen === "combat" ? `战斗第 ${savedRun.combatTurn || 1} 回合` : `路线 ${savedRun.routeProgress + 1}/4` },
+        { label: "关联", text: `${getProfession(savedRun.origin).short} · 生命 ${savedRun.hp}` },
+        { label: "自信", text: "无需重新开局，直接回到上次节点" },
+        { label: "回报", text: "完成后继续推进证据、战利和最近战绩" },
+      ],
+    };
+  }
+  if (claimableGoal) {
+    return {
+      tone: "claim",
+      title: "先领取落印",
+      hook: `「${claimableGoal.title}」已经完成，先把奖励落袋，再决定下一局走稳健还是进取路线。`,
+      primary: "领取落印",
+      secondary: "查看全卷",
+      secondaryTarget: "codex",
+      goalId: claimableGoal.id,
+      chips: [
+        { label: "注意", text: "有奖励待领取" },
+        { label: "关联", text: claimableGoal.hook },
+        { label: "自信", text: `${claimableGoal.current}/${claimableGoal.target} 已达成` },
+        { label: "回报", text: formatProgressReward(claimableGoal.reward) },
+      ],
+    };
+  }
+  if (!mainComplete) {
+    return {
+      tone: "story",
+      title: `推进第 ${currentChapterId} 章`,
+      hook: `${currentChapter.name} 正在等待新的抉择；先完成主线，再回头补证据和后记会更顺。`,
+      primary: "选择道途",
+      secondary: "查看章节",
+      secondaryTarget: "chapters",
+      chips: [
+        { label: "注意", text: currentInvestigation.objective },
+        { label: "关联", text: `${currentChapter.region} · ${currentChapter.level}` },
+        { label: "自信", text: archiveFound ? `已带回 ${archiveFound}/${archiveTotal} 证据` : "先带回第一条证据" },
+        { label: "回报", text: "解锁下一章、战利和长期挑战进度" },
+      ],
+    };
+  }
+  if (archiveFound < archiveTotal) {
+    return {
+      tone: "casebook",
+      title: "补完当前宗卷",
+      hook: `${currentChapter.name} 还差 ${archiveTotal - archiveFound} 条分支证据，重访不同路线会让二十五章真相更完整。`,
+      primary: "重访章节",
+      secondary: "打开异闻录",
+      secondaryTarget: "codex",
+      chips: [
+        { label: "注意", text: `证据 ${archiveFound}/${archiveTotal}` },
+        { label: "关联", text: currentInvestigation.objective },
+        { label: "自信", text: "安全路线可能放弃证据，选择战斗/事件更容易带回线索" },
+        { label: "回报", text: "满证据宗卷可领取悟道与灵玉" },
+      ],
+    };
+  }
+  if (foundEpilogues < epilogues.length) {
+    return {
+      tone: "epilogue",
+      title: "补一篇人物后记",
+      hook: `${currentChapter.name} 的人物后记仍未收齐，换一次关键抉择能看到另一种代价。`,
+      primary: "重访章节",
+      secondary: "打开异闻录",
+      secondaryTarget: "codex",
+      chips: [
+        { label: "注意", text: `后记 ${foundEpilogues}/${epilogues.length}` },
+        { label: "关联", text: "关键抉择会进入章末回应" },
+        { label: "自信", text: "已通关章节可自由重访，不影响标准主线" },
+        { label: "回报", text: "补全人物关系与最近战绩" },
+      ],
+    };
+  }
+  if (!dailyStatus.claimed) {
+    return {
+      tone: "daily",
+      title: "今日首胜还在",
+      hook: `${getProfession(dailyTrial.origin).short} · 第 ${dailyTrial.chapter} 章 · ${dailyTrial.modifier.name}，同日同题适合检验构筑理解。`,
+      primary: "领取试炼",
+      secondary: "查看章节",
+      secondaryTarget: "daily",
+      chips: [
+        { label: "注意", text: dailyTrial.modifier.name },
+        { label: "关联", text: `种子 ${dailyTrial.seed}` },
+        { label: "自信", text: "固定题面可重复复盘" },
+        { label: "回报", text: `首胜灵玉 +${DAILY_TRIAL_REWARD.jade}` },
+      ],
+    };
+  }
+  const nextGoal = goals[0];
+  return {
+    tone: "long",
+    title: nextGoal?.title || "自由重访",
+    hook: nextGoal?.hook || "主线已归档，继续用另一门道途补全宗卷、流派和劫数首破。",
+    primary: "查看云游录",
+    secondary: "打开挑战卷",
+    secondaryTarget: "codex",
+    chips: [
+      { label: "注意", text: nextGoal ? `进度 ${nextGoal.current}/${nextGoal.target}` : "二十五章自由重访" },
+      { label: "关联", text: "长期收集会反哺称号、悟道和灵玉" },
+      { label: "自信", text: "先选最接近完成的一项即可" },
+      { label: "回报", text: nextGoal ? formatProgressReward(nextGoal.reward) : "补完宗卷与劫数称号" },
+    ],
+  };
+}
+
 function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resumeRun, claimProgressReward, dailyTrial }) {
   const mainComplete = (profile.unlockedEndings || []).includes(`chapter_${CHAPTERS.length}_ending`);
   const currentChapterId = mainComplete ? CHAPTERS.length : Math.min(CHAPTERS.length, Math.max(1, profile.chapter || 1));
@@ -2514,6 +2632,19 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resume
   const goals = nextProgressGoals(profile, 2);
   const goalSummaries = progressSummaries(profile);
   const dailyStatus = dailyRewardStatus(profile, dailyTrial);
+  const actionMandate = homeActionMandate({ profile, currentChapterId, currentChapter, currentInvestigation, archiveFound, archiveTotal, dailyStatus, dailyTrial, goals, mainComplete, savedRun });
+  const runMandatePrimary = () => {
+    if (actionMandate.tone === "resume") return resumeRun();
+    if (actionMandate.tone === "claim" && actionMandate.goalId) return claimProgressReward(actionMandate.goalId);
+    if (actionMandate.tone === "daily") return setScreen("daily");
+    if (["casebook", "epilogue", "long"].includes(actionMandate.tone)) return setScreen("chapters");
+    return beginRun();
+  };
+  const runMandateSecondary = () => {
+    if (actionMandate.secondaryTarget === "codex") return setOverlay("codex");
+    if (actionMandate.secondaryTarget === "daily") return setScreen("daily");
+    return setScreen("chapters");
+  };
   const aggressiveGoal = goalSummaries.find((goal) => goal.id === "a_grade")
     || goals.find((goal) => !goal.claimed)
     || goals[0];
@@ -2584,6 +2715,25 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resume
           <span><GameImage src="/ui/icons/treasure.png" alt="" /><b>6/6</b><small>道途</small></span>
         </div>
         <div className="account-progress"><span>修行等级 Lv.{profile.level}</span><i><b style={{ width: `${profile.xp % 100}%` }} /></i><small>{profile.xp % 100}/100</small></div>
+        <section className={`home-action-mandate ${actionMandate.tone}`} aria-label="今夜行动令">
+          <header>
+            <span>今夜行动令</span>
+            <strong>{actionMandate.title}</strong>
+            <p>{actionMandate.hook}</p>
+          </header>
+          <div>
+            {actionMandate.chips.map((chip) => (
+              <article key={chip.label}>
+                <small>{chip.label}</small>
+                <b>{chip.text}</b>
+              </article>
+            ))}
+          </div>
+          <footer>
+            <button onClick={runMandatePrimary}>{actionMandate.primary}</button>
+            <button onClick={runMandateSecondary}>{actionMandate.secondary}</button>
+          </footer>
+        </section>
         <div className="home-actions">
           <button onClick={() => setScreen("classes")}><GameImage src="/ui/breakthroughs/sword_heart.png" alt="" /><span><strong>道途</strong><small>{DECK_RECIPES.length} 套流派</small></span></button>
           <button onClick={() => setScreen("collection")}><GameImage src="/ui/treasures/bamboo_slip.png" alt="" /><span><strong>藏经阁</strong><small>{profile.discoveredCards?.length || 0}/{ALL_CARDS.length} 已收录</small></span></button>

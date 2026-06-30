@@ -54,6 +54,7 @@ expect(source.includes("defeatLearningPlan") && source.includes("defeat-learning
 expect(source.includes("defeat-counterplay") && source.includes("本场敌人") && source.includes("机制对策") && source.includes("enemy?.counter"), "失败页必须结合本场敌人与机制给出针对性对策");
 expect(!source.includes("jobMastery: { ...value.jobMastery, [origin]: (value.jobMastery[origin] || 0) + 10 }"), "开始或重试章节不得直接发放熟练度，避免故意失败刷成长");
 expect(source.includes("nextProgressGoals(profile, 2)") && source.includes("progress-board"), "首页必须展示可行动的下一长期目标");
+expect(source.includes("function homeActionMandate") && source.includes("home-action-mandate") && source.includes("今夜行动令") && source.includes("注意") && source.includes("关联") && source.includes("自信") && source.includes("回报"), "首页必须提供由真实进度推导的今夜行动令，连接主线、复玩和长期目标");
 expect(source.includes("function MotivationPathPanel") && source.includes("三线目标") && source.includes("稳健") && source.includes("进取") && source.includes("长期") && source.includes("低风险") && source.includes("高风险") && source.includes("延迟满足"), "首页必须用三条风险/回报路径覆盖即时满足、进取挑战与长期复玩动机");
 expect(source.includes("nextProgressGoals(profile, 1)") && source.includes("summary-next-goal") && source.includes("下一枚印记"), "结算页必须展示下一项长期挑战进度，形成回局动机");
 expect(source.includes("nextAfterClaim") && source.includes("progressNotice.epithet") && source.includes("挑战卷已落印") && source.includes("下一枚印记："), "长期挑战领取必须展示称号、奖励明细与下一目标落印反馈");
@@ -135,6 +136,7 @@ expect(styles.includes(".class-system-grid") && styles.includes(".starter-handbo
 expect(styles.includes(".growth-economy-ledger") && styles.includes(".growth-ledger-grid") && styles.includes(".device-desktop .growth-ledger-grid") && styles.includes(".talent-node.recommended"), "悟道经济账本必须拥有移动/PC 样式和推荐节点高亮");
 expect(styles.includes(".growth-prescription") && styles.includes(".growth-prescription > div") && styles.includes(".talent-node.affordable") && styles.includes(".talent-node.maxed") && styles.includes(".device-desktop .growth-prescription"), "成长处方必须拥有移动/PC 样式与节点可负担/圆满状态");
 expect(styles.includes(".motivation-path-panel") && styles.includes(".motivation-path.steady") && styles.includes(".motivation-path.bold") && styles.includes(".motivation-path.long") && styles.includes(".device-desktop .motivation-path-panel > div"), "首页三线目标必须拥有稳健/进取/长期差异化样式与 PC 三列布局");
+expect(styles.includes(".home-action-mandate") && styles.includes(".home-action-mandate.claim") && styles.includes(".home-action-mandate.casebook") && styles.includes(".device-desktop .home-action-mandate > div"), "首页今夜行动令必须拥有不同目标态与PC四格布局");
 expect(styles.includes(".chapter-casefile") && styles.includes(".casefile-lore") && styles.includes(".device-desktop .chapter-casefile"), "章节案卷预览必须拥有移动/PC 样式");
 expect(styles.includes(".chapter-arc-overview") && styles.includes(".device-desktop .chapter-arc-overview > div") && styles.includes("grid-template-columns: repeat(5, minmax(0, 1fr))"), "主线五卷弧线必须拥有移动横向浏览与PC五列样式");
 expect(styles.includes(".chapter-starter-briefing") && styles.includes(".device-desktop .chapter-starter-briefing > div") && styles.includes("grid-template-columns: repeat(4, minmax(0, 1fr))"), "章节开局简报必须拥有移动双列与PC四列样式");
