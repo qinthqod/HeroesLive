@@ -60,6 +60,8 @@ expect(source.includes("completedTribulations") && source.includes("tribulationS
 expect(source.includes("nextMode === \"story\" ? tribulationForLevel(options.tribulationLevel || 0) : tribulationForLevel(0)"), "每日试炼和挑战复刻不得继承终局劫数");
 expect(source.includes("createFeedbackEngine") && source.includes("navigator.vibrate"), "战斗必须提供可降级的音效与触觉反馈");
 expect(source.includes("feedback: { sound: true, haptics: true, volume: 0.55"), "反馈偏好必须具有可持久化默认值");
+expect(source.includes("function GameImage") && source.includes("loading={eager ? \"eager\" : \"lazy\"}") && source.includes("decoding={eager ? \"sync\" : \"async\"}") && source.includes("fetchPriority={eager ? \"high\" : \"auto\"}"), "图片素材必须统一通过 GameImage 设置首屏优先级、懒加载和异步解码");
+expect(source.includes("<GameImage eager src={currentChapter.art}") && source.includes("<GameImage eager className=\"enemy-art\"") && source.includes("<GameImage src={card.art}") && source.includes("<GameImage src={treasure.art}"), "首屏/战斗关键图必须优先加载，高密度卡牌与法宝图必须走懒加载");
 for (const feedbackKind of ["cast", "impact", "draw", "enemy", "hurt", "reward"]) {
   expect(source.includes(`feedback("${feedbackKind}")`), `缺少 ${feedbackKind} 战斗反馈触点`);
 }

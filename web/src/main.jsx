@@ -240,6 +240,18 @@ function createFeedbackEngine() {
   };
 }
 
+function GameImage({ eager = false, className = "", ...props }) {
+  return (
+    <img
+      className={className || undefined}
+      loading={eager ? "eager" : "lazy"}
+      decoding={eager ? "sync" : "async"}
+      fetchPriority={eager ? "high" : "auto"}
+      {...props}
+    />
+  );
+}
+
 function buildEnemyMoves(chapter, encounterStage) {
   return encounterStage === 3
     ? BOSS_MOVE_PATTERNS[chapter]
@@ -2407,7 +2419,7 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resume
   return (
     <section className="mobile-shell home-screen screen-content">
       <div className={`home-hero ${savedRun ? "has-save" : ""}`}>
-        <img src={currentChapter.art} alt="" />
+        <GameImage eager src={currentChapter.art} alt="" />
         <div className="home-shade" />
         <MobileTopBar title="青岚夜行" subtitle={`${profile.equippedTitle || "云游录"} · 第七夜`} profile={profile} />
         <div className="home-player">
@@ -2424,23 +2436,23 @@ function HomeScreen({ profile, setScreen, setOverlay, beginRun, savedRun, resume
       </div>
       <div className="home-dashboard">
         <div className="resource-strip">
-          <span><img src="/ui/icons/stones.png" alt="" /><b>{profile.jade}</b><small>灵玉</small></span>
-          <span><img src="/ui/icons/qi.png" alt="" /><b>{profile.spirit}</b><small>悟道</small></span>
-          <span><img src="/ui/icons/treasure.png" alt="" /><b>6/6</b><small>道途</small></span>
+          <span><GameImage src="/ui/icons/stones.png" alt="" /><b>{profile.jade}</b><small>灵玉</small></span>
+          <span><GameImage src="/ui/icons/qi.png" alt="" /><b>{profile.spirit}</b><small>悟道</small></span>
+          <span><GameImage src="/ui/icons/treasure.png" alt="" /><b>6/6</b><small>道途</small></span>
         </div>
         <div className="account-progress"><span>修行等级 Lv.{profile.level}</span><i><b style={{ width: `${profile.xp % 100}%` }} /></i><small>{profile.xp % 100}/100</small></div>
         <div className="home-actions">
-          <button onClick={() => setScreen("classes")}><img src="/ui/breakthroughs/sword_heart.png" alt="" /><span><strong>道途</strong><small>{DECK_RECIPES.length} 套流派</small></span></button>
-          <button onClick={() => setScreen("collection")}><img src="/ui/treasures/bamboo_slip.png" alt="" /><span><strong>藏经阁</strong><small>{profile.discoveredCards?.length || 0}/{ALL_CARDS.length} 已收录</small></span></button>
-          <button onClick={() => setScreen("growth")}><img src="/ui/insights/open_meridians.png" alt="" /><span><strong>悟道树</strong><small>永久成长</small></span></button>
-          <button onClick={() => setOverlay("codex")}><img src="/ui/treasures/spirit_lamp.png" alt="" /><span><strong>异闻录</strong><small>人物与线索</small></span></button>
+          <button onClick={() => setScreen("classes")}><GameImage src="/ui/breakthroughs/sword_heart.png" alt="" /><span><strong>道途</strong><small>{DECK_RECIPES.length} 套流派</small></span></button>
+          <button onClick={() => setScreen("collection")}><GameImage src="/ui/treasures/bamboo_slip.png" alt="" /><span><strong>藏经阁</strong><small>{profile.discoveredCards?.length || 0}/{ALL_CARDS.length} 已收录</small></span></button>
+          <button onClick={() => setScreen("growth")}><GameImage src="/ui/insights/open_meridians.png" alt="" /><span><strong>悟道树</strong><small>永久成长</small></span></button>
+          <button onClick={() => setOverlay("codex")}><GameImage src="/ui/treasures/spirit_lamp.png" alt="" /><span><strong>异闻录</strong><small>人物与线索</small></span></button>
         </div>
         <article className={`daily-thread ${archiveFound === archiveTotal ? "completed" : ""}`} onClick={() => archiveFound === archiveTotal ? setOverlay("codex") : setScreen("chapters")}>
           <div><span className="section-index">{mainComplete ? "宗卷补完" : "当前调查"}</span><h2>{currentInvestigation.objective}</h2><p>{archiveFound === archiveTotal ? "本章全部分支证据已收入异闻宗卷。" : `${currentInvestigation.opening} · 重返不同路线可补全分支证据。`}</p></div>
           <strong>{archiveFound}/{archiveTotal}</strong>
         </article>
         <button className={`daily-trial-card ${dailyRewardStatus(profile, dailyTrial).claimed ? "completed" : ""}`} onClick={() => setScreen("daily")}>
-          <span className="daily-trial-moon"><img src="/ui/treasures/spirit_lamp.png" alt="" /></span>
+          <span className="daily-trial-moon"><GameImage src="/ui/treasures/spirit_lamp.png" alt="" /></span>
           <div>
             <small>{dailyTrial.dateLabel} · 今日试炼</small>
             <strong>{dailyTrial.modifier.name}</strong>
@@ -2525,7 +2537,7 @@ function DailyTrialScreen({ trial, profile, savedRun, onBack, onResume, onStart 
   return (
     <section className="mobile-shell daily-trial-screen screen-content">
       <div className="daily-trial-hero">
-        <img src="/ui/bg_title_shrine.png" alt="" />
+        <GameImage eager src="/ui/bg_title_shrine.png" alt="" />
         <div className="daily-trial-shade" />
         <MobileTopBar title="今日试炼" subtitle={`${trial.dateLabel} · 同日同局`} onBack={onBack} profile={profile} />
         <div className="daily-trial-title">
@@ -2620,7 +2632,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
         </div>
       </div>}
       <article className={`chapter-casefile ${previewUnlocked ? "" : "locked"}`} aria-label="章节案卷预览">
-        <img src={previewChapter.art} alt="" />
+        <GameImage eager src={previewChapter.art} alt="" />
         <div className="casefile-shade" />
         <div className="casefile-main">
           <span className="section-index">案卷预览 · 卷 {String(previewChapter.id).padStart(2, "0")}</span>
@@ -2641,7 +2653,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
         </div>
         <div className="casefile-lore">
           <section className="casefile-boss-card">
-            <img src={previewBoss?.art} alt="" />
+            <GameImage src={previewBoss?.art} alt="" />
             <div>
               <span>首领现形</span>
               <strong>{previewBoss?.name} · {previewBoss?.archetype}</strong>
@@ -2719,10 +2731,10 @@ function ChapterScreen({ profile, onBack, onChoose }) {
                   : completed ? "换职业复盘" : "推进主线";
           return (
             <button key={chapter.id} className={`chapter-card ${unlocked ? "" : "locked"} ${completed ? "completed" : ""} ${current ? "current" : ""} ${previewChapterId === chapter.id ? "previewed" : ""} ${selectedTribulation.level ? "tribulation-selected" : ""}`} disabled={!unlocked} onMouseEnter={() => setPreviewChapterId(chapter.id)} onFocus={() => setPreviewChapterId(chapter.id)} onClick={() => onChoose(chapter.id, selectedTribulation.level)}>
-              <img src={chapter.art} alt="" />
+              <GameImage src={chapter.art} alt="" />
               <div className="chapter-card-shade" />
               <span className="chapter-number">{completed ? "已结卷" : current ? "当前主线" : `卷 ${String(chapter.id).padStart(2, "0")}`}</span>
-              {chapterBoss && <span className="chapter-boss-sigil"><img src={chapterBoss.art} alt="" /><b>{chapterBoss.name}</b><i>{chapterBoss.trait}</i></span>}
+              {chapterBoss && <span className="chapter-boss-sigil"><GameImage src={chapterBoss.art} alt="" /><b>{chapterBoss.name}</b><i>{chapterBoss.trait}</i></span>}
               <div><small>{chapter.region} · {chapter.level}</small><h2>{chapter.name}</h2><p>{chapter.summary}</p><strong>{!unlocked ? "完成前章后解锁" : selectedTribulation.level ? `${selectedTribulation.name} · ${tribulationStatus.claimed ? "首破已领" : `首破称号「${selectedTribulation.reward.title}」`}` : completed ? `可重访 · 首领 ${chapter.boss}` : `继续主线 · 首领 ${chapter.boss}`}</strong>
                 <div className="chapter-replay-goals" aria-label={`第 ${chapter.id} 章复玩目标`}>
                   <span className={foundEvidence >= evidence.length ? "done" : ""}><b>证据</b><i>{foundEvidence}/{evidence.length}</i></span>
@@ -2759,14 +2771,14 @@ function ClassScreen({ origin, setOrigin, profile, onBack, onStart }) {
     <section className="mobile-shell class-screen screen-content">
       <MobileTopBar title="选择道途" subtitle="职业决定卡池与核心资源" onBack={onBack} profile={profile} />
       <div className="class-focus" style={{ "--job-color": current.color }}>
-        <img className="class-portrait" src={current.portrait} alt="" />
+        <GameImage eager className="class-portrait" src={current.portrait} alt="" />
         <div className="class-focus-shade" />
         <div className="class-copy"><span>{current.resource}</span><h1>{current.name}</h1><p>{current.motto}</p><strong>{current.style}</strong><div className="mastery-line"><i style={{ width: `${Math.min(100, mastery)}%` }} /><small>道途熟练 {mastery}/100</small></div></div>
       </div>
       <div className="class-tabs">
         {PROFESSIONS.map((job) => {
           const unlocked = profile.unlockedJobs.includes(job.id);
-          return <button key={job.id} disabled={!unlocked} className={origin === job.id ? "active" : ""} onClick={() => setOrigin(job.id)}><img src={job.icon} alt="" /><span>{job.short}</span>{!unlocked && <i>锁</i>}</button>;
+          return <button key={job.id} disabled={!unlocked} className={origin === job.id ? "active" : ""} onClick={() => setOrigin(job.id)}><GameImage src={job.icon} alt="" /><span>{job.short}</span>{!unlocked && <i>锁</i>}</button>;
         })}
       </div>
       <article className="mechanic-panel">
@@ -2828,7 +2840,7 @@ function ClassScreen({ origin, setOrigin, profile, onBack, onStart }) {
 function StoryScreen({ scene, index, total, choices, onChoose }) {
   return (
     <section className="story-screen screen-content">
-      <img className="story-art" src={scene.art} alt="" />
+      <GameImage eager className="story-art" src={scene.art} alt="" />
       <div className="story-gradient" />
       <div className="story-progress">{Array.from({ length: total }, (_, step) => <i className={step <= index ? "active" : ""} key={step} />)}</div>
       <div className="story-dialogue">
@@ -2862,7 +2874,7 @@ function GrowthScreen({ profile, setProfile, onBack }) {
       <div className="talent-path">
         {META_TALENTS.map((talent, index) => (
           <button key={talent.id} className="talent-node" onClick={() => upgrade(talent)}>
-            <img src={talent.art} alt="" /><div><small>悟道节点 {index + 1}</small><h2>{talent.name} · {profile.talentLevels[talent.id] || 0}/{talent.max}</h2><p>{talent.effect}</p></div><span>8</span>
+            <GameImage src={talent.art} alt="" /><div><small>悟道节点 {index + 1}</small><h2>{talent.name} · {profile.talentLevels[talent.id] || 0}/{talent.max}</h2><p>{talent.effect}</p></div><span>8</span>
           </button>
         ))}
       </div>
@@ -2896,7 +2908,7 @@ function CollectionScreen({ origin, setOrigin, profile, onBack }) {
       <MobileTopBar title="藏经阁" subtitle={`${profile.discoveredCards?.length || 0}/${ALL_CARDS.length} 张术法 · ${totalCompletedRecipes}/${DECK_RECIPES.length} 套流派`} onBack={onBack} />
       <div className="collection-jobs">{PROFESSIONS.map((job) => {
         const count = job.cards.filter((card) => discovered.has(card.id)).length;
-        return <button className={job.id === origin ? "active" : ""} key={job.id} onClick={() => setOrigin(job.id)}><img src={job.icon} alt="" /><span>{job.short}<small>{count}/20</small></span></button>;
+        return <button className={job.id === origin ? "active" : ""} key={job.id} onClick={() => setOrigin(job.id)}><GameImage src={job.icon} alt="" /><span>{job.short}<small>{count}/20</small></span></button>;
       })}</div>
       <div className="collection-mode" role="tablist" aria-label="藏经阁分类">
         <button className={view === "cards" ? "active" : ""} onClick={() => setView("cards")} role="tab" aria-selected={view === "cards"}><span>术法卷</span><small>{currentDiscovered}/20</small></button>
@@ -2955,7 +2967,7 @@ function BuildRecipeCard({ state, discovered }) {
       <div className="build-components">
         {components.map((card) => (
           <div className={discovered.has(card.id) ? "known" : "unknown"} key={card.id}>
-            <img src={discovered.has(card.id) ? card.art : "/card_back_qinglan_trial.png"} alt="" />
+            <GameImage src={discovered.has(card.id) ? card.art : "/card_back_qinglan_trial.png"} alt="" />
             <small>{discovered.has(card.id) ? card.name : `未收录组件 · ${card.keyword}`}</small>
           </div>
         ))}
@@ -2967,14 +2979,14 @@ function BuildRecipeCard({ state, discovered }) {
 }
 
 function MiniCard({ card }) {
-  return <div className="mini-card"><img src={card.art} alt="" /><span>{card.cost}</span><small>{card.name}</small></div>;
+  return <div className="mini-card"><GameImage src={card.art} alt="" /><span>{card.cost}</span><small>{card.name}</small></div>;
 }
 
 function LibraryCard({ card, discovered }) {
   if (!discovered) {
-    return <article className="library-card undiscovered"><div className="unknown-card-art"><img src="/card_back_qinglan_trial.png" alt="" /><b>?</b></div><div><small>{card.rarity} · {card.type}</small><h3>未收录术法</h3><p>{card.refined ? `精研「${card.baseName}」后收录真解。` : `在战利、坊市或山中异闻中发现 · 关键词「${card.keyword}」`}</p></div></article>;
+    return <article className="library-card undiscovered"><div className="unknown-card-art"><GameImage src="/card_back_qinglan_trial.png" alt="" /><b>?</b></div><div><small>{card.rarity} · {card.type}</small><h3>未收录术法</h3><p>{card.refined ? `精研「${card.baseName}」后收录真解。` : `在战利、坊市或山中异闻中发现 · 关键词「${card.keyword}」`}</p></div></article>;
   }
-  return <article className={`library-card rarity-${card.rarity} ${card.refined ? "refined-card" : ""}`}><img src={card.art} alt="" /><div><span>{card.cost}</span><small>{card.rarity} · {card.type}</small><h3>{card.name}</h3><p>{card.text}</p></div></article>;
+  return <article className={`library-card rarity-${card.rarity} ${card.refined ? "refined-card" : ""}`}><GameImage src={card.art} alt="" /><div><span>{card.cost}</span><small>{card.rarity} · {card.type}</small><h3>{card.name}</h3><p>{card.text}</p></div></article>;
 }
 
 function TitleScreen({ origin, setOrigin, selectedOrigin, beginRun, setOverlay }) {
@@ -3004,7 +3016,7 @@ function TitleScreen({ origin, setOrigin, selectedOrigin, beginRun, setOverlay }
               className={origin === item.id ? "origin active" : "origin"}
               onClick={() => setOrigin(item.id)}
             >
-              <img src={item.icon} alt="" />
+              <GameImage src={item.icon} alt="" />
               <span><strong>{item.name}</strong><small>{item.line}</small></span>
               <i>选择</i>
             </button>
@@ -3037,7 +3049,7 @@ function RunHeader({ stage, chapter, hp, maxHp, stones, runMode, runSeed, runTri
     <header className="run-header">
       <div className="run-brand"><span className="brand-mark small">青</span><div><strong>{runMode === "daily" ? "今日试炼" : runMode === "challenge" ? "挑战复刻" : runTribulation?.level ? "劫数云游" : "青岚夜行"}</strong><small>{runMode !== "story" ? `${runTrial?.modifier?.name || "标准规则"} · ${runSeed}` : storySubtitle}</small></div></div>
       <div className="run-progress"><span style={{ width: `${routeStep * 25}%` }} /></div>
-      <div className="header-resources"><span><img src="/ui/icons/hp.png" alt="" />{hp}/{maxHp}</span><span><img src="/ui/icons/stones.png" alt="" />{stones}</span></div>
+      <div className="header-resources"><span><GameImage src="/ui/icons/hp.png" alt="" />{hp}/{maxHp}</span><span><GameImage src="/ui/icons/stones.png" alt="" />{stones}</span></div>
     </header>
   );
 }
@@ -3176,7 +3188,7 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
             const meta = routeMeta[node.id];
             return (
               <button className="route-choice-card" key={node.id} onClick={() => chooseNode(node)} style={{ "--choice-delay": `${index * 100}ms` }}>
-                <img src={node.art} alt="" />
+                <GameImage src={node.art} alt="" />
                 <div className="route-choice-shade" />
                 <span className="route-choice-kind">{node.kind}</span>
                 <div className="route-choice-copy">
@@ -3224,7 +3236,7 @@ function EncounterPreludeScreen({ chapter, stage, seen, onBegin }) {
   };
   return (
     <section className={`encounter-prelude stage-${stage} screen-content`}>
-      <div className="encounter-prelude-art"><img src={prelude.enemy.art} alt={prelude.enemy.name} /></div>
+      <div className="encounter-prelude-art"><GameImage eager src={prelude.enemy.art} alt={prelude.enemy.name} /></div>
       <div className="encounter-prelude-vignette" />
       <div className="encounter-prelude-copy">
         <span className="section-index">{prelude.eyebrow}</span>
@@ -3267,7 +3279,7 @@ function BossPreludeScreen({ chapter, choices, clues, onBegin }) {
   if (!prelude || !beat) return null;
   return (
     <section className="boss-prelude screen-content">
-      <div className="boss-prelude-art"><img src={prelude.art} alt="" /><div /></div>
+      <div className="boss-prelude-art"><GameImage eager src={prelude.art} alt="" /><div /></div>
       <div className="boss-prelude-copy">
         <span className="section-index">{prelude.eyebrow}</span>
         <h1>{prelude.name}</h1>
@@ -3529,7 +3541,7 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
     <section className={`market-screen market-chapter-${chapter} screen-content`}>
       <header className="market-header">
         <div><span className="section-index">{market.eyebrow}</span><h1>{market.name}</h1><p>{market.description}</p></div>
-        <div className="market-wallet"><img src="/ui/icons/stones.png" alt="" /><span>灵石</span><strong>{stones}</strong></div>
+        <div className="market-wallet"><GameImage src="/ui/icons/stones.png" alt="" /><span>灵石</span><strong>{stones}</strong></div>
       </header>
       <div className="market-notice">{notice}</div>
       <div className={`market-economy ${canTradeNow ? "trade-ready" : "trade-tight"}`}>
@@ -3571,7 +3583,7 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
             <span><small>{market.special.label}</small><strong>{market.special.title}</strong><p>{market.special.detail}</p></span><b>{specialUsed ? "已交易" : market.special.cost}</b>
           </button>
           {treasureOffer && <article className="market-treasure">
-            <img src={treasureOffer.art} alt="" />
+            <GameImage src={treasureOffer.art} alt="" />
             <div><small>本次法宝</small><strong>{treasureOffer.name}</strong><p>{treasureOffer.effect}</p></div>
             <button disabled={treasureBought || stones < Math.max(12, market.treasureCost - discount) || treasures.some((item) => item.id === treasureOffer.id)} onClick={buyTreasure}>{treasureBought || treasures.some((item) => item.id === treasureOffer.id) ? "已购得" : `${Math.max(12, market.treasureCost - discount)} 灵石`}</button>
           </article>}
@@ -3583,7 +3595,7 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
             {deck.map((card, index) => {
               const canRefine = Boolean(refinedVersion(card, origin));
               return <article key={`${card.id}-${index}`}>
-                <img src={card.art} alt="" />
+                <GameImage src={card.art} alt="" />
                 <div><strong>{card.name}</strong><small>{card.cost} 费 · {card.keyword} · {card.rarity}</small></div>
                 <button disabled={!canRefine || stones < market.refineCost} onClick={() => refine(index)}>{card.refined ? "已真解" : `精研 ${market.refineCost}`}</button>
                 <button disabled={stones < market.removeCost || deck.length <= 8} onClick={() => remove(index)}>忘却 {market.removeCost}</button>
@@ -3661,7 +3673,7 @@ function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingC
   }, []);
   return (
     <section className="event-screen screen-content">
-      <div className="event-art"><img src={event.art} alt="" /></div>
+      <div className="event-art"><GameImage eager src={event.art} alt="" /></div>
       <div className="event-copy"><span className="section-index">{event.eyebrow}</span><h1>{event.name}</h1><p>{event.description}</p></div>
       <RunNotebook notebook={notebook} compact className="event-notebook" />
       <div className="event-choices">
@@ -3739,7 +3751,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
   return (
     <section className={`combat-screen screen-content ${combatFx?.phase || ""} ${playerFx?.kind || ""} guide-step-${guideStep}`}>
       <aside className={`player-rail ${playerFx ? "player-impact" : ""}`}>
-        <div className="portrait"><img src="/enemy_rogue_cultivator.png" alt="" /></div>
+        <div className="portrait"><GameImage src="/enemy_rogue_cultivator.png" alt="" /></div>
         <div className="player-name"><strong>{origin.name}</strong><small>炼气前期</small></div>
         <Resource icon="/ui/icons/hp.png" name="生命" value={`${hp}/${maxHp}`} />
         <Resource icon="/ui/icons/qi.png" name="灵气" value={`${qi}/${maxQi}`} />
@@ -3748,10 +3760,10 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         <Resource className="profession-resource" icon={professionResource.icon} name={professionResource.label} value={professionResource.value} />
         <Resource className="stones-resource" icon="/ui/icons/stones.png" name="灵石" value={stones} />
         <div className="quick-items">
-          <button disabled={!consumables.spirit || combatBusy} aria-label={`聚气散，剩余 ${consumables.spirit}`} onClick={() => useConsumable("spirit")}><img src="/ui/consumables/spirit_draught.png" alt="" /><span>{consumables.spirit}</span></button>
-          <button disabled={!consumables.skin || combatBusy} aria-label={`石肤符，剩余 ${consumables.skin}`} onClick={() => useConsumable("skin")}><img src="/ui/consumables/stone_skin_talisman.png" alt="" /><span>{consumables.skin}</span></button>
-          <button disabled={!consumables.clarity || combatBusy} aria-label={`清神粉，剩余 ${consumables.clarity}`} onClick={() => useConsumable("clarity")}><img src="/ui/consumables/clarity_powder.png" alt="" /><span>{consumables.clarity}</span></button>
-          <button disabled={!consumables.thunder || combatBusy} aria-label={`阴雷子，剩余 ${consumables.thunder}`} onClick={() => useConsumable("thunder")}><img src="/ui/consumables/thunder_seed.png" alt="" /><span>{consumables.thunder}</span></button>
+          <button disabled={!consumables.spirit || combatBusy} aria-label={`聚气散，剩余 ${consumables.spirit}`} onClick={() => useConsumable("spirit")}><GameImage src="/ui/consumables/spirit_draught.png" alt="" /><span>{consumables.spirit}</span></button>
+          <button disabled={!consumables.skin || combatBusy} aria-label={`石肤符，剩余 ${consumables.skin}`} onClick={() => useConsumable("skin")}><GameImage src="/ui/consumables/stone_skin_talisman.png" alt="" /><span>{consumables.skin}</span></button>
+          <button disabled={!consumables.clarity || combatBusy} aria-label={`清神粉，剩余 ${consumables.clarity}`} onClick={() => useConsumable("clarity")}><GameImage src="/ui/consumables/clarity_powder.png" alt="" /><span>{consumables.clarity}</span></button>
+          <button disabled={!consumables.thunder || combatBusy} aria-label={`阴雷子，剩余 ${consumables.thunder}`} onClick={() => useConsumable("thunder")}><GameImage src="/ui/consumables/thunder_seed.png" alt="" /><span>{consumables.thunder}</span></button>
         </div>
       </aside>
       <div className={`enemy-stage ${combatFx?.phase === "impact" && combatFx.damage > 0 ? "enemy-impact" : ""} ${combatFx?.phase === "enemy-turn" ? "enemy-lunge" : ""}`}>
@@ -3765,12 +3777,12 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
           <p>{enemy.counter}</p>
         </div>
         {(enemyBurn > 0 || enemyPoison > 0 || enemyWeak > 0 || enemyShield > 0) && <div className="enemy-statuses">
-          {enemyShield > 0 && <span className="status-shield"><img src="/ui/icons/shield.png" alt="" />护体 {enemyShield}</span>}
-          {enemyBurn > 0 && <span className="status-burn"><img src="/ui/icons/burn.png" alt="" />燃烧 {enemyBurn}</span>}
-          {enemyPoison > 0 && <span className="status-poison"><img src="/ui/icons/curse.png" alt="" />丹毒 {enemyPoison}</span>}
-          {enemyWeak > 0 && <span className="status-weak"><img src="/ui/icons/weak.png" alt="" />虚弱 {enemyWeak}</span>}
+          {enemyShield > 0 && <span className="status-shield"><GameImage src="/ui/icons/shield.png" alt="" />护体 {enemyShield}</span>}
+          {enemyBurn > 0 && <span className="status-burn"><GameImage src="/ui/icons/burn.png" alt="" />燃烧 {enemyBurn}</span>}
+          {enemyPoison > 0 && <span className="status-poison"><GameImage src="/ui/icons/curse.png" alt="" />丹毒 {enemyPoison}</span>}
+          {enemyWeak > 0 && <span className="status-weak"><GameImage src="/ui/icons/weak.png" alt="" />虚弱 {enemyWeak}</span>}
         </div>}
-        <img className="enemy-art" src={enemy.art} alt={enemy.name} />
+        <GameImage eager className="enemy-art" src={enemy.art} alt={enemy.name} />
         {combatFx?.phase === "impact" && combatFx.damage > 0 && <div className={`damage-number damage-${combatFx.kind}`}>−{combatFx.damage}</div>}
         {combatFx?.phase === "impact" && combatFx.kind === "guard" && <div className="effect-number effect-guard">+{combatFx.shieldGain} 护盾</div>}
         {combatFx?.phase === "impact" && combatFx.kind === "heal" && <div className="effect-number effect-heal">+{combatFx.heal} 生命</div>}
@@ -3816,7 +3828,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
       </div>
       <button className={`end-turn ${guideStep === 2 ? "guide-focus" : ""}`} disabled={combatBusy} onClick={endTurn}><span className="end-turn-ring" /><strong>结束<br />回合</strong><kbd>Space</kbd></button>
       <div className="pile-status">
-        <button className="deck-count" aria-label={`抽牌堆剩余 ${drawPile.length} 张`} onClick={() => setOverlay("deck")}><img src="/card_back_qinglan_trial.png" alt="" /><span>{drawPile.length}</span></button>
+        <button className="deck-count" aria-label={`抽牌堆剩余 ${drawPile.length} 张`} onClick={() => setOverlay("deck")}><GameImage src="/card_back_qinglan_trial.png" alt="" /><span>{drawPile.length}</span></button>
         <span className="discard-count">弃 {discardPile.length}</span>
         {exhaustPile.length > 0 && <span className="exhaust-count">耗 {exhaustPile.length}</span>}
       </div>
@@ -3841,13 +3853,13 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
 function DrawSequence({ fx }) {
   return (
     <div className="draw-sequence" key={fx.nonce}>
-      <div className="draw-source"><img src="/card_back_qinglan_trial.png" alt="" /><span>{fx.source}</span></div>
+      <div className="draw-source"><GameImage src="/card_back_qinglan_trial.png" alt="" /><span>{fx.source}</span></div>
       {fx.cards.map((card, index) => (
         <div className={`draw-ghost draw-ghost-${index}`} style={{ "--draw-index": index }} key={`${card.id}-${index}`}>
-          <img src="/card_back_qinglan_trial.png" alt="" />
+          <GameImage src="/card_back_qinglan_trial.png" alt="" />
           <article>
             <span>{card.cost}</span>
-            <img src={card.art} alt="" />
+            <GameImage src={card.art} alt="" />
             <strong>{card.name}</strong>
             <small>{card.keyword}</small>
           </article>
@@ -3900,7 +3912,7 @@ function PlayedCardFx({ fx }) {
       <article>
         <span>{fx.card.cost}</span>
         <h3>{fx.card.name}</h3>
-        <img src={fx.card.art} alt="" />
+        <GameImage src={fx.card.art} alt="" />
         <small>{fx.card.type}</small>
       </article>
     </div>
@@ -3908,7 +3920,7 @@ function PlayedCardFx({ fx }) {
 }
 
 function Resource({ icon, name, value, className = "" }) {
-  return <div className={`resource ${className}`}><img src={icon} alt="" /><span>{name}</span><strong>{value}</strong></div>;
+  return <div className={`resource ${className}`}><GameImage src={icon} alt="" /><span>{name}</span><strong>{value}</strong></div>;
 }
 
 function Card({ card, index, playable, displayCost = card.cost, comboReady = false, casting = false, status = null, onClick }) {
@@ -3917,7 +3929,7 @@ function Card({ card, index, playable, displayCost = card.cost, comboReady = fal
       <span className={`card-cost ${displayCost < card.cost ? "discounted" : ""}`}>{displayCost}</span>
       <span className="card-key">{index + 1}</span>
       <h3>{card.name}</h3>
-      <img src={card.art} alt="" />
+      <GameImage src={card.art} alt="" />
       <div className="card-meta"><small>{card.type}</small><b>{card.rarity}</b></div>
       <strong className="card-keyword">{card.keyword}</strong>
       {comboReady && <span className="combo-ready-seal">联</span>}
@@ -3993,7 +4005,7 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
       <h1>{isBossReward ? "胜者执卷，真相落印" : "妖影散尽，灵光未灭"}</h1>
       <p>{isBossReward ? investigation?.conclusion : "至少一张战利会推进当前最接近的流派，其余保留补强与转型空间。"}</p>
       {aftermath && <div className="battle-aftermath">
-        <img src={aftermath.enemy.art} alt="" />
+        <GameImage src={aftermath.enemy.art} alt="" />
         <div className="aftermath-copy">
           <small>战斗余波 · {aftermath.enemy.name}</small>
           <strong>{aftermath.title}</strong>
@@ -4008,7 +4020,7 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
         </aside>
       </div>}
       {isBossReward && bossClue && <div className="boss-revelation">
-        <img src={chapterData?.art} alt="" />
+        <GameImage src={chapterData?.art} alt="" />
         <div>
           <small>首领最后的证词</small>
           <strong>{bossClue}</strong>
@@ -4063,14 +4075,14 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
           <div className="reward-fit"><b>推荐 {fit.rank}</b><span>{fit.reason}</span></div>
           <Card card={card} index={index} playable={rewardRevealed} onClick={() => rewardRevealed && claimReward(card)} />
           <div className="reward-card-seal" aria-hidden="true">
-            <img src="/card_back_qinglan_trial.png" alt="" />
+            <GameImage src="/card_back_qinglan_trial.png" alt="" />
             <span>{card.rarity}</span>
             <strong>待揭</strong>
           </div>
         </div>;
       })}</div>
       {treasureReward && <button className="reward-treasure" onClick={() => claimReward(null, treasureReward)}>
-        <img src={treasureReward.art} alt="" />
+        <GameImage src={treasureReward.art} alt="" />
         <span><small>{stage === 2 ? "精英战法宝" : "首领遗珍"}</small><strong>{treasureReward.name}</strong><em>{treasureReward.effect}</em></span>
         <b>选择法宝</b>
       </button>}
@@ -4088,7 +4100,7 @@ function TreasureStrip({ treasures, compact = false }) {
   return (
     <div className={`treasure-strip ${compact ? "compact" : ""}`}>
       <small>法宝</small>
-      {treasures.map((treasure) => <span key={treasure.id} title={`${treasure.name}：${treasure.effect}`}><img src={treasure.art} alt="" /><b>{treasure.name}</b></span>)}
+      {treasures.map((treasure) => <span key={treasure.id} title={`${treasure.name}：${treasure.effect}`}><GameImage src={treasure.art} alt="" /><b>{treasure.name}</b></span>)}
     </div>
   );
 }
@@ -4395,7 +4407,7 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
           </div>
           <div className="deck-diagnosis"><b>补强优先级</b><span>{analysis.priorities.join(" · ") || "结构健康，继续强化核心组件"}</span></div>
           <div className="deck-diagnosis"><b>成型组件</b><span>{analysis.keyComponents.map(([name, count]) => `${name} ${count}`).join(" · ") || "尚未形成双卡组件"}</span></div>
-          <div className="deck-scroll-list">{deck.map((card, index) => <span key={`${card.id}-${index}`}><img src={card.art} alt="" /><b>{card.name}</b><small>{card.cost} 费 · {card.keyword}</small></span>)}</div>
+          <div className="deck-scroll-list">{deck.map((card, index) => <span key={`${card.id}-${index}`}><GameImage src={card.art} alt="" /><b>{card.name}</b><small>{card.cost} 费 · {card.keyword}</small></span>)}</div>
         </>}
         {type === "codex" && <>
           {(() => {
@@ -4440,7 +4452,7 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
           <div className="codex-treasures">
             {TREASURES.map((treasure) => {
               const discovered = profile.discoveredTreasures?.includes(treasure.id) || treasures.some((owned) => owned.id === treasure.id);
-              return <article className={discovered ? "" : "unknown"} key={treasure.id}><img src={treasure.art} alt="" /><div><strong>{discovered ? treasure.name : "未识法器"}</strong><p>{discovered ? treasure.effect : "在精英战、坊市或山中异闻里发现。"}</p></div></article>;
+              return <article className={discovered ? "" : "unknown"} key={treasure.id}><GameImage src={treasure.art} alt="" /><div><strong>{discovered ? treasure.name : "未识法器"}</strong><p>{discovered ? treasure.effect : "在精英战、坊市或山中异闻里发现。"}</p></div></article>;
             })}
           </div>
           <h3 className="codex-heading">命途印记</h3>
