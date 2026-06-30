@@ -749,6 +749,18 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .defeat-learning b { margin-top: 5px; color: #cfc2a0; font-size: 9px; font-weight: 400; line-height: 1.55; }
 .defeat-learning p { margin: 9px 0 0; color: #8a9c92; font-size: 9px; line-height: 1.55; }
 .defeat-learning em { display: block; margin-top: 5px; color: #b89d62; font-size: 8px; font-style: normal; line-height: 1.45; }
+.defeat-counterplay {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin-top: 10px;
+  background: rgba(177,138,66,.16);
+}
+.defeat-counterplay article {
+  min-height: 68px;
+  padding: 10px 11px;
+  background: rgba(20,19,13,.82);
+}
 .defeat-diagnosis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 28px; background: rgba(130,151,139,.16); }
 .defeat-diagnosis div { min-height: 83px; padding: 13px; background: rgba(6,17,14,.92); }
 .defeat-diagnosis small, .defeat-diagnosis strong { display: block; }
@@ -1385,6 +1397,8 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .defeat-learning > div { grid-template-columns: 1fr; }
   .defeat-learning article { min-height: 58px; }
   .defeat-learning header strong { font-size: 18px; }
+  .defeat-counterplay { grid-template-columns: 1fr; }
+  .defeat-counterplay article { min-height: 56px; }
   .defeat-diagnosis { grid-template-columns: 1fr; }
   .defeat-diagnosis div { min-height: 60px; }
   .defeat-actions button { flex: 1; min-width: 0; }

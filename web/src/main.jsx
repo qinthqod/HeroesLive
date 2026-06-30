@@ -4183,7 +4183,14 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
   );
 }
 
-function defeatLearningPlan(analysis, stage, clues, pendingClue, failureStreak, support) {
+function defeatLearningPlan(analysis, chapter, stage, clues, pendingClue, failureStreak, support) {
+  const enemy = ENCOUNTER_ENEMIES[chapter]?.[stage];
+  const moves = buildEnemyMoves(chapter, stage) || [];
+  const hasShield = moves.some((move) => move.shield);
+  const hasDrain = moves.some((move) => move.drainQi);
+  const hasHandPressure = moves.some((move) => move.drawPenalty || move.curse || move.weak);
+  const hasMultiHit = moves.some((move) => move.hits && move.hits > 1);
+  const pressure = chapterDifficultyProfile(chapter);
   let lesson = {
     type: "节奏判断",
     cause: "牌组结构尚可，但本场攻守节奏没有跟上敌人当前招式。",
@@ -4235,13 +4242,25 @@ function defeatLearningPlan(analysis, stage, clues, pendingClue, failureStreak, 
     : failureStreak > 0
       ? "当前尚无额外数值扶助，先调整路线与牌组结构会更有效。"
       : "首次失败不发放额外资源，先从本页处方修正构筑方向。";
-  return { ...lesson, practice, clueLine, supportLine };
+  const enemyLine = enemy
+    ? `${enemy.name} · ${enemy.archetype}。${enemy.trait}`
+    : `第 ${chapter} 章第 ${stage} 战。敌压 ${pressure.pressure}，${pressure.tolerance}。`;
+  const counterLine = hasHandPressure
+    ? "优先补净心、过牌或低费防御，别让手牌污染和虚弱同时拖慢回合。"
+    : hasShield
+      ? "优先准备拆盾与持续输出；看到敌人立壁回合，不要把全部伤害打进护体。"
+      : hasDrain
+        ? "保留聚气散或 0–1 费牌，避免被夺气后整回合空过。"
+        : hasMultiHit
+          ? "多段攻击最怕裸血硬吃，至少留一张即时护盾或恢复。"
+          : enemy?.counter || pressure.advice;
+  return { ...lesson, practice, clueLine, supportLine, enemyLine, counterLine };
 }
 
 function DefeatScreen({ chapter, stage, deck, treasures, clues, pendingClue, runMode, runSeed, runTrial, failureStreak, onRetry, onHome }) {
   const analysis = analyzeDeck(deck);
   const support = retrySupportFor(failureStreak);
-  const lesson = defeatLearningPlan(analysis, stage, clues, pendingClue, failureStreak, support);
+  const lesson = defeatLearningPlan(analysis, chapter, stage, clues, pendingClue, failureStreak, support);
   return (
     <section className="defeat-screen screen-content">
       <div className="defeat-moon" />
@@ -4265,6 +4284,10 @@ function DefeatScreen({ chapter, stage, deck, treasures, clues, pendingClue, run
           </div>
           <p>{lesson.clueLine}</p>
           <em>{lesson.supportLine}</em>
+          <div className="defeat-counterplay">
+            <article><small>本场敌人</small><b>{lesson.enemyLine}</b></article>
+            <article><small>机制对策</small><b>{lesson.counterLine}</b></article>
+          </div>
         </section>
         <div className="defeat-diagnosis">
           <div><small>最终牌组</small><strong>{deck.length} 张</strong></div>

@@ -376,7 +376,7 @@ await run("PC 失败页显示学习处方", { width: 1366, height: 768 }, "?scre
   const learningText = await page.locator(".defeat-learning").innerText();
   const learningBox = await page.locator(".defeat-learning").boundingBox();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
-  if (!learningText.includes("错误类型") || !learningText.includes("下局行动") || !learningText.includes("节点练习")) throw new Error("PC 失败页缺少学习处方字段");
+  if (!learningText.includes("错误类型") || !learningText.includes("下局行动") || !learningText.includes("节点练习") || !learningText.includes("本场敌人") || !learningText.includes("机制对策")) throw new Error("PC 失败页缺少学习处方字段");
   if (!learningBox || learningBox.width < 500) throw new Error(`PC 失败学习处方过窄：${learningBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`PC 失败页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
@@ -388,7 +388,7 @@ await run("移动失败页学习处方不横溢", { width: 430, height: 932 }, "
   const learningText = await page.locator(".defeat-learning").innerText();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   if (!learningBox || learningBox.width > 402) throw new Error(`移动失败学习处方过宽：${learningBox?.width}`);
-  if (!learningText.includes("错误类型") || !learningText.includes("下局行动")) throw new Error("移动失败页缺少学习处方");
+  if (!learningText.includes("错误类型") || !learningText.includes("下局行动") || !learningText.includes("本场敌人") || !learningText.includes("机制对策")) throw new Error("移动失败页缺少学习处方");
   if (layout.scrollWidth > layout.width) throw new Error(`移动失败页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
