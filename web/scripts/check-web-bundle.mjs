@@ -4,6 +4,7 @@ import { dirname, extname, resolve } from "node:path";
 const output = resolve(import.meta.dirname, "../../exports/web");
 const textExtensions = new Set([".html", ".css", ".js"]);
 const textFiles = [];
+const jsFiles = [];
 const pngFiles = [];
 const missingImages = new Set();
 let totalBytes = 0;
@@ -19,6 +20,7 @@ async function collect(directory) {
     totalBytes += (await stat(path)).size;
     const extension = extname(entry.name).toLowerCase();
     if (extension === ".png") pngFiles.push(path);
+    if (extension === ".js") jsFiles.push(path);
     if (textExtensions.has(extension)) textFiles.push(path);
   }
 }
@@ -57,4 +59,14 @@ if (totalBytes > maxBytes) {
   throw new Error(`Production bundle is ${(totalBytes / 1024 / 1024).toFixed(1)} MiB; limit is 10 MiB.`);
 }
 
-console.log(`Production bundle verified: ${(totalBytes / 1024 / 1024).toFixed(1)} MiB, no PNG files, and all WebP references resolve.`);
+const maxJsChunkBytes = 500 * 1024;
+const oversizedJs = [];
+for (const file of jsFiles) {
+  const size = (await stat(file)).size;
+  if (size > maxJsChunkBytes) oversizedJs.push(`${file} ${(size / 1024).toFixed(1)} KiB`);
+}
+if (oversizedJs.length) {
+  throw new Error(`JS chunk budget exceeded 500 KiB:\n${oversizedJs.join("\n")}`);
+}
+
+console.log(`Production bundle verified: ${(totalBytes / 1024 / 1024).toFixed(1)} MiB, ${jsFiles.length} JS chunk(s) under 500 KiB, no PNG files, and all WebP references resolve.`);

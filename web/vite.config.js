@@ -8,5 +8,12 @@ export default defineConfig({
   build: {
     outDir: "../exports/web",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom/client"],
+        },
+      },
+    },
   },
 });
