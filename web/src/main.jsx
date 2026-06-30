@@ -555,7 +555,7 @@ function App() {
       completedTribulations: [],
       tutorialFlags: {},
       seenEncounters: [],
-      feedback: { sound: true, haptics: true, volume: 0.55 },
+      feedback: { sound: true, haptics: true, reducedMotion: false, volume: 0.55 },
     };
     return {
       ...base,
@@ -585,7 +585,7 @@ function App() {
       recentRuns: base.recentRuns || [],
       tutorialFlags: base.tutorialFlags || {},
       seenEncounters: base.seenEncounters || [],
-      feedback: { sound: true, haptics: true, volume: 0.55, ...(base.feedback || {}) },
+      feedback: { sound: true, haptics: true, reducedMotion: false, volume: 0.55, ...(base.feedback || {}) },
       ...(debugArchiveCount ? {
         investigationArchive: {
           ...(base.investigationArchive || {}),
@@ -2005,6 +2005,7 @@ function App() {
       className={`app screen-${screen} device-${deviceMode} transition-${transition}`}
       data-device={deviceMode}
       data-layout={deviceMode === "desktop" ? "wide-desktop" : "compact-mobile"}
+      data-motion={profile.feedback?.reducedMotion ? "reduced" : "full"}
       onScroll={(event) => {
         if (screen === "combat" && event.currentTarget.scrollTop !== 0) {
           event.currentTarget.scrollTop = 0;
@@ -4465,7 +4466,7 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
   })[type], [type]);
   return (
     <div className="overlay" onMouseDown={close}>
-      <article className={type === "deck" ? "deck-overlay" : type === "codex" ? "codex-overlay" : type === "guide" ? "guide-overlay" : ""} onMouseDown={(event) => event.stopPropagation()}>
+      <article className={type === "deck" ? "deck-overlay" : type === "codex" ? "codex-overlay" : type === "guide" ? "guide-overlay" : type === "settings" ? "settings-overlay" : ""} onMouseDown={(event) => event.stopPropagation()}>
         <button className="overlay-close" onClick={close}>收起</button>
         <span className="section-index">卷册</span><h2>{content[0]}</h2><p>{content[1]}</p>
         {type === "guide" && <>
@@ -4601,6 +4602,10 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
               setProfile((value) => ({ ...value, feedback: { ...value.feedback, haptics } }));
               if (haptics) feedback("impact");
             }}><strong>触觉</strong><small>{profile.feedback.haptics ? "已开启" : "已关闭"}</small></button>
+            <button className={profile.feedback.reducedMotion ? "active" : ""} onClick={() => {
+              const reducedMotion = !profile.feedback.reducedMotion;
+              setProfile((value) => ({ ...value, feedback: { ...value.feedback, reducedMotion } }));
+            }}><strong>低动效</strong><small>{profile.feedback.reducedMotion ? "已开启" : "已关闭"}</small></button>
             <label><span>音量</span><input type="range" min="0.1" max="1" step="0.05" value={profile.feedback.volume} onChange={(event) => setProfile((value) => ({ ...value, feedback: { ...value.feedback, volume: Number(event.target.value) } }))} /><b>{Math.round(profile.feedback.volume * 100)}%</b></label>
           </div>
           {savedRun ? <>

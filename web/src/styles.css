@@ -36,6 +36,33 @@ button:focus-visible { outline: 2px solid var(--amber-light); outline-offset: 3p
 }
 .app.device-desktop { min-width: 1024px; }
 .app.device-mobile { min-width: 0; min-height: 100%; }
+.app[data-motion="reduced"] *,
+.app[data-motion="reduced"] *::before,
+.app[data-motion="reduced"] *::after {
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: .01ms !important;
+}
+.app[data-motion="reduced"] .screen-curtain,
+.app[data-motion="reduced"] .impact-streak,
+.app[data-motion="reduced"] .enemy-strike-flash,
+.app[data-motion="reduced"] .draw-ink-bloom,
+.app[data-motion="reduced"] .played-card-glow {
+  display: none !important;
+}
+.app[data-motion="reduced"] .damage-number,
+.app[data-motion="reduced"] .effect-number,
+.app[data-motion="reduced"] .trigger-feedback,
+.app[data-motion="reduced"] .turn-flow,
+.app[data-motion="reduced"] .combat-guide {
+  animation: none !important;
+  transform: none !important;
+}
+.app[data-motion="reduced"] .game-card:hover,
+.app[data-motion="reduced"] .reward-cards .game-card:hover {
+  transform: none !important;
+}
 .device-mode-badge {
   position: fixed;
   z-index: 120;

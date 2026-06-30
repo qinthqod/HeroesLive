@@ -60,7 +60,9 @@ expect(source.includes("completedDailyTrials") && source.includes("dailyFirstCle
 expect(source.includes("completedTribulations") && source.includes("tribulationStatus.claimable") && source.includes("settleTribulationClear"), "劫数首破奖励必须具有永久章节锁并在章末结算");
 expect(source.includes("nextMode === \"story\" ? tribulationForLevel(options.tribulationLevel || 0) : tribulationForLevel(0)"), "每日试炼和挑战复刻不得继承终局劫数");
 expect(source.includes("createFeedbackEngine") && source.includes("navigator.vibrate"), "战斗必须提供可降级的音效与触觉反馈");
-expect(source.includes("feedback: { sound: true, haptics: true, volume: 0.55"), "反馈偏好必须具有可持久化默认值");
+expect(source.includes("feedback: { sound: true, haptics: true, reducedMotion: false, volume: 0.55"), "反馈偏好必须具有可持久化默认值");
+expect(source.includes("data-motion={profile.feedback?.reducedMotion ? \"reduced\" : \"full\"}") && source.includes("低动效") && source.includes("reducedMotion"), "设置页必须提供可持久化低动效模式并暴露根节点状态");
+expect(source.includes("type === \"settings\" ? \"settings-overlay\"") && source.includes("feedback-settings"), "设置弹窗必须挂载专属 settings-overlay 样式类");
 expect(source.includes("function GameImage") && source.includes("loading={eager ? \"eager\" : \"lazy\"}") && source.includes("decoding={eager ? \"sync\" : \"async\"}") && source.includes("fetchPriority={eager ? \"high\" : \"auto\"}"), "图片素材必须统一通过 GameImage 设置首屏优先级、懒加载和异步解码");
 expect(source.includes("<GameImage eager src={currentChapter.art}") && source.includes("<GameImage eager className=\"enemy-art\"") && source.includes("<GameImage src={card.art}") && source.includes("<GameImage src={treasure.art}"), "首屏/战斗关键图必须优先加载，高密度卡牌与法宝图必须走懒加载");
 for (const feedbackKind of ["cast", "impact", "draw", "enemy", "hurt", "reward"]) {
@@ -109,6 +111,7 @@ expect(source.includes("DesktopModePanel") && source.includes("desktop-mode-pane
 expect(source.includes("desktop-control-hints") && source.includes("Space 结束回合") && source.includes("单击卡牌立即出牌"), "PC 战斗页必须提供桌面端操作提示");
 expect(styles.includes(".device-desktop .combat-screen") && styles.includes(".device-desktop .player-rail") && styles.includes(".device-desktop .progress-rail") && styles.includes(".device-desktop .hand"), "PC 战斗页必须拥有桌面端左中右战局与宽手牌区");
 expect(styles.includes(".combat-effect-bursts") && styles.includes(".effect-burst") && styles.includes(".draw-ghost article img"), "战斗必须拥有多效果浮字和抽牌翻面真实卡图样式");
+expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".app[data-motion=\"reduced\"] .impact-streak") && styles.includes(".app[data-motion=\"reduced\"] .reward-cards .game-card:hover"), "低动效模式必须降低全局动画、隐藏强闪烁并保留可读状态反馈");
 expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile .desktop-mode-panel") && styles.includes(".device-desktop .desktop-control-hints"), "PC 专属面板和战斗提示必须具备桌面/移动端样式隔离");
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 expect(styles.includes(".reward-decision-aid") && styles.includes(".device-desktop .reward-decision-aid") && styles.includes(".reward-decision-aid.sealed"), "战利满意即可推荐必须拥有移动/PC 和启封前后的视觉状态");

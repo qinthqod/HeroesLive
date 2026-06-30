@@ -30,6 +30,7 @@
     "smoke:chapter-transition": "node scripts/smoke-chapter-transitions.mjs",
     "smoke:home-world": "node scripts/smoke-home-world-state.mjs",
     "smoke:responsive": "node scripts/smoke-responsive-layout.mjs",
+    "smoke:settings": "node scripts/smoke-settings-preferences.mjs",
     "smoke:tribulation": "node scripts/smoke-tribulation-mode.mjs",
     "smoke:story": "node scripts/smoke-story-lore.mjs",
     "smoke:epilogue": "node scripts/smoke-epilogue-branches.mjs",
