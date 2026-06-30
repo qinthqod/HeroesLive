@@ -116,6 +116,7 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
   if (!firstBossSigil.includes("第七盏灯") || !firstBossSigil.includes("灯火试心")) throw new Error("PC 章节卡缺少 Boss 身份签");
   if (!firstBossSigilBox || firstBossSigilBox.width < 130) throw new Error(`PC 章节 Boss 签过窄：${firstBossSigilBox?.width}`);
   if (!firstCardText.includes("证据") || !firstCardText.includes("后记") || !firstCardText.includes("劫数") || !firstCardText.includes("下一目标")) throw new Error("PC 章节卡缺少复玩目标");
+  if (!firstCardText.includes("敌压") || !firstCardText.includes("容错") || !firstCardText.includes("建议")) throw new Error("PC 章节卡缺少难度画像");
   if (!firstCardBox || firstCardBox.height < 300) throw new Error(`PC 章节卡高度不足以承载目标梯度：${firstCardBox?.height}`);
   if (layout.scrollWidth > layout.width) throw new Error(`PC 章节页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
@@ -143,6 +144,7 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   if (!firstBossSigil.includes("第七盏灯") || !firstBossSigil.includes("灯火试心")) throw new Error("移动章节卡缺少 Boss 身份签");
   if (!firstBossSigilBox || firstBossSigilBox.width > 290) throw new Error(`移动章节 Boss 签过宽：${firstBossSigilBox?.width}`);
   if (!firstCardText.includes("证据") || !firstCardText.includes("后记") || !firstCardText.includes("劫数") || !firstCardText.includes("下一目标")) throw new Error("移动章节卡缺少复玩目标");
+  if (!firstCardText.includes("敌压") || !firstCardText.includes("容错") || !firstCardText.includes("建议")) throw new Error("移动章节卡缺少难度画像");
   if (!goalBox || goalBox.width > 390) throw new Error(`移动章节复玩目标过宽：${goalBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动章节页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });

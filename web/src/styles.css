@@ -1841,7 +1841,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   margin: 0 auto;
   padding: 0 0 40px;
 }
-.device-desktop .chapter-card { height: 318px; }
+.device-desktop .chapter-card { height: 348px; }
 .device-desktop .chapter-boss-sigil { min-width: 144px; }
 .device-desktop .chapter-replay-goals span { min-height: 36px; padding: 6px 8px; }
 .device-desktop .chapter-next-target { margin-top: 9px; font-size: 9px; }
@@ -2318,6 +2318,29 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .casefile-metrics small { display: block; }
 .casefile-metrics b { color: #e0c171; font-family: "STKaiti", serif; font-size: 20px; font-weight: 400; }
 .casefile-metrics small { margin-top: 2px; color: #789184; font-size: 8px; }
+.chapter-difficulty-brief {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 8px;
+}
+.chapter-difficulty-brief span,
+.chapter-difficulty-tags span {
+  min-width: 0;
+  border: 1px solid rgba(218,176,81,.18);
+  background: rgba(70,44,12,.32);
+  color: #cfc1a0;
+}
+.chapter-difficulty-brief span {
+  padding: 7px 8px;
+  font-size: 9px;
+}
+.chapter-difficulty-brief b,
+.chapter-difficulty-tags b {
+  margin-right: 5px;
+  color: #e2bd64;
+  font-weight: 500;
+}
 .casefile-main button { width: 100%; margin-top: 14px; padding: 13px 14px; border: 1px solid rgba(217,172,72,.46); border-radius: 14px 2px 14px 2px; background: linear-gradient(105deg, rgba(119,75,17,.68), rgba(48,78,57,.52)); color: #f3d991; cursor: pointer; }
 .casefile-main button:disabled { opacity: .46; cursor: not-allowed; filter: grayscale(.6); }
 .casefile-lore { display: grid; gap: 8px; padding: 0 18px 18px; }
@@ -2449,6 +2472,19 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   background: rgba(25,80,55,.24);
 }
 .chapter-replay-goals span.done i { color: #8bc7a8; }
+.chapter-difficulty-tags {
+  display: grid;
+  grid-template-columns: .72fr .88fr 1.25fr;
+  gap: 5px;
+  margin-top: 6px;
+}
+.chapter-difficulty-tags span {
+  overflow: hidden;
+  padding: 5px 6px;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .chapter-next-target {
   display: block;
   margin-top: 7px;

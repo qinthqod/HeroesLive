@@ -246,6 +246,42 @@ function buildEnemyMoves(chapter, encounterStage) {
     : ENCOUNTER_MOVE_PATTERNS[chapter][encounterStage];
 }
 
+function chapterDifficultyProfile(chapterId, tribulation = null) {
+  const enemies = Object.values(ENCOUNTER_ENEMIES[chapterId] || {});
+  const moveGroups = [
+    ...(ENCOUNTER_MOVE_PATTERNS[chapterId] ? Object.values(ENCOUNTER_MOVE_PATTERNS[chapterId]) : []),
+    BOSS_MOVE_PATTERNS[chapterId] || [],
+    BOSS_PHASES[chapterId]?.moves || [],
+  ];
+  const moves = moveGroups.flat();
+  const totalHp = enemies.reduce((sum, enemy) => sum + (enemy?.max || enemy?.hp || 0), 0);
+  const avgDamage = moves.length ? moves.reduce((sum, move) => sum + ((move.damage || 0) * (move.hits || 1)), 0) / moves.length : 0;
+  const mechanismScore = moves.reduce((sum, move) => sum
+    + (move.shield ? 1 : 0)
+    + (move.drainQi ? 1 : 0)
+    + (move.drawPenalty ? 1 : 0)
+    + (move.curse ? 1 : 0)
+    + (move.weak ? 0.7 : 0)
+    + (move.heal ? 0.7 : 0)
+    + (move.hits && move.hits > 1 ? 0.6 : 0), 0);
+  const tribulationBoost = tribulation?.level ? tribulation.level * 8 : 0;
+  const raw = Math.round(totalHp / 12 + avgDamage * 2.6 + mechanismScore * 5 + tribulationBoost);
+  const pressure = Math.max(18, Math.min(99, raw));
+  const tier = pressure >= 82 ? "凶险" : pressure >= 66 ? "高压" : pressure >= 48 ? "均衡" : "稳健";
+  const tolerance = pressure >= 82 ? "容错低" : pressure >= 66 ? "容错中" : "容错高";
+  const needShieldBreak = moves.some((move) => move.shield);
+  const needCleanse = moves.some((move) => move.curse || move.weak || move.drawPenalty);
+  const needQi = moves.some((move) => move.drainQi);
+  const advice = needCleanse
+    ? "带净心/过牌"
+    : needShieldBreak
+      ? "准备拆盾爆发"
+      : needQi
+        ? "保留聚气资源"
+        : pressure >= 66 ? "提高防御密度" : "适合补证据";
+  return { pressure, tier, tolerance, advice };
+}
+
 function intentLabel(move) {
   const parts = [];
   if (move.damage) parts.push(`${move.damage}${move.hits ? `×${move.hits}` : ""}`);
@@ -2554,6 +2590,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
   const previewEvidenceTotal = investigationEvidence(previewChapter.id).length;
   const previewEpilogues = CHAPTER_EPILOGUES[previewChapter.id] || [];
   const previewFoundEpilogues = previewEpilogues.filter((epilogue) => (profile.unlockedEpilogues || []).includes(epilogue.id)).length;
+  const previewDifficulty = chapterDifficultyProfile(previewChapter.id, selectedTribulation);
   return (
     <section className="mobile-shell chapter-screen screen-content">
       <MobileTopBar title="云游录" subtitle={`${CHAPTERS.length} 卷主线 · 逐章解锁`} onBack={onBack} profile={profile} />
@@ -2592,7 +2629,11 @@ function ChapterScreen({ profile, onBack, onChoose }) {
           <div className="casefile-metrics">
             <span><b>{previewFoundEvidence}/{previewEvidenceTotal}</b><small>宗卷证据</small></span>
             <span><b>{previewFoundEpilogues}/{previewEpilogues.length}</b><small>人物后记</small></span>
-            <span><b>{previewEnemies.length}</b><small>遭遇压力</small></span>
+            <span><b>{previewDifficulty.pressure}</b><small>敌压 · {previewDifficulty.tier}</small></span>
+          </div>
+          <div className="chapter-difficulty-brief" aria-label="章节难度建议">
+            <span><b>容错</b>{previewDifficulty.tolerance}</span>
+            <span><b>建议</b>{previewDifficulty.advice}</span>
           </div>
           <button disabled={!previewUnlocked} onClick={() => onChoose(previewChapter.id, selectedTribulation.level)}>
             {previewUnlocked ? `进入${previewChapter.name}` : "完成前章后解锁"}
@@ -2664,6 +2705,7 @@ function ChapterScreen({ profile, onBack, onChoose }) {
           const foundEvidence = profile.investigationArchive?.[String(chapter.id)]?.length || 0;
           const epilogues = CHAPTER_EPILOGUES[chapter.id] || [];
           const chapterBoss = ENCOUNTER_ENEMIES[chapter.id]?.[3];
+          const difficulty = chapterDifficultyProfile(chapter.id, selectedTribulation);
           const foundEpilogues = epilogues.filter((epilogue) => (profile.unlockedEpilogues || []).includes(epilogue.id)).length;
           const tribulationClears = TRIBULATION_LEVELS.slice(1).filter((item) => tribulationRewardStatus(profile, chapter.id, item.level).claimed).length;
           const nextTarget = !unlocked
@@ -2686,6 +2728,11 @@ function ChapterScreen({ profile, onBack, onChoose }) {
                   <span className={foundEvidence >= evidence.length ? "done" : ""}><b>证据</b><i>{foundEvidence}/{evidence.length}</i></span>
                   <span className={foundEpilogues >= epilogues.length ? "done" : ""}><b>后记</b><i>{foundEpilogues}/{epilogues.length}</i></span>
                   <span className={mainComplete && tribulationClears >= TRIBULATION_LEVELS.length - 1 ? "done" : ""}><b>劫数</b><i>{tribulationClears}/{TRIBULATION_LEVELS.length - 1}</i></span>
+                </div>
+                <div className="chapter-difficulty-tags" aria-label={`第 ${chapter.id} 章难度画像`}>
+                  <span><b>敌压</b>{difficulty.pressure}</span>
+                  <span><b>{difficulty.tier}</b>{difficulty.tolerance}</span>
+                  <span><b>建议</b>{difficulty.advice}</span>
                 </div>
                 <em className="chapter-next-target">下一目标 · {nextTarget}</em>
               </div>
