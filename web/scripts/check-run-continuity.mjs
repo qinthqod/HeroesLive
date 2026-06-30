@@ -94,6 +94,7 @@ expect(source.includes("generateRewardChoices") && source.includes("reward-build
 expect(source.includes("reward-reveal-panel") && source.includes("reward-card-seal") && source.includes("rewardRarityPlan") && source.includes("reward-open-spoils") && source.includes("启封战利"), "战利页必须保留主动启封、牌背封印和奖励池说明");
 expect(source.includes("reward-contract") && source.includes("本次保底") && source.includes("重整代价") && source.includes("兜底选择"), "战利页必须公开保底、可变奖励、重整代价与兜底选择");
 expect(source.includes("rewardDecisionOptions") && source.includes("reward-decision-aid") && source.includes("满意即可 · 四步内决策") && source.includes("构筑契合、当前短板、费用压力"), "战利页必须提供满意即可推荐，降低三选一奖励的认知负担");
+expect(source.includes("rewardPickMemory") && source.includes("reward-pick-memory") && source.includes("入牌预期") && source.includes("deck.length}→${nextDeck.length}") && source.includes("成卷后优先精简/真解"), "战利候选必须展示拿牌后的流派进度、牌组规模和下一步构筑记忆");
 expect(source.includes("boss-revelation") && source.includes("首领最后的证词"), "首领战利必须承接章节真相，而非复用普通战文案");
 expect(source.includes("if (stage < 3) setHp") && source.includes("不取战利 · 直接结卷"), "章末跳过战利不得通过无后续价值的回血抬高评阶");
 expect(source.includes("路线 ${routeStep}/4") && source.includes("routeStep * 25"), "路线顶栏必须与四层章节地图保持一致");
@@ -132,6 +133,7 @@ expect(styles.includes(".casebook-focus") && styles.includes(".casebook-volume-g
 expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile .desktop-mode-panel") && styles.includes(".device-desktop .desktop-control-hints"), "PC 专属面板和战斗提示必须具备桌面/移动端样式隔离");
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 expect(styles.includes(".reward-decision-aid") && styles.includes(".device-desktop .reward-decision-aid") && styles.includes(".reward-decision-aid.sealed"), "战利满意即可推荐必须拥有移动/PC 和启封前后的视觉状态");
+expect(styles.includes(".reward-pick-memory") && styles.includes(".reward-card-wrap.sealed .reward-pick-memory") && styles.includes(".device-desktop .reward-pick-memory"), "战利入牌预期必须拥有启封后显示、移动压缩和PC可读样式");
 expect(styles.includes(".class-system-grid") && styles.includes(".starter-handbook") && styles.includes(".class-recipe-preview") && styles.includes(".device-desktop .mechanic-panel"), "职业选择页必须拥有移动/PC 的起手牌与构筑预览样式");
 expect(styles.includes(".growth-economy-ledger") && styles.includes(".growth-ledger-grid") && styles.includes(".device-desktop .growth-ledger-grid") && styles.includes(".talent-node.recommended"), "悟道经济账本必须拥有移动/PC 样式和推荐节点高亮");
 expect(styles.includes(".growth-prescription") && styles.includes(".growth-prescription > div") && styles.includes(".talent-node.affordable") && styles.includes(".talent-node.maxed") && styles.includes(".device-desktop .growth-prescription"), "成长处方必须拥有移动/PC 样式与节点可负担/圆满状态");

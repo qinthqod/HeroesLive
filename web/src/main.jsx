@@ -4495,6 +4495,30 @@ function rewardRarityPlan(stage) {
   return { name: "章末战利池", weights: "普通 34 · 精良 36 · 稀有 30 · 传说 9", promise: "终局牌与精研牌权重上升，至少一张继续推进当前流派。" };
 }
 
+function rewardPickMemory(card, deck, origin) {
+  const nextDeck = [...deck, card];
+  const beforeBuild = currentBuildState(deck, origin);
+  const afterBuild = currentBuildState(nextDeck, origin);
+  const beforeAnalysis = analyzeDeck(deck);
+  const afterAnalysis = analyzeDeck(nextDeck);
+  const afterBalance = balanceRadar(nextDeck);
+  const progressed = afterBuild && beforeBuild && afterBuild.recipe.id === beforeBuild.recipe.id && afterBuild.progress > beforeBuild.progress;
+  const newKeywordCount = afterAnalysis.keywords[card.keyword] || 0;
+  const highCostDelta = afterAnalysis.highCost - beforeAnalysis.highCost;
+  return {
+    build: afterBuild
+      ? `${afterBuild.recipe.name} ${afterBuild.progress}/5${progressed ? " ↑" : ""}`
+      : "暂不追流派",
+    pressure: `${afterBalance.lowest.label} · ${afterBalance.lowest.advice}`,
+    deckSize: `${deck.length}→${nextDeck.length} 张 · ${card.cost} 费${highCostDelta > 0 ? " · 费用压力+1" : ""}`,
+    next: afterBuild?.complete
+      ? "成卷后优先精简/真解"
+      : afterBuild?.nextCard
+        ? `下找「${afterBuild.nextCard.keyword}」`
+        : newKeywordCount >= 2 ? `${card.keyword} 已成组件` : "保持三轴均衡",
+  };
+}
+
 function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, treasures, stones, clues, pendingClue, profile, randomSeed, runTribulation, setStones, claimReward, skipReward }) {
   const [rerollCount, setRerollCount] = useState(0);
   const [rewardOpening, setRewardOpening] = useState(false);
@@ -4532,6 +4556,7 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
   }, [origin, stage, rerollCount, randomSeed, chapter, routeProgress]);
   const rerollPrice = Math.max(4, 6 - Math.min(2, treasureValue(treasures, "marketDiscount")));
   const rewardFits = rewards.map((card) => rewardFit(card, deck, origin));
+  const rewardMemories = rewards.map((card) => rewardPickMemory(card, deck, origin));
   const guaranteedFit = rewardFits.find((fit) => fit.recipe) || rewardFits[0];
   const highFitCount = rewardFits.filter((fit) => fit.rank === "高").length;
   const rewardDecisionOptions = rewards
@@ -4654,9 +4679,17 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
       <RunNotebook notebook={notebook} compact className="reward-notebook" />
       <div className="reward-cards">{rewards.map((card, index) => {
         const fit = rewardFits[index];
+        const memory = rewardMemories[index];
         return <div className={`reward-card-wrap fit-${fit.rank} ${rewardOpening ? "opening" : ""} ${rewardRevealed ? "revealed" : "sealed"}`} style={{ "--delay": `${180 + index * 120}ms` }} key={card.id}>
           <div className="reward-fit"><b>推荐 {fit.rank}</b><span>{fit.reason}</span></div>
           <Card card={card} index={index} playable={rewardRevealed} onClick={() => rewardRevealed && claimReward(card)} />
+          <div className="reward-pick-memory" aria-label={`${card.name} 入牌预期`}>
+            <span>入牌预期</span>
+            <b>{memory.build}</b>
+            <small>{memory.pressure}</small>
+            <em>{memory.deckSize}</em>
+            <i>{memory.next}</i>
+          </div>
           <div className="reward-card-seal" aria-hidden="true">
             <GameImage src="/card_back_qinglan_trial.png" alt="" />
             <span>{card.rarity}</span>

@@ -679,6 +679,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .reward-cards .game-card:hover { transform: translateY(-18px) scale(1.04); }
 .reward-card-wrap { position: relative; width: 215px; padding-top: 49px; perspective: 900px; }
 .reward-card-wrap.sealed .reward-fit { opacity: .45; filter: grayscale(.55); }
+.reward-card-wrap.sealed .reward-pick-memory { opacity: 0; transform: translateY(-4px); pointer-events: none; }
 .reward-card-wrap.sealed .game-card { opacity: 0; transform: rotateY(-94deg) scale(.9); pointer-events: none; }
 .reward-card-wrap.opening .reward-card-seal { animation: reward-seal-pulse .82s var(--delay) ease-in-out both; }
 .reward-card-wrap.revealed .game-card { animation: reward-card-flip .72s var(--delay) var(--ease-snap) both; }
@@ -751,6 +752,43 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .fit-高 .reward-fit { border-color: rgba(215,177,85,.68); box-shadow: 0 0 22px rgba(215,177,85,.12); }
 .fit-高 .reward-fit b { color: #f0cb6f; }
 .fit-低 .reward-fit b { color: #7d9186; }
+.reward-pick-memory {
+  margin-top: 7px;
+  padding: 8px;
+  border: 1px solid rgba(128,164,145,.16);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(216,176,82,.1), transparent 36%),
+    rgba(5,18,14,.86);
+  text-align: left;
+  transition: .24s ease;
+}
+.reward-pick-memory span,
+.reward-pick-memory b,
+.reward-pick-memory small,
+.reward-pick-memory em,
+.reward-pick-memory i { display: block; }
+.reward-pick-memory span {
+  color: #b99858;
+  font-size: 7px;
+  letter-spacing: .13em;
+}
+.reward-pick-memory b {
+  margin-top: 3px;
+  color: #e2d1a2;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.reward-pick-memory small,
+.reward-pick-memory em,
+.reward-pick-memory i {
+  margin-top: 3px;
+  color: #81958a;
+  font-size: 7px;
+  font-style: normal;
+  line-height: 1.35;
+}
+.reward-pick-memory i { color: #9eb6a8; }
 .reward-tip { display: block; margin-top: 22px; color: #62776d; }
 .reward-skip { margin-top: 14px; padding: 10px 18px; border: 1px solid rgba(139,174,154,.28); background: rgba(7,20,16,.72); color: #91a49a; cursor: pointer; }
 .reward-skip:hover { border-color: var(--amber); color: #e5c478; }
@@ -1596,6 +1634,19 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .reward-cards { width: 100%; gap: 5px; margin-top: 24px; }
   .reward-card-wrap { width: calc((100vw - 56px) / 3); max-width: 124px; padding-top: 58px; }
   .reward-cards .game-card { width: calc((100vw - 56px) / 3); max-width: 124px; height: 238px; }
+  .reward-pick-memory { margin-top: 5px; padding: 6px; }
+  .reward-pick-memory b,
+  .reward-pick-memory small,
+  .reward-pick-memory em,
+  .reward-pick-memory i {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .reward-pick-memory b { font-size: 8px; }
+  .reward-pick-memory small,
+  .reward-pick-memory em,
+  .reward-pick-memory i { font-size: 6px; }
   .reward-card-seal { top: 58px; height: 238px; }
   .reward-card-seal strong { width: 52px; height: 52px; font-size: 17px; }
   .reward-card-seal span { top: 12px; left: 10px; padding: 3px 5px; font-size: 7px; }
@@ -2693,6 +2744,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .device-desktop .reward-cards .game-card { height: min(340px, 43vh); width: min(205px, 15vw); }
 .device-desktop .reward-card-wrap { width: min(205px, 15vw); padding-top: 42px; }
 .device-desktop .reward-card-seal { top: 42px; height: min(340px, 43vh); }
+.device-desktop .reward-pick-memory { min-height: 92px; }
 .device-desktop .reward-actions { padding-bottom: 18px; }
 .device-desktop .summary-screen {
   height: 100%;

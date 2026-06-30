@@ -492,12 +492,18 @@ await run("PC 奖励页保持宽屏三选一", { width: 1366, height: 768 }, "?s
   const cardsBox = await page.locator(".reward-cards").boundingBox();
   const revealText = await page.locator(".reward-reveal-panel").innerText();
   const contractText = await page.locator(".reward-contract").innerText();
+  const memoryText = await page.locator(".reward-pick-memory").first().innerText();
+  const memoryCards = await page.locator(".reward-pick-memory").count();
   const sealCount = await page.locator(".reward-card-seal").count();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (rewardCards !== 3) throw new Error(`奖励卡数量为 ${rewardCards}`);
   if (sealCount !== 3 || !revealText.includes("战利已开")) throw new Error("PC 奖励页缺少启封后的翻牌揭示效果");
   for (const phrase of ["本次保底", "可变奖励", "重整代价", "兜底选择"]) {
     if (!contractText.includes(phrase)) throw new Error(`PC 奖励契约缺少 ${phrase}`);
+  }
+  if (memoryCards !== 3) throw new Error(`PC 入牌预期数量为 ${memoryCards}`);
+  for (const phrase of ["入牌预期", "→"]) {
+    if (!memoryText.includes(phrase)) throw new Error(`PC 入牌预期缺少 ${phrase}`);
   }
   if (!cardsBox || cardsBox.width < 700) throw new Error(`PC 奖励卡区过窄：${cardsBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`PC 奖励页横向溢出 ${layout.scrollWidth - layout.width}px`);
@@ -511,12 +517,17 @@ await run("移动奖励页公开战利契约且不横溢", { width: 430, height:
   const contractBox = await page.locator(".reward-contract").boundingBox();
   const openBox = await page.locator(".reward-open-spoils").boundingBox();
   const contractText = await page.locator(".reward-contract").innerText();
+  const memoryText = await page.locator(".reward-pick-memory").first().innerText();
+  const memoryBox = await page.locator(".reward-pick-memory").first().boundingBox();
+  const memoryCards = await page.locator(".reward-pick-memory").count();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   for (const phrase of ["本次保底", "可变奖励", "重整代价", "兜底选择"]) {
     if (!contractText.includes(phrase)) throw new Error(`移动奖励契约缺少 ${phrase}`);
   }
   if (!contractBox || contractBox.width > 402) throw new Error(`移动奖励契约过宽：${contractBox?.width}`);
   if (!openBox || openBox.width > 402) throw new Error(`移动启封按钮过宽：${openBox?.width}`);
+  if (memoryCards !== 3 || !memoryText.includes("入牌预期") || !memoryText.includes("→")) throw new Error("移动奖励页缺少入牌预期");
+  if (!memoryBox || memoryBox.width > 124) throw new Error(`移动入牌预期过宽：${memoryBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动奖励页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
