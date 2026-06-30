@@ -97,6 +97,7 @@ expect(source.includes("路线 ${routeStep}/4") && source.includes("routeStep * 
 expect(source.includes("combat-build-tracker") && source.includes("route-build-goal") && source.includes("deck-build-state"), "局内流派目标必须贯穿战斗、路线和牌组卷册");
 expect(source.includes("investigation-strip") && source.includes("summary-investigation"), "章节调查必须贯穿路线进度与章末结论");
 expect(source.includes("route-causality-strip") && source.includes("上一因") && source.includes("当前证") && source.includes("下一果") && source.includes("nextEnemyShield"), "路线页必须把命途回响、当前证据和下一战代价串成因果线索条");
+expect(source.includes("routeSpaceProfile") && source.includes("了望强 / 庇护弱") && source.includes("庇护强 / 了望稳") && source.includes("route-space-read") && source.includes("space-${space.stance}"), "路线选择必须把了望/庇护、光源、压力和战术取舍转成可读环境信息");
 expect(source.includes("中断调查") && source.includes("pendingClue?.text"), "失败复盘必须指出未能带回的待查证线索");
 expect(source.includes("investigationArchive") && source.includes("investigationRewards"), "章节调查宗卷必须跨局保存完成度与奖励状态");
 expect(source.includes("investigation-archive") && source.includes("章调查宗卷"), "异闻录必须展示永久调查宗卷");
@@ -133,6 +134,7 @@ expect(styles.includes(".growth-prescription") && styles.includes(".growth-presc
 expect(styles.includes(".chapter-casefile") && styles.includes(".casefile-lore") && styles.includes(".device-desktop .chapter-casefile"), "章节案卷预览必须拥有移动/PC 样式");
 expect(styles.includes(".chapter-tempo-contract") && styles.includes(".device-desktop .chapter-tempo-contract div") && styles.includes("grid-template-columns: repeat(4, minmax(0, 1fr))"), "章节节奏契约必须拥有移动双列与 PC 四段式样式");
 expect(styles.includes(".route-causality-strip") && styles.includes(".device-desktop .route-causality-strip"), "路线因果线索条必须拥有移动/PC 样式");
+expect(styles.includes(".route-space-read") && styles.includes(".route-choice-card.space-庇护") && styles.includes(".route-choice-card.space-旷野") && styles.includes(".route-space-read span"), "路线空间读法必须拥有庇护/旷野差异化视觉和移动端可读样式");
 expect(styles.includes(".build-target-panel") && styles.includes(".device-desktop .build-library") && styles.includes(".device-desktop .build-target-panel"), "流派图谱追踪目标必须拥有移动/PC 样式");
 for (const trade of ["duplicate", "purge", "thunder-refine", "shadow", "rewrite", "moon-debt"]) {
   expect(source.includes(`market.special.id === "${trade}"`), `坊市缺少 ${trade} 专属交易运行时`);

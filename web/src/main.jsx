@@ -3261,6 +3261,24 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
     training: { risk: "无战斗", reward: "灵气 / 精研 / 压缩", consequence: "永久改变本局牌组节奏" },
     boss: { risk: "首领战", reward: "章节突破", consequence: chapterCopy.bossConsequence },
   };
+  const routeSpaceProfile = (node, index) => {
+    const profiles = {
+      story: { stance: "庇护", light: "暖灯", pressure: "安全叙事", tactic: "适合补证据与人物回响" },
+      battle: { stance: "均衡", light: "冷月", pressure: "可控遭遇", tactic: "用低风险战斗检验当前构筑" },
+      event: { stance: "半隐", light: "异火", pressure: "未知扰动", tactic: "用资源换线索或特殊收益" },
+      elite: { stance: "旷野", light: "逆光", pressure: "高压试炼", tactic: "敌强但奖励最能改变牌组上限" },
+      market: { stance: "庇护", light: "市灯", pressure: "经济取舍", tactic: "删牌购牌，牺牲灵石换稳定" },
+      rest: { stance: "庇护", light: "泉光", pressure: "低压修整", tactic: "稳住血线，放弃一次战利爆发" },
+      training: { stance: "高阶", light: "天光", pressure: "清晰规划", tactic: "重塑灵气、精研或压缩牌组" },
+      boss: { stance: "旷野", light: "血月", pressure: "终点暴露", tactic: "没有退路，检查资源与线索回响" },
+    };
+    const profile = profiles[node.id] || profiles.event;
+    return {
+      ...profile,
+      vantage: profile.stance === "旷野" ? "了望强 / 庇护弱" : profile.stance === "庇护" ? "庇护强 / 了望稳" : profile.stance === "高阶" ? "高处了望 / 心神清明" : "了望与庇护均衡",
+      ratio: index % 2 === 0 ? "宽视野" : "窄入口",
+    };
+  };
   const chooseNode = (node) => {
     const clue = investigation?.routes?.[routeProgress]?.[node.id];
     onChooseNode(node, clue);
@@ -3333,14 +3351,20 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
         <div className={`route-choice-grid choices-${currentChoices.length}`}>
           {currentChoices.map((node, index) => {
             const meta = routeMeta[node.id];
+            const space = routeSpaceProfile(node, index);
             return (
-              <button className="route-choice-card" key={node.id} onClick={() => chooseNode(node)} style={{ "--choice-delay": `${index * 100}ms` }}>
+              <button className={`route-choice-card space-${space.stance}`} key={node.id} onClick={() => chooseNode(node)} style={{ "--choice-delay": `${index * 100}ms` }}>
                 <GameImage src={node.art} alt="" />
                 <div className="route-choice-shade" />
                 <span className="route-choice-kind">{node.kind}</span>
                 <div className="route-choice-copy">
                   <h2>{node.name}</h2>
                   <p>{node.desc}</p>
+                  <div className="route-space-read" aria-label="路线空间读法">
+                    <span><b>{space.stance}</b><small>{space.vantage}</small></span>
+                    <span><b>{space.light}</b><small>{space.pressure}</small></span>
+                    <span><b>{space.ratio}</b><small>{space.tactic}</small></span>
+                  </div>
                   <div className="route-choice-facts"><b>{meta.risk}</b><b>{meta.reward}</b></div>
                   <small>{meta.consequence}</small>
                   <strong>踏入此处 <i>›</i></strong>

@@ -3819,9 +3819,32 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .route-choice-card:hover > img { transform: scale(1.04); filter: brightness(.78) saturate(.85); }
 .route-choice-shade { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(3,10,8,.98) 0 52%, rgba(3,10,8,.16) 88%), linear-gradient(90deg, rgba(3,10,8,.42), transparent); }
 .route-choice-kind { position: absolute; top: 13px; left: 13px; padding: 4px 8px; border-left: 2px solid var(--amber); background: rgba(4,14,11,.78); color: #e7c36b; font-size: 9px; letter-spacing: .12em; }
+.route-choice-card.space-庇护 { border-color: rgba(128,188,154,.34); }
+.route-choice-card.space-旷野 { border-color: rgba(210,116,82,.42); }
+.route-choice-card.space-高阶 { border-color: rgba(190,169,98,.42); }
+.route-choice-card.space-庇护 .route-choice-shade { background: linear-gradient(0deg, rgba(3,13,9,.98) 0 52%, rgba(13,35,24,.22) 88%), linear-gradient(90deg, rgba(4,24,17,.55), transparent); }
+.route-choice-card.space-旷野 .route-choice-shade { background: linear-gradient(0deg, rgba(8,8,7,.98) 0 52%, rgba(38,15,10,.2) 88%), linear-gradient(90deg, rgba(39,12,9,.5), transparent); }
+.route-choice-card.space-高阶 .route-choice-shade { background: linear-gradient(0deg, rgba(5,12,10,.98) 0 52%, rgba(44,35,12,.18) 88%), linear-gradient(90deg, rgba(32,24,9,.5), transparent); }
 .route-choice-copy { position: absolute; left: 14px; right: 14px; bottom: 14px; }
 .route-choice-copy h2 { margin: 0; color: #f0e3c3; font-family: "STKaiti", serif; font-size: 25px; font-weight: 400; }
 .route-choice-copy p { min-height: 34px; margin: 5px 0 9px; color: #9aa9a0; font-size: 10px; line-height: 1.55; }
+.route-space-read {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin: 8px 0;
+}
+.route-space-read span {
+  min-width: 0;
+  min-height: 45px;
+  padding: 6px 6px 5px;
+  border: 1px solid rgba(128,168,147,.16);
+  background: rgba(5,19,14,.56);
+}
+.route-space-read b,
+.route-space-read small { display: block; }
+.route-space-read b { color: #d5bd77; font-size: 8px; font-weight: 400; letter-spacing: .08em; }
+.route-space-read small { margin-top: 3px; color: #81978b; font-size: 7px; line-height: 1.35; }
 .route-choice-facts { display: flex; flex-wrap: wrap; gap: 5px; }
 .route-choice-facts b { padding: 4px 6px; border: 1px solid rgba(128,168,147,.22); color: #9fc0af; font-size: 8px; font-weight: 400; }
 .route-choice-copy small { display: block; margin: 8px 0; color: #756f5d; font-size: 8px; }
@@ -3877,6 +3900,9 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .choices-1 .route-choice-card { min-height: 350px; }
   .route-choice-copy { left: 11px; right: 11px; bottom: 11px; }
   .route-choice-copy h2 { font-size: 22px; }
+  .route-space-read { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; }
+  .route-space-read span { flex: 0 0 96px; min-height: 38px; padding: 5px; }
+  .route-space-read small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 }
 
 @media (prefers-reduced-motion: reduce) {
