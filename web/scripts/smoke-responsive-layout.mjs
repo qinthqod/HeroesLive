@@ -181,6 +181,35 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   if (layout.scrollWidth > layout.width) throw new Error(`移动章节页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 悟道树展示成长处方和可点亮状态", { width: 1366, height: 768 }, "?screen=growth", async (page) => {
+  await page.locator(".growth-prescription").waitFor();
+  const layout = await layoutSnapshot(page);
+  const prescriptionText = await page.locator(".growth-prescription").innerText();
+  const prescriptionCards = await page.locator(".growth-prescription article").count();
+  const prescriptionRows = await page.locator(".growth-prescription article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
+  const affordableNodes = await page.locator(".talent-node.affordable").count();
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (prescriptionCards !== 3 || prescriptionRows !== 1) throw new Error(`PC 成长处方没有三列展示：cards=${prescriptionCards}, rows=${prescriptionRows}`);
+  for (const phrase of ["下一局处方", "确定放出", "补完收益", "消耗节奏"]) {
+    if (!prescriptionText.includes(phrase)) throw new Error(`PC 悟道树处方缺少 ${phrase}`);
+  }
+  if (affordableNodes < 1) throw new Error("PC 悟道树没有标记可点亮节点");
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 悟道树横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动悟道树处方单列且节点状态清晰", { width: 430, height: 932 }, "?screen=growth", async (page) => {
+  await page.locator(".growth-prescription").waitFor();
+  const layout = await layoutSnapshot(page);
+  const prescriptionBox = await page.locator(".growth-prescription").boundingBox();
+  const prescriptionRows = await page.locator(".growth-prescription article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
+  const nodeText = await page.locator(".talent-path").innerText();
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  if (prescriptionRows !== 3) throw new Error(`移动成长处方未保持三块单列：rows=${prescriptionRows}`);
+  if (!nodeText.includes("可点亮") && !nodeText.includes("还差")) throw new Error("移动悟道树节点缺少可点亮/差额状态");
+  if (!prescriptionBox || prescriptionBox.width > 402) throw new Error(`移动成长处方过宽：${prescriptionBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`移动悟道树横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
 await run("PC 职业页展示起手牌与构筑入口", { width: 1366, height: 768 }, "?screen=classes&origin=sword", async (page) => {
   await page.locator(".class-system-grid").waitFor();
   const layout = await layoutSnapshot(page);

@@ -2925,6 +2925,28 @@ function GrowthScreen({ profile, setProfile, onBack }) {
   const nextShortfall = growthPlan ? Math.max(0, talentCost - (profile.spirit || 0)) : 0;
   const totalTalentLevels = META_TALENTS.reduce((sum, talent) => sum + (profile.talentLevels[talent.id] || 0), 0);
   const totalTalentCap = META_TALENTS.reduce((sum, talent) => sum + talent.max, 0);
+  const incompleteCasebooks = CHAPTERS.filter((chapter) => {
+    const evidence = investigationEvidence(chapter.id);
+    const found = profile.investigationArchive?.[String(chapter.id)] || [];
+    return evidence.length > 0 && found.length < evidence.length;
+  }).length;
+  const growthPrescriptions = [
+    {
+      label: "确定放出",
+      title: "主线 / 今日试炼",
+      text: upgradeCredits ? `当前可升级 ${upgradeCredits} 次，先把悟道转成战力。` : `还差 ${nextShortfall} 点悟道，优先完成一章或今日首胜。`,
+    },
+    {
+      label: "补完收益",
+      title: `${incompleteCasebooks} 卷未圆满`,
+      text: incompleteCasebooks ? "重访缺证据章节，宗卷圆满会追加悟道与灵玉。" : "宗卷已圆满，资源重心可转向劫数首破。",
+    },
+    {
+      label: "消耗节奏",
+      title: growthPlan ? growthPlan.talent.name : "全树圆满",
+      text: growthPlan ? `本次推荐补 ${growthPlan.talent.name}，避免单一路线被 Min/Max 成唯一答案。` : "永久成长已经完成，后续奖励转为职业熟练与挑战卷。",
+    },
+  ];
   const upgrade = (talent) => {
     const level = profile.talentLevels[talent.id] || 0;
     if (profile.spirit < talentCost || level >= talent.max) return;
@@ -2971,12 +2993,37 @@ function GrowthScreen({ profile, setProfile, onBack }) {
           <p>{upgradeCredits ? "先补最低等级节点，保持开局生命、灵石和资源节奏均衡。" : "下一局优先追主线、宗卷或新卡收录，凑够一次确定成长。"}</p>
         </div>}
       </section>
+      <section className="growth-prescription" aria-label="下一局成长处方">
+        <header><span>下一局处方</span><strong>{upgradeCredits ? "先消耗" : "先获取"}</strong></header>
+        <div>
+          {growthPrescriptions.map((item) => (
+            <article key={item.label}>
+              <small>{item.label}</small>
+              <b>{item.title}</b>
+              <p>{item.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
       <div className="talent-path">
-        {META_TALENTS.map((talent, index) => (
-          <button key={talent.id} className={`talent-node ${growthPlan?.talent.id === talent.id ? "recommended" : ""}`} onClick={() => upgrade(talent)}>
-            <GameImage src={talent.art} alt="" /><div><small>悟道节点 {index + 1}{growthPlan?.talent.id === talent.id ? " · 推荐" : ""}</small><h2>{talent.name} · {profile.talentLevels[talent.id] || 0}/{talent.max}</h2><p>{talent.effect}</p></div><span>{talentCost}</span>
-          </button>
-        ))}
+        {META_TALENTS.map((talent, index) => {
+          const level = profile.talentLevels[talent.id] || 0;
+          const maxed = level >= talent.max;
+          const affordable = profile.spirit >= talentCost && !maxed;
+          const shortfall = maxed ? 0 : Math.max(0, talentCost - (profile.spirit || 0));
+          return (
+            <button key={talent.id} className={`talent-node ${growthPlan?.talent.id === talent.id ? "recommended" : ""} ${affordable ? "affordable" : ""} ${maxed ? "maxed" : ""}`} disabled={!affordable} onClick={() => upgrade(talent)}>
+              <GameImage src={talent.art} alt="" />
+              <div>
+                <small>悟道节点 {index + 1}{growthPlan?.talent.id === talent.id ? " · 推荐" : ""}</small>
+                <h2>{talent.name} · {level}/{talent.max}</h2>
+                <p>{talent.effect}</p>
+                <em>{maxed ? "已圆满" : affordable ? "可点亮" : `还差 ${shortfall} 悟道`}</em>
+              </div>
+              <span>{maxed ? "满" : talentCost}</span>
+            </button>
+          );
+        })}
       </div>
     </section>
   );
