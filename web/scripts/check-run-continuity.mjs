@@ -28,6 +28,7 @@ expect(source.includes("const queryView = new URLSearchParams(window.location.se
 expect(source.includes("setEnemyShield(nextEnemyShield + trialShield + tribulationShield)"), "进入战斗时必须同时兑现事件代价、每日异兆与劫数护体");
 expect(source.includes("className=\"run-chronicle\""), "路线页必须展示本局命途回响");
 expect(source.includes("onClick={() => playCard(index)}"), "战斗卡牌必须单击立即出牌");
+expect(source.includes("event.code === \"Space\"") && source.includes("playCard(Number(event.key) - 1)") && source.includes("数字 1–7 出对应手牌"), "PC 战斗必须支持数字键出牌与 Space 结束回合，并在操作提示中明示");
 expect(!source.includes("card-inspector") && !source.includes("onDoubleClick"), "战斗不得残留二次确认或双击施放");
 expect(source.includes("tutorialFlags") && source.includes("className={`combat-guide"), "首场战斗必须提供可持久化的渐进式引导");
 expect(source.includes("单击卡牌就会直接出牌，不需要再次确认"), "新手引导必须明确告知单击即出牌");
@@ -108,7 +109,7 @@ expect(source.includes("TurnFlowFx") && source.includes("turn-flow") && source.i
 expect(source.includes("effectBursts") && source.includes("CombatEffectBursts") && source.includes("card.art"), "出牌和抽牌必须展示空间化效果浮字与真实卡图反馈");
 expect(source.includes("detectDeviceMode") && source.includes("data-device={deviceMode}") && source.includes("data-layout={deviceMode === \"desktop\" ? \"wide-desktop\" : \"compact-mobile\"}") && source.includes("device-mode-badge"), "页面必须判断 PC/移动设备并公开当前适配模式");
 expect(source.includes("DesktopModePanel") && source.includes("desktop-mode-panel") && source.includes("PC ADAPTIVE"), "PC 非战斗页面必须拥有桌面端专属状态栏");
-expect(source.includes("desktop-control-hints") && source.includes("Space 结束回合") && source.includes("单击卡牌立即出牌"), "PC 战斗页必须提供桌面端操作提示");
+expect(source.includes("desktop-control-hints") && source.includes("Space 结束回合") && source.includes("数字 1–7 出对应手牌") && source.includes("单击卡牌立即出牌"), "PC 战斗页必须提供桌面端操作提示");
 expect(styles.includes(".device-desktop .combat-screen") && styles.includes(".device-desktop .player-rail") && styles.includes(".device-desktop .progress-rail") && styles.includes(".device-desktop .hand"), "PC 战斗页必须拥有桌面端左中右战局与宽手牌区");
 expect(styles.includes(".combat-effect-bursts") && styles.includes(".effect-burst") && styles.includes(".draw-ghost article img"), "战斗必须拥有多效果浮字和抽牌翻面真实卡图样式");
 expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".app[data-motion=\"reduced\"] .impact-streak") && styles.includes(".app[data-motion=\"reduced\"] .reward-cards .game-card:hover"), "低动效模式必须降低全局动画、隐藏强闪烁并保留可读状态反馈");

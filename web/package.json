@@ -29,6 +29,7 @@
     "smoke:aftermath": "node scripts/smoke-battle-aftermaths.mjs",
     "smoke:chapter-transition": "node scripts/smoke-chapter-transitions.mjs",
     "smoke:home-world": "node scripts/smoke-home-world-state.mjs",
+    "smoke:keyboard": "node scripts/smoke-keyboard-controls.mjs",
     "smoke:responsive": "node scripts/smoke-responsive-layout.mjs",
     "smoke:settings": "node scripts/smoke-settings-preferences.mjs",
     "smoke:tribulation": "node scripts/smoke-tribulation-mode.mjs",

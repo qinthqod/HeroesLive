@@ -3883,6 +3883,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         <div className="desktop-control-hints" aria-label="PC 战斗操作提示">
           <small>PC 操作</small>
           <span>单击卡牌立即出牌</span>
+          <span>数字 1–7 出对应手牌</span>
           <span>Space 结束回合</span>
           <span>右栏快速查图鉴/地图</span>
         </div>

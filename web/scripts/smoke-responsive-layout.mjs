@@ -228,7 +228,7 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (!playerBox || !progressBox || playerBox.right >= enemyBox.x || progressBox.x <= enemyBox.x + enemyBox.width) throw new Error("PC 战斗页没有形成左中右桌面战局");
   if (qiBox && trackerBox && !(trackerBox.y + trackerBox.height < qiBox.y || qiBox.y + qiBox.height < trackerBox.y || trackerBox.x + trackerBox.width < qiBox.x || qiBox.x + qiBox.width < trackerBox.x)) throw new Error("PC 流派目标卡压住了灵气球");
   if (!cardStates.some((text) => /可出|联动|差|需|心魔/.test(text))) throw new Error("PC 战斗页没有显示卡牌即时状态");
-  if (!controlHints.includes("单击卡牌立即出牌") || !controlHints.includes("Space 结束回合")) throw new Error("PC 战斗页缺少桌面操作提示");
+  if (!controlHints.includes("单击卡牌立即出牌") || !controlHints.includes("数字 1–7 出对应手牌") || !controlHints.includes("Space 结束回合")) throw new Error("PC 战斗页缺少桌面操作提示");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
