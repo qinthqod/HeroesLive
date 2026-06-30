@@ -2880,12 +2880,26 @@ function StoryScreen({ scene, index, total, choices, onChoose }) {
 }
 
 function GrowthScreen({ profile, setProfile, onBack }) {
+  const talentCost = 8;
+  const upgradeCredits = Math.floor((profile.spirit || 0) / talentCost);
+  const growthPlan = META_TALENTS
+    .map((talent) => {
+      const level = profile.talentLevels[talent.id] || 0;
+      const remaining = Math.max(0, talent.max - level);
+      const priority = talent.id === "edge" ? 3 : talent.id === "mind" ? 2 : 1;
+      return { talent, level, remaining, priority };
+    })
+    .filter((item) => item.remaining > 0)
+    .sort((a, b) => a.level - b.level || b.priority - a.priority)[0] || null;
+  const nextShortfall = growthPlan ? Math.max(0, talentCost - (profile.spirit || 0)) : 0;
+  const totalTalentLevels = META_TALENTS.reduce((sum, talent) => sum + (profile.talentLevels[talent.id] || 0), 0);
+  const totalTalentCap = META_TALENTS.reduce((sum, talent) => sum + talent.max, 0);
   const upgrade = (talent) => {
     const level = profile.talentLevels[talent.id] || 0;
-    if (profile.spirit < 8 || level >= talent.max) return;
+    if (profile.spirit < talentCost || level >= talent.max) return;
     setProfile((value) => ({
       ...value,
-      spirit: value.spirit - 8,
+      spirit: value.spirit - talentCost,
       talentLevels: { ...value.talentLevels, [talent.id]: level + 1 },
     }));
   };
@@ -2893,10 +2907,43 @@ function GrowthScreen({ profile, setProfile, onBack }) {
     <section className="mobile-shell growth-screen screen-content">
       <MobileTopBar title="悟道树" subtitle="跨局永久成长" onBack={onBack} profile={profile} />
       <div className="growth-summary"><span>可用悟道</span><strong>{profile.spirit}</strong><p>完成章节、发现新卡牌和达成剧情结局均可获得。</p></div>
+      <section className="growth-economy-ledger" aria-label="修行资源账本">
+        <header>
+          <span>修行账本 · 收放平衡</span>
+          <strong>{totalTalentLevels}/{totalTalentCap}</strong>
+        </header>
+        <div className="growth-ledger-grid">
+          <article>
+            <small>立即满足</small>
+            <b>{upgradeCredits}</b>
+            <p>{upgradeCredits ? `现在可点亮 ${upgradeCredits} 次节点。` : `还差 ${nextShortfall} 点悟道可点亮下一次。`}</p>
+          </article>
+          <article>
+            <small>延迟规划</small>
+            <b>{growthPlan ? growthPlan.talent.name : "圆满"}</b>
+            <p>{growthPlan ? `${growthPlan.level}/${growthPlan.talent.max} · ${growthPlan.talent.effect}` : "全部永久成长已经点满。"}</p>
+          </article>
+          <article>
+            <small>资源来源</small>
+            <b>章 / 卡 / 结局</b>
+            <p>通关章节、收录新术法、补完宗卷都会继续放出悟道。</p>
+          </article>
+          <article>
+            <small>资源消耗</small>
+            <b>{talentCost}</b>
+            <p>每次升级固定消耗，避免后期囤积失去意义。</p>
+          </article>
+        </div>
+        {growthPlan && <div className="growth-next-advice">
+          <span>推荐下一点</span>
+          <strong>{growthPlan.talent.name}</strong>
+          <p>{upgradeCredits ? "先补最低等级节点，保持开局生命、灵石和资源节奏均衡。" : "下一局优先追主线、宗卷或新卡收录，凑够一次确定成长。"}</p>
+        </div>}
+      </section>
       <div className="talent-path">
         {META_TALENTS.map((talent, index) => (
-          <button key={talent.id} className="talent-node" onClick={() => upgrade(talent)}>
-            <GameImage src={talent.art} alt="" /><div><small>悟道节点 {index + 1}</small><h2>{talent.name} · {profile.talentLevels[talent.id] || 0}/{talent.max}</h2><p>{talent.effect}</p></div><span>8</span>
+          <button key={talent.id} className={`talent-node ${growthPlan?.talent.id === talent.id ? "recommended" : ""}`} onClick={() => upgrade(talent)}>
+            <GameImage src={talent.art} alt="" /><div><small>悟道节点 {index + 1}{growthPlan?.talent.id === talent.id ? " · 推荐" : ""}</small><h2>{talent.name} · {profile.talentLevels[talent.id] || 0}/{talent.max}</h2><p>{talent.effect}</p></div><span>{talentCost}</span>
           </button>
         ))}
       </div>

@@ -53,6 +53,7 @@ expect(!source.includes("jobMastery: { ...value.jobMastery, [origin]: (value.job
 expect(source.includes("nextProgressGoals(profile, 2)") && source.includes("progress-board"), "首页必须展示可行动的下一长期目标");
 expect(source.includes("nextProgressGoals(profile, 1)") && source.includes("summary-next-goal") && source.includes("下一枚印记"), "结算页必须展示下一项长期挑战进度，形成回局动机");
 expect(source.includes("nextAfterClaim") && source.includes("progressNotice.epithet") && source.includes("挑战卷已落印") && source.includes("下一枚印记："), "长期挑战领取必须展示称号、奖励明细与下一目标落印反馈");
+expect(source.includes("growth-economy-ledger") && source.includes("修行账本 · 收放平衡") && source.includes("upgradeCredits") && source.includes("growthPlan") && source.includes("资源来源") && source.includes("资源消耗"), "悟道树必须展示长期成长经济账本、可升级次数、下一推荐节点与资源收放闭环");
 expect(source.includes("recentRuns: [runRecord") && source.includes("最近战绩"), "章节通关必须记录最近战绩并在异闻录展示");
 expect(source.includes("runMode,") && source.includes("runSeed,") && source.includes("runTrial,"), "试炼模式、种子与异兆必须进入自动存档");
 expect(source.includes("completedDailyTrials") && source.includes("dailyFirstClear"), "每日首胜奖励必须具有永久日期锁");
@@ -112,6 +113,7 @@ expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 expect(styles.includes(".reward-decision-aid") && styles.includes(".device-desktop .reward-decision-aid") && styles.includes(".reward-decision-aid.sealed"), "战利满意即可推荐必须拥有移动/PC 和启封前后的视觉状态");
 expect(styles.includes(".class-system-grid") && styles.includes(".starter-handbook") && styles.includes(".class-recipe-preview") && styles.includes(".device-desktop .mechanic-panel"), "职业选择页必须拥有移动/PC 的起手牌与构筑预览样式");
+expect(styles.includes(".growth-economy-ledger") && styles.includes(".growth-ledger-grid") && styles.includes(".device-desktop .growth-ledger-grid") && styles.includes(".talent-node.recommended"), "悟道经济账本必须拥有移动/PC 样式和推荐节点高亮");
 expect(styles.includes(".chapter-casefile") && styles.includes(".casefile-lore") && styles.includes(".device-desktop .chapter-casefile"), "章节案卷预览必须拥有移动/PC 样式");
 expect(styles.includes(".chapter-tempo-contract") && styles.includes(".device-desktop .chapter-tempo-contract div") && styles.includes("grid-template-columns: repeat(4, minmax(0, 1fr))"), "章节节奏契约必须拥有移动双列与 PC 四段式样式");
 expect(styles.includes(".route-causality-strip") && styles.includes(".device-desktop .route-causality-strip"), "路线因果线索条必须拥有移动/PC 样式");

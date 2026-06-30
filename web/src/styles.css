@@ -1866,6 +1866,17 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .device-desktop .chapter-heading { padding: 0 0 20px; }
 .device-desktop .chapter-heading h1 { font-size: 56px; }
 .device-desktop .tribulation-panel { max-width: 1220px; margin: 0 auto 18px; }
+.device-desktop .growth-summary,
+.device-desktop .growth-economy-ledger,
+.device-desktop .talent-path { max-width: 980px; margin-inline: auto; }
+.device-desktop .growth-summary { margin-top: 0; }
+.device-desktop .growth-ledger-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.device-desktop .growth-next-advice { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 10px; }
+.device-desktop .growth-next-advice strong,
+.device-desktop .growth-next-advice p { margin-top: 0; }
+.device-desktop .talent-path { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.device-desktop .talent-path::before { display: none; }
+.device-desktop .talent-node { min-height: 128px; align-items: start; }
 .device-desktop .chapter-casefile {
   display: grid;
   grid-template-columns: minmax(0, .9fr) minmax(520px, 1.1fr);
@@ -2763,9 +2774,66 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .growth-summary span { color: #87a093; font-size: 10px; }
 .growth-summary strong { display: block; margin: 4px 0; color: var(--amber-light); font-family: serif; font-size: 42px; }
 .growth-summary p { margin: 0; color: #788b81; font-size: 10px; line-height: 1.6; }
+.growth-economy-ledger {
+  margin: -4px 18px 10px;
+  padding: 13px;
+  border: 1px solid rgba(132,164,146,.2);
+  border-left: 2px solid rgba(218,176,81,.62);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(218,176,81,.14), transparent 40%),
+    linear-gradient(135deg, rgba(7,24,18,.9), rgba(4,14,12,.94));
+}
+.growth-economy-ledger header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.growth-economy-ledger header span {
+  color: #c8aa63;
+  font-size: 9px;
+  letter-spacing: .14em;
+}
+.growth-economy-ledger header strong {
+  color: #e5d3a2;
+  font-family: "STKaiti", serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+.growth-ledger-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.growth-ledger-grid article {
+  min-height: 88px;
+  padding: 10px;
+  border: 1px solid rgba(128,160,142,.14);
+  background: rgba(255,255,255,.035);
+}
+.growth-ledger-grid small,
+.growth-ledger-grid b,
+.growth-ledger-grid p { display: block; }
+.growth-ledger-grid small { color: #738a7e; font-size: 8px; }
+.growth-ledger-grid b { margin-top: 4px; color: #e4cc8a; font-family: "STKaiti", serif; font-size: 18px; font-weight: 400; }
+.growth-ledger-grid p { margin: 5px 0 0; color: #84988e; font-size: 8px; line-height: 1.45; }
+.growth-next-advice {
+  margin-top: 10px;
+  padding: 10px 11px;
+  border: 1px solid rgba(218,176,81,.2);
+  background: linear-gradient(105deg, rgba(73,49,12,.5), rgba(7,22,17,.72));
+}
+.growth-next-advice span,
+.growth-next-advice strong,
+.growth-next-advice p { display: block; }
+.growth-next-advice span { color: #a88d55; font-size: 8px; letter-spacing: .14em; }
+.growth-next-advice strong { margin-top: 4px; color: #efd78f; font-family: "STKaiti", serif; font-size: 20px; font-weight: 400; }
+.growth-next-advice p { margin: 4px 0 0; color: #91a69b; font-size: 9px; line-height: 1.5; }
 .talent-path { position: relative; display: grid; gap: 15px; padding: 14px 18px 40px; }
 .talent-path::before { content: ""; position: absolute; left: 48px; top: 30px; bottom: 70px; width: 1px; background: linear-gradient(var(--amber), rgba(118,157,137,.18)); }
 .talent-node { position: relative; z-index: 2; min-height: 94px; display: grid; grid-template-columns: 62px 1fr auto; align-items: center; gap: 13px; padding: 13px; border: 1px solid rgba(142,177,157,.2); background: rgba(7,21,17,.9); text-align: left; cursor: pointer; }
+.talent-node.recommended { border-color: rgba(218,176,81,.44); background: radial-gradient(circle at 12% 0%, rgba(218,176,81,.13), transparent 34%), rgba(7,21,17,.92); box-shadow: inset 2px 0 rgba(218,176,81,.58); }
 .talent-node img { width: 58px; height: 58px; border-radius: 50%; border: 1px solid rgba(222,175,73,.45); }
 .talent-node small { color: #71877c; font-size: 8px; }
 .talent-node h2 { margin: 3px 0; color: #e5d8b9; font-size: 15px; }
