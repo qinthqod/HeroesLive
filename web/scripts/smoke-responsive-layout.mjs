@@ -102,6 +102,36 @@ await run("移动试炼札记单列且不横溢", { width: 430, height: 932 }, "
   if (layout.scrollWidth > layout.width) throw new Error(`移动试炼札记横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 牌组卷册展示四轴平衡雷达", { width: 1366, height: 768 }, "?overlay=deck&origin=sword", async (page) => {
+  await page.locator(".deck-balance-radar").waitFor();
+  const layout = await layoutSnapshot(page);
+  const radarText = await page.locator(".deck-balance-radar").innerText();
+  const radarCards = await page.locator(".deck-balance-radar article").count();
+  const radarRows = await page.locator(".deck-balance-radar article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  if (radarCards !== 4 || radarRows !== 1) throw new Error(`PC 平衡雷达未四列展示：cards=${radarCards}, rows=${radarRows}`);
+  for (const phrase of ["平衡雷达", "输出", "生存", "循环", "费用"]) {
+    if (!radarText.includes(phrase)) throw new Error(`PC 平衡雷达缺少 ${phrase}`);
+  }
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 牌组卷册横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动牌组卷册平衡雷达两列可读", { width: 430, height: 932 }, "?overlay=deck&origin=sword", async (page) => {
+  await page.locator(".deck-balance-radar").waitFor();
+  const layout = await layoutSnapshot(page);
+  const radarText = await page.locator(".deck-balance-radar").innerText();
+  const radarBox = await page.locator(".deck-balance-radar").boundingBox();
+  const radarCards = await page.locator(".deck-balance-radar article").count();
+  const radarRows = await page.locator(".deck-balance-radar article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  if (radarCards !== 4 || radarRows !== 2) throw new Error(`移动平衡雷达未两列展示：cards=${radarCards}, rows=${radarRows}`);
+  for (const phrase of ["平衡雷达", "输出", "生存", "循环", "费用"]) {
+    if (!radarText.includes(phrase)) throw new Error(`移动平衡雷达缺少 ${phrase}`);
+  }
+  if (!radarBox || radarBox.width > 402) throw new Error(`移动平衡雷达过宽：${radarBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`移动牌组卷册横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
 await run("PC 异闻录按五卷组织二十五章宗卷", { width: 1366, height: 768 }, "?overlay=codex", async (page) => {
   await page.locator(".casebook-volume-grid").waitFor();
   const layout = await layoutSnapshot(page);

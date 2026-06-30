@@ -34,7 +34,7 @@ import {
   resolveBattleAftermath,
   resolveEncounterPrelude,
 } from "./gameData";
-import { analyzeDeck, currentBuildState, generateRewardChoices, rewardFit, rewardRecipeTarget } from "./deckStrategy";
+import { analyzeDeck, balanceRadar, currentBuildState, generateRewardChoices, rewardFit, rewardRecipeTarget } from "./deckStrategy";
 import { createPendingClue, settlePendingClue } from "./investigationState";
 import { INVESTIGATION_COMPLETION_REWARD, investigationEvidence, mergeInvestigationArchive } from "./investigationArchive";
 import { retrySupportFor } from "./retrySupport";
@@ -4657,6 +4657,7 @@ const GUIDE_PLAYBOOK = [
 
 function Overlay({ type, close, deck, origin, profile, setProfile, treasures, savedRun, abandonRun, feedback, claimProgressReward }) {
   const analysis = analyzeDeck(deck);
+  const balance = balanceRadar(deck);
   const build = currentBuildState(deck, origin);
   const [abandonArmed, setAbandonArmed] = useState(false);
   const defaultArchiveVolumeIndex = Math.min(4, Math.max(0, Math.floor(((profile.chapter || 1) - 1) / 5)));
@@ -4719,6 +4720,20 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
           <div className="deck-curve">
             {analysis.costs.map((count, cost) => <div key={cost}><i style={{ height: `${18 + count * 10}px` }} /><b>{count}</b><small>{cost === 3 ? "3+" : cost} 费</small></div>)}
           </div>
+          <section className={`deck-balance-radar ${balance.dominantRisks.length ? "warning" : ""}`} aria-label="牌组平衡雷达">
+            <header><span>平衡雷达</span><strong>{balance.verdict}</strong></header>
+            <div>
+              {balance.axes.map((axis) => (
+                <article key={axis.key}>
+                  <small>{axis.label}</small>
+                  <b>{axis.score}</b>
+                  <i><em style={{ width: `${axis.score}%` }} /></i>
+                  <p>{axis.advice}</p>
+                </article>
+              ))}
+            </div>
+            <footer>{balance.dominantRisks.length ? balance.dominantRisks.join(" · ") : `最低轴：${balance.lowest.label} · ${balance.lowest.advice}`}</footer>
+          </section>
           <div className="deck-diagnosis"><b>补强优先级</b><span>{analysis.priorities.join(" · ") || "结构健康，继续强化核心组件"}</span></div>
           <div className="deck-diagnosis"><b>成型组件</b><span>{analysis.keyComponents.map(([name, count]) => `${name} ${count}`).join(" · ") || "尚未形成双卡组件"}</span></div>
           <div className="deck-scroll-list">{deck.map((card, index) => <span key={`${card.id}-${index}`}><GameImage src={card.art} alt="" /><b>{card.name}</b><small>{card.cost} 费 · {card.keyword}</small></span>)}</div>

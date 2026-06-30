@@ -38,6 +38,35 @@ export function analyzeDeck(deck) {
   return { ...profile, priorities: priorities.slice(0, 4), keyComponents };
 }
 
+export function balanceRadar(deck) {
+  const profile = analyzeDeck(deck);
+  const total = Math.max(1, profile.total);
+  const attackScore = Math.min(100, Math.round((profile.attack / Math.max(4, total * 0.34)) * 100));
+  const survivalScore = Math.min(100, Math.round(((profile.defense + profile.heal) / Math.max(3, total * 0.24)) * 100));
+  const cycleScore = Math.min(100, Math.round((profile.draw / Math.max(2, total * 0.2)) * 100));
+  const lowCurve = Math.max(0, total - profile.highCost);
+  const curveScore = Math.min(100, Math.round((lowCurve / Math.max(1, total * 0.68)) * 100));
+  const dominantRisks = [
+    profile.attack >= total * 0.55 && survivalScore < 70 ? "伤害占优但防线偏薄" : "",
+    profile.highCost >= total * 0.38 ? "高费拥堵会放大卡手风险" : "",
+    profile.draw <= 2 && total >= 12 ? "过牌不足，核心组件回转慢" : "",
+    profile.defense + profile.heal <= 2 ? "缺少容错，遇到多段攻击容易崩盘" : "",
+  ].filter(Boolean);
+  const axes = [
+    { key: "attack", label: "输出", score: attackScore, advice: attackScore >= 80 ? "足够斩杀" : "补稳定伤害" },
+    { key: "survival", label: "生存", score: survivalScore, advice: survivalScore >= 80 ? "容错充足" : "补护盾/恢复" },
+    { key: "cycle", label: "循环", score: cycleScore, advice: cycleScore >= 80 ? "回转顺畅" : "补过牌/压缩" },
+    { key: "curve", label: "费用", score: curveScore, advice: curveScore >= 80 ? "曲线轻盈" : "降低高费密度" },
+  ];
+  const lowest = [...axes].sort((a, b) => a.score - b.score)[0];
+  return {
+    axes,
+    lowest,
+    dominantRisks,
+    verdict: dominantRisks[0] || (lowest.score < 65 ? `优先修正「${lowest.label}」短板` : "结构均衡，可追求更高阶联动"),
+  };
+}
+
 export function recipeMatches(deck, origin) {
   const deckIds = new Set(deck.map((card) => card.id));
   const deckFamilies = new Set(deck.map((card) => card.baseName));
