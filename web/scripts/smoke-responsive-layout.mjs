@@ -282,6 +282,7 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   const trackerBox = await page.locator(".combat-build-tracker").boundingBox();
   const cardStates = await page.locator(".hand .card-play-state").allTextContents();
   const controlHints = await page.locator(".desktop-control-hints").innerText();
+  const learningCue = await page.locator(".combat-learning-cue").innerText();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (layout.layout !== "wide-desktop") throw new Error(`PC 战斗布局标识为 ${layout.layout}`);
   if (!handBox || handBox.width < 760) throw new Error(`PC 手牌区过窄：${handBox?.width}`);
@@ -289,6 +290,7 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (!playerBox || !progressBox || playerBox.right >= enemyBox.x || progressBox.x <= enemyBox.x + enemyBox.width) throw new Error("PC 战斗页没有形成左中右桌面战局");
   if (qiBox && trackerBox && !(trackerBox.y + trackerBox.height < qiBox.y || qiBox.y + qiBox.height < trackerBox.y || trackerBox.x + trackerBox.width < qiBox.x || qiBox.x + qiBox.width < trackerBox.x)) throw new Error("PC 流派目标卡压住了灵气球");
   if (!cardStates.some((text) => /可出|联动|差|需|心魔/.test(text))) throw new Error("PC 战斗页没有显示卡牌即时状态");
+  if (!learningCue.includes("本回合目标") || !learningCue.includes("读敌意")) throw new Error(`PC 战斗页缺少本回合学习目标：${learningCue}`);
   if (!controlHints.includes("单击卡牌立即出牌") || !controlHints.includes("数字 1–7 出对应手牌") || !controlHints.includes("Space 结束回合")) throw new Error("PC 战斗页缺少桌面操作提示");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
@@ -304,6 +306,9 @@ await run("PC 首战引导按读敌意出牌交回合推进", { width: 1366, hei
   guideText = await page.locator(".combat-guide").innerText();
   if (!guideText.includes("单击卡牌") || !guideText.includes("当前只要做一件事：点")) throw new Error("首战引导未进入单击出牌步骤");
   await page.locator(".hand .game-card.playable").first().click();
+  await page.locator(".combat-learning-cue.mastery").waitFor();
+  const masteryText = await page.locator(".combat-learning-cue").innerText();
+  if (!masteryText.includes("模式掌握")) throw new Error(`出牌后没有形成模式掌握反馈：${masteryText}`);
   await page.locator(".combat-guide.guide-2").waitFor();
   guideText = await page.locator(".combat-guide").innerText();
   if (!guideText.includes("结束回合") || !guideText.includes("当前只要做一件事：交")) throw new Error("首战引导未在出牌后推进到交回合步骤");

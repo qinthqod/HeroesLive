@@ -3880,6 +3880,32 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
     if (playable) return { kind: "ready", label: "可出", detail: "单击即可立即施放。" };
     return null;
   };
+  const learningCue = (() => {
+    if (triggerFx?.combo) {
+      return { state: "mastery", label: "模式掌握", title: "连携条件成立", text: triggerFx.combo };
+    }
+    const effects = triggerFx?.effects || [];
+    if (effects.some((effect) => /护盾|护体|格挡/.test(effect))) {
+      return { state: "mastery", label: "模式掌握", title: "防守窗口", text: "你把敌意读成了护体时机；下一步看能否少掉血交回合。" };
+    }
+    if (effects.some((effect) => /抽牌|灵气|发现/.test(effect))) {
+      return { state: "mastery", label: "模式掌握", title: "资源循环", text: "你正在把手牌、灵气和下一轮选择串成循环。" };
+    }
+    if (effects.some((effect) => /净除|心魔|驱散/.test(effect))) {
+      return { state: "mastery", label: "模式掌握", title: "清理负担", text: "你减少了后续抽牌污染，长期胜率会更稳定。" };
+    }
+    if (effects.some((effect) => /伤害|燃烧|丹毒|虚弱/.test(effect))) {
+      return { state: "mastery", label: "模式掌握", title: "压低血线", text: "你把本回合资源转成了有效压制；继续观察下一式风险。" };
+    }
+    return {
+      state: "goal",
+      label: "本回合目标",
+      title: currentEnemyMove?.damage ? "先读敌意，再决定攻守" : "抓住安全窗口推进",
+      text: currentEnemyMove?.damage
+        ? `敌人当前会造成 ${currentEnemyMove.damage * (currentEnemyMove.hits || 1)} 点威胁；先找护体、虚弱或快速斩杀。`
+        : "敌人本式压力较低，优先补资源、抽牌或铺职业组件。",
+    };
+  })();
   useEffect(() => {
     if (guideStep === 1 && combatFx?.card) setGuideStep(2);
   }, [combatFx?.card, guideStep]);
@@ -3948,6 +3974,11 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         {triggerFx.combo && <em>{triggerFx.combo}</em>}
         <div>{triggerFx.effects.map((effect) => <span key={effect}>{effect}</span>)}</div>
       </div>}
+      <aside className={`combat-learning-cue ${learningCue.state}`} aria-label="战斗学习反馈">
+        <small>{learningCue.label}</small>
+        <strong>{learningCue.title}</strong>
+        <p>{learningCue.text}</p>
+      </aside>
       {drawFx && <DrawSequence fx={drawFx} />}
       <aside className="progress-rail">
         <span>本轮进度</span>

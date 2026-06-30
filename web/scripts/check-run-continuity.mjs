@@ -33,6 +33,7 @@ expect(!source.includes("card-inspector") && !source.includes("onDoubleClick"), 
 expect(source.includes("tutorialFlags") && source.includes("className={`combat-guide"), "首场战斗必须提供可持久化的渐进式引导");
 expect(source.includes("单击卡牌就会直接出牌，不需要再次确认"), "新手引导必须明确告知单击即出牌");
 expect(source.includes("guide-steps") && source.includes("当前只要做一件事") && source.includes("读敌意") && source.includes("点卡牌") && source.includes("交回合"), "首战引导必须把读敌意、点卡牌、交回合拆成三步低负荷实践");
+expect(source.includes("combat-learning-cue") && source.includes("模式掌握") && source.includes("本回合目标") && source.includes("防守窗口") && source.includes("资源循环") && source.includes("压低血线"), "战斗必须根据真实出牌结算提供模式学习反馈，而不只在失败后教学");
 expect(source.includes("GUIDE_PLAYBOOK") && source.includes("guide-playbook") && source.includes("读局面") && source.includes("选路线") && source.includes("取战利") && source.includes("整牌组"), "可回看的试炼札记必须提供读局面、选路线、取战利和整牌组四步学习框架");
 expect(source.includes("guide-current-run") && source.includes("当前牌组提醒"), "试炼札记必须结合当前牌组或流派给即时建议");
 expect(source.includes("masteryStarterDeck") && source.includes("masteryOpeningState"), "职业熟练度必须真实改变起始牌组与战斗资源");
@@ -117,6 +118,7 @@ expect(source.includes("DesktopModePanel") && source.includes("desktop-mode-pane
 expect(source.includes("desktop-control-hints") && source.includes("Space 结束回合") && source.includes("数字 1–7 出对应手牌") && source.includes("单击卡牌立即出牌"), "PC 战斗页必须提供桌面端操作提示");
 expect(styles.includes(".device-desktop .combat-screen") && styles.includes(".device-desktop .player-rail") && styles.includes(".device-desktop .progress-rail") && styles.includes(".device-desktop .hand"), "PC 战斗页必须拥有桌面端左中右战局与宽手牌区");
 expect(styles.includes(".combat-effect-bursts") && styles.includes(".effect-burst") && styles.includes(".draw-ghost article img"), "战斗必须拥有多效果浮字和抽牌翻面真实卡图样式");
+expect(styles.includes(".combat-learning-cue") && styles.includes(".combat-learning-cue.mastery") && styles.includes(".combat-learning-cue p") && styles.includes(".combat-learning-cue strong"), "战斗学习反馈必须拥有目标态、掌握态和移动端可读样式");
 expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".app[data-motion=\"reduced\"] .impact-streak") && styles.includes(".app[data-motion=\"reduced\"] .reward-cards .game-card:hover"), "低动效模式必须降低全局动画、隐藏强闪烁并保留可读状态反馈");
 expect(styles.includes(".app[data-readability=\"large\"] .game-card p") && styles.includes(".app[data-readability=\"large\"] .card-play-state") && styles.includes(".app[data-readability=\"large\"] .market-fit"), "可读模式必须放大战斗卡牌、状态与高密度决策文本");
 expect(styles.includes(".abandon-confirm") && styles.includes(".abandon-run.armed") && styles.includes(".abandon-cancel"), "放弃存档二次确认必须拥有危险提示、确认态与取消按钮样式");
