@@ -555,7 +555,7 @@ function App() {
       completedTribulations: [],
       tutorialFlags: {},
       seenEncounters: [],
-      feedback: { sound: true, haptics: true, reducedMotion: false, volume: 0.55 },
+      feedback: { sound: true, haptics: true, reducedMotion: false, readableText: false, volume: 0.55 },
     };
     return {
       ...base,
@@ -585,7 +585,7 @@ function App() {
       recentRuns: base.recentRuns || [],
       tutorialFlags: base.tutorialFlags || {},
       seenEncounters: base.seenEncounters || [],
-      feedback: { sound: true, haptics: true, reducedMotion: false, volume: 0.55, ...(base.feedback || {}) },
+      feedback: { sound: true, haptics: true, reducedMotion: false, readableText: false, volume: 0.55, ...(base.feedback || {}) },
       ...(debugArchiveCount ? {
         investigationArchive: {
           ...(base.investigationArchive || {}),
@@ -2006,6 +2006,7 @@ function App() {
       data-device={deviceMode}
       data-layout={deviceMode === "desktop" ? "wide-desktop" : "compact-mobile"}
       data-motion={profile.feedback?.reducedMotion ? "reduced" : "full"}
+      data-readability={profile.feedback?.readableText ? "large" : "standard"}
       onScroll={(event) => {
         if (screen === "combat" && event.currentTarget.scrollTop !== 0) {
           event.currentTarget.scrollTop = 0;
@@ -4607,6 +4608,10 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
               const reducedMotion = !profile.feedback.reducedMotion;
               setProfile((value) => ({ ...value, feedback: { ...value.feedback, reducedMotion } }));
             }}><strong>低动效</strong><small>{profile.feedback.reducedMotion ? "已开启" : "已关闭"}</small></button>
+            <button className={profile.feedback.readableText ? "active" : ""} onClick={() => {
+              const readableText = !profile.feedback.readableText;
+              setProfile((value) => ({ ...value, feedback: { ...value.feedback, readableText } }));
+            }}><strong>可读模式</strong><small>{profile.feedback.readableText ? "大字距" : "标准"}</small></button>
             <label><span>音量</span><input type="range" min="0.1" max="1" step="0.05" value={profile.feedback.volume} onChange={(event) => setProfile((value) => ({ ...value, feedback: { ...value.feedback, volume: Number(event.target.value) } }))} /><b>{Math.round(profile.feedback.volume * 100)}%</b></label>
           </div>
           {savedRun ? <>

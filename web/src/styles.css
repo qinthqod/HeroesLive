@@ -36,6 +36,37 @@ button:focus-visible { outline: 2px solid var(--amber-light); outline-offset: 3p
 }
 .app.device-desktop { min-width: 1024px; }
 .app.device-mobile { min-width: 0; min-height: 100%; }
+.app[data-readability="large"] { --readable-leading: 1.72; }
+.app[data-readability="large"] .game-card p,
+.app[data-readability="large"] .card-play-state,
+.app[data-readability="large"] .game-card .card-meta,
+.app[data-readability="large"] .game-card .card-keyword,
+.app[data-readability="large"] .reward-fit span,
+.app[data-readability="large"] .market-fit,
+.app[data-readability="large"] .route-choice-copy p,
+.app[data-readability="large"] .route-choice-copy small,
+.app[data-readability="large"] .desktop-control-hints span,
+.app[data-readability="large"] .enemy-readout p,
+.app[data-readability="large"] .combat-log,
+.app[data-readability="large"] .notebook-lines p,
+.app[data-readability="large"] .run-notebook footer {
+  font-size: 1.14em;
+  line-height: var(--readable-leading);
+}
+.app[data-readability="large"] .game-card h3,
+.app[data-readability="large"] .reward-decision-aid strong,
+.app[data-readability="large"] .growth-next-advice strong {
+  letter-spacing: .03em;
+}
+.app[data-readability="large"] .game-card p {
+  margin-inline: 4px;
+}
+.app[data-readability="large"] .card-play-state,
+.app[data-readability="large"] .reward-fit,
+.app[data-readability="large"] .market-fit {
+  overflow: visible;
+  white-space: normal;
+}
 .app[data-motion="reduced"] *,
 .app[data-motion="reduced"] *::before,
 .app[data-motion="reduced"] *::after {

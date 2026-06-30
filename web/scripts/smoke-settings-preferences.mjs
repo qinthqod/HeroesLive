@@ -7,27 +7,42 @@ const failures = [];
 const page = await browser.newPage({ viewport: { width: 430, height: 932 } });
 try {
   await page.goto(`${base}?overlay=settings`, { waitUntil: "networkidle" });
+  await page.evaluate(() => localStorage.removeItem("qinglan-profile-v2"));
+  await page.goto(`${base}?overlay=settings`, { waitUntil: "networkidle" });
   await page.locator(".settings-overlay").waitFor();
   const initialMotion = await page.locator(".app").getAttribute("data-motion");
+  const initialReadability = await page.locator(".app").getAttribute("data-readability");
   if (initialMotion !== "full") throw new Error(`默认动效状态异常：${initialMotion}`);
+  if (initialReadability !== "standard") throw new Error(`默认可读状态异常：${initialReadability}`);
 
   await page.locator(".feedback-settings button", { hasText: "低动效" }).click();
   const reducedMotion = await page.locator(".app").getAttribute("data-motion");
   if (reducedMotion !== "reduced") throw new Error(`开启低动效后根节点状态异常：${reducedMotion}`);
 
-  const savedPreference = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-profile-v2") || "{}")?.feedback?.reducedMotion);
-  if (savedPreference !== true) throw new Error("低动效偏好没有持久化到本地档案");
+  await page.locator(".feedback-settings button", { hasText: "可读模式" }).click();
+  const largeReadability = await page.locator(".app").getAttribute("data-readability");
+  if (largeReadability !== "large") throw new Error(`开启可读模式后根节点状态异常：${largeReadability}`);
+
+  const savedPreference = await page.evaluate(() => JSON.parse(localStorage.getItem("qinglan-profile-v2") || "{}")?.feedback);
+  if (savedPreference?.reducedMotion !== true) throw new Error("低动效偏好没有持久化到本地档案");
+  if (savedPreference?.readableText !== true) throw new Error("可读模式偏好没有持久化到本地档案");
 
   await page.goto(`${base}?overlay=settings`, { waitUntil: "networkidle" });
   await page.locator(".settings-overlay").waitFor();
   const restoredMotion = await page.locator(".app").getAttribute("data-motion");
+  const restoredReadability = await page.locator(".app").getAttribute("data-readability");
   if (restoredMotion !== "reduced") throw new Error(`刷新后低动效没有恢复：${restoredMotion}`);
+  if (restoredReadability !== "large") throw new Error(`刷新后可读模式没有恢复：${restoredReadability}`);
 
   await page.locator(".feedback-settings button", { hasText: "低动效" }).click();
   const fullMotion = await page.locator(".app").getAttribute("data-motion");
   if (fullMotion !== "full") throw new Error(`关闭低动效后根节点状态异常：${fullMotion}`);
 
-  console.log("Settings preference smoke passed: reduced-motion mode toggles, persists, and restores.");
+  await page.locator(".feedback-settings button", { hasText: "可读模式" }).click();
+  const standardReadability = await page.locator(".app").getAttribute("data-readability");
+  if (standardReadability !== "standard") throw new Error(`关闭可读模式后根节点状态异常：${standardReadability}`);
+
+  console.log("Settings preference smoke passed: reduced-motion and readable-text modes toggle, persist, and restore.");
 } catch (error) {
   failures.push(error.message);
 } finally {
