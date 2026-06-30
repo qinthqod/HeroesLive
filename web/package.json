@@ -31,6 +31,7 @@
     "smoke:home-world": "node scripts/smoke-home-world-state.mjs",
     "smoke:keyboard": "node scripts/smoke-keyboard-controls.mjs",
     "smoke:responsive": "node scripts/smoke-responsive-layout.mjs",
+    "smoke:save": "node scripts/smoke-save-safety.mjs",
     "smoke:settings": "node scripts/smoke-settings-preferences.mjs",
     "smoke:tribulation": "node scripts/smoke-tribulation-mode.mjs",
     "smoke:story": "node scripts/smoke-story-lore.mjs",

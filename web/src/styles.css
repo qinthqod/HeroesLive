@@ -1064,7 +1064,24 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .save-summary-grid strong { margin-top: 6px; color: #d9c998; font-family: "STKaiti", serif; font-size: 16px; font-weight: 400; }
 .save-combat-detail { margin: 12px 0 0; padding: 9px 11px; border-left: 2px solid #6e9a82; background: rgba(16,48,36,.42); color: #9bb2a5; font-size: 9px; line-height: 1.55; }
 .save-time { display: block; margin-top: 10px; color: #64786d; font-size: 8px; }
-.abandon-run { width: 100%; margin-top: 18px; padding: 10px 12px; border: 1px solid rgba(176,91,70,.42); background: rgba(76,25,19,.42); color: #d79a86; cursor: pointer; }
+.abandon-confirm {
+  margin-top: 12px;
+  padding: 10px 11px;
+  border: 1px solid rgba(213,126,100,.42);
+  border-left: 2px solid #d16d57;
+  background: linear-gradient(105deg, rgba(78,23,18,.64), rgba(5,18,14,.72));
+}
+.abandon-confirm strong,
+.abandon-confirm span { display: block; }
+.abandon-confirm strong { color: #efb097; font-size: 11px; font-weight: 500; }
+.abandon-confirm span { margin-top: 4px; color: #b79787; font-size: 8px; line-height: 1.5; }
+.abandon-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 18px; }
+.abandon-actions:has(.abandon-cancel) { grid-template-columns: .78fr 1.22fr; }
+.abandon-run,
+.abandon-cancel { width: 100%; padding: 10px 12px; cursor: pointer; }
+.abandon-run { border: 1px solid rgba(176,91,70,.42); background: rgba(76,25,19,.42); color: #d79a86; }
+.abandon-run.armed { border-color: rgba(222,93,72,.76); background: rgba(121,32,24,.62); color: #ffc1a9; }
+.abandon-cancel { border: 1px solid rgba(124,157,139,.22); background: rgba(7,22,17,.72); color: #9eb4a8; }
 .abandon-run:hover { border-color: rgba(213,126,100,.72); background: rgba(102,35,25,.54); }
 .abandon-note { margin: 7px 0 0; color: #687a70; font-size: 8px; line-height: 1.5; }
 

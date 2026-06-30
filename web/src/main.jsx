@@ -4454,6 +4454,10 @@ const GUIDE_PLAYBOOK = [
 function Overlay({ type, close, deck, origin, profile, setProfile, treasures, savedRun, abandonRun, feedback, claimProgressReward }) {
   const analysis = analyzeDeck(deck);
   const build = currentBuildState(deck, origin);
+  const [abandonArmed, setAbandonArmed] = useState(false);
+  useEffect(() => {
+    setAbandonArmed(false);
+  }, [type, savedRun?.savedAt]);
   const archiveChapters = [...CHAPTERS].sort((a, b) => {
     const bCount = (profile.investigationArchive?.[String(b.id)] || []).length;
     const aCount = (profile.investigationArchive?.[String(a.id)] || []).length;
@@ -4623,7 +4627,14 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
             </div>
             {savedRun.screen === "combat" && <p className="save-combat-detail">敌人 {savedRun.enemy?.name} · {savedRun.enemy?.hp}/{savedRun.enemy?.max} 生命 · 手牌 {savedRun.hand?.length || 0} · 抽牌堆 {savedRun.drawPile?.length || 0} · 弃牌堆 {savedRun.discardPile?.length || 0}</p>}
             <small className="save-time">最近保存：{new Date(savedRun.savedAt).toLocaleString("zh-CN")}</small>
-            <button className="abandon-run" onClick={abandonRun}>放弃当前云游</button>
+            {abandonArmed && <div className="abandon-confirm" role="alert">
+              <strong>确认放弃这次云游？</strong>
+              <span>这会清除当前局内手牌、路线、敌人和战利状态；永久成长与图鉴不会丢失。</span>
+            </div>}
+            <div className="abandon-actions">
+              {abandonArmed && <button className="abandon-cancel" onClick={() => setAbandonArmed(false)}>取消</button>}
+              <button className={`abandon-run ${abandonArmed ? "armed" : ""}`} onClick={() => abandonArmed ? abandonRun() : setAbandonArmed(true)}>{abandonArmed ? "确认放弃并回山门" : "放弃当前云游"}</button>
+            </div>
             <p className="abandon-note">只清除未完成的局内存档，不影响等级、悟道、法宝图鉴、剧情印记和结局收藏。</p>
           </> : <p>当前没有未完成的云游存档。</p>}
         </div>}

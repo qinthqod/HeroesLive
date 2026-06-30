@@ -75,6 +75,7 @@ for (const stat of ["cardsPlayed", "damageDealt", "damageTaken", "turns", "comba
   expect(source.includes(stat), `整局统计缺少 ${stat}`);
 }
 expect(source.includes("runStats,") && source.includes("setRunStats({ ...freshRunStats(), ...(savedRun.runStats || {}) })"), "整局统计必须进入自动存档并可恢复");
+expect(source.includes("abandonArmed") && source.includes("abandon-confirm") && source.includes("确认放弃这次云游") && source.includes("abandon-cancel"), "放弃自动存档必须经过二次确认并允许取消，避免误触丢局内进度");
 expect(!source.includes("<span>甲上</span>") && !source.includes("<strong>+38</strong>"), "章末不得继续显示固定评阶或虚假修为");
 expect(source.includes("defaultDiscoveredCards") && source.includes("discoveredCards"), "藏经阁必须具有兼容旧档的卡牌发现状态");
 expect(source.includes("runDeck.forEach((card)") && source.includes("discovered.add(card.id)"), "进入本局牌组的卡牌必须永久写入藏经阁");
@@ -115,6 +116,7 @@ expect(styles.includes(".device-desktop .combat-screen") && styles.includes(".de
 expect(styles.includes(".combat-effect-bursts") && styles.includes(".effect-burst") && styles.includes(".draw-ghost article img"), "战斗必须拥有多效果浮字和抽牌翻面真实卡图样式");
 expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".app[data-motion=\"reduced\"] .impact-streak") && styles.includes(".app[data-motion=\"reduced\"] .reward-cards .game-card:hover"), "低动效模式必须降低全局动画、隐藏强闪烁并保留可读状态反馈");
 expect(styles.includes(".app[data-readability=\"large\"] .game-card p") && styles.includes(".app[data-readability=\"large\"] .card-play-state") && styles.includes(".app[data-readability=\"large\"] .market-fit"), "可读模式必须放大战斗卡牌、状态与高密度决策文本");
+expect(styles.includes(".abandon-confirm") && styles.includes(".abandon-run.armed") && styles.includes(".abandon-cancel"), "放弃存档二次确认必须拥有危险提示、确认态与取消按钮样式");
 expect(styles.includes(".desktop-mode-panel") && styles.includes(".device-mobile .desktop-mode-panel") && styles.includes(".device-desktop .desktop-control-hints"), "PC 专属面板和战斗提示必须具备桌面/移动端样式隔离");
 expect(styles.includes(".device-desktop .market-layout") && styles.includes(".device-desktop .reward-cards"), "PC 坊市与奖励页必须使用独立宽屏布局");
 expect(styles.includes(".reward-decision-aid") && styles.includes(".device-desktop .reward-decision-aid") && styles.includes(".reward-decision-aid.sealed"), "战利满意即可推荐必须拥有移动/PC 和启封前后的视觉状态");
