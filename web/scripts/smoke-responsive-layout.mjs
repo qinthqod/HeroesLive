@@ -171,6 +171,9 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
   const arcCards = await page.locator(".chapter-arc-overview button").count();
   const arcRows = await page.locator(".chapter-arc-overview button").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
   const casefileText = await page.locator(".chapter-casefile").innerText();
+  const briefingText = await page.locator(".chapter-starter-briefing").innerText();
+  const briefingCards = await page.locator(".chapter-starter-briefing article").count();
+  const briefingRows = await page.locator(".chapter-starter-briefing article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
   const casefileBox = await page.locator(".chapter-casefile").boundingBox();
   const bossCardBox = await page.locator(".casefile-boss-card").boundingBox();
   const loreCards = await page.locator(".casefile-lore section").count();
@@ -187,6 +190,10 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
   }
   for (const phrase of ["案卷预览", "首领现形", "调查目标", "路线节奏", "首领宗卷", "敌情压力"]) {
     if (!casefileText.includes(phrase)) throw new Error(`PC 章节案卷缺少 ${phrase}`);
+  }
+  if (briefingCards !== 4 || briefingRows !== 1) throw new Error(`PC 开局简报没有四列展示：cards=${briefingCards}, rows=${briefingRows}`);
+  for (const phrase of ["开局简报", "本章焦点", "构筑准备", "调查回报", "失败保护"]) {
+    if (!briefingText.includes(phrase)) throw new Error(`PC 开局简报缺少 ${phrase}`);
   }
   if (!casefileBox || casefileBox.width < 1000 || casefileBox.height < 330) throw new Error(`PC 章节案卷尺寸异常：${casefileBox?.width}×${casefileBox?.height}`);
   if (!bossCardBox || bossCardBox.width < 480) throw new Error(`PC 首领现形卡过窄：${bossCardBox?.width}`);
@@ -209,6 +216,10 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   const arcBox = await page.locator(".chapter-arc-overview").boundingBox();
   const arcCards = await page.locator(".chapter-arc-overview button").count();
   const casefileText = await page.locator(".chapter-casefile").innerText();
+  const briefingText = await page.locator(".chapter-starter-briefing").innerText();
+  const briefingBox = await page.locator(".chapter-starter-briefing").boundingBox();
+  const briefingCards = await page.locator(".chapter-starter-briefing article").count();
+  const briefingRows = await page.locator(".chapter-starter-briefing article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
   const casefileBox = await page.locator(".chapter-casefile").boundingBox();
   const bossCardBox = await page.locator(".casefile-boss-card").boundingBox();
   const volumeButtons = await page.locator(".chapter-volume-nav button").count();
@@ -226,6 +237,11 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   for (const phrase of ["案卷预览", "首领现形", "调查目标", "路线节奏", "首领宗卷"]) {
     if (!casefileText.includes(phrase)) throw new Error(`移动章节案卷缺少 ${phrase}`);
   }
+  if (briefingCards !== 4 || briefingRows !== 2) throw new Error(`移动开局简报未保持两列：cards=${briefingCards}, rows=${briefingRows}`);
+  for (const phrase of ["开局简报", "本章焦点", "构筑准备", "调查回报", "失败保护"]) {
+    if (!briefingText.includes(phrase)) throw new Error(`移动开局简报缺少 ${phrase}`);
+  }
+  if (!briefingBox || briefingBox.width > 366) throw new Error(`移动开局简报过宽：${briefingBox?.width}`);
   if (!casefileBox || casefileBox.width > 402) throw new Error(`移动章节案卷过宽：${casefileBox?.width}`);
   if (!bossCardBox || bossCardBox.width > 366) throw new Error(`移动首领现形卡过宽：${bossCardBox?.width}`);
   if (volumeButtons !== 5) throw new Error(`移动部卷筛选数量为 ${volumeButtons}`);

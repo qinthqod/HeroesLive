@@ -327,6 +327,42 @@ function chapterArcOverview(profile, activeVolumeIndex, mainComplete) {
   });
 }
 
+function chapterStarterBriefing({ chapter, difficulty, foundEvidence, evidenceTotal, foundEpilogues, epilogueTotal, failures, boss }) {
+  const evidenceGap = Math.max(0, evidenceTotal - foundEvidence);
+  const epilogueGap = Math.max(0, epilogueTotal - foundEpilogues);
+  const pressureFocus = difficulty.pressure >= 82
+    ? "先活过前两轮高压"
+    : difficulty.pressure >= 66
+      ? "练习保留防御窗口"
+      : difficulty.pressure >= 48 ? "稳定完成路线证据" : "适合试新职业";
+  return [
+    {
+      key: "focus",
+      label: "本章焦点",
+      title: pressureFocus,
+      text: `${chapter.region} 的核心压力是「${difficulty.tier}」，先确认敌意，再决定是否贪路线收益。`,
+    },
+    {
+      key: "build",
+      label: "构筑准备",
+      title: difficulty.advice,
+      text: boss?.counter ? `Boss 反制方向：${boss.counter}` : "保持输出、生存和过牌至少各有一条稳定来源。",
+    },
+    {
+      key: "reward",
+      label: "调查回报",
+      title: evidenceGap ? `还差 ${evidenceGap} 条证据` : epilogueGap ? `还差 ${epilogueGap} 篇后记` : "宗卷可转向劫数",
+      text: foundEvidence >= 4 ? "本章真相已明，重访更适合补分支后记和高阶首破。" : "带回 4 条证据即可形成章末结论，安全路线可能会放弃线索。",
+    },
+    {
+      key: "safety",
+      label: "失败保护",
+      title: failures ? `山门扶助 ${Math.min(3, failures)} 层` : "失败会留下处方",
+      text: failures ? "扶助只增加容错消耗品，不降低敌人强度；通关后会清零。" : "若中断调查，失败页会指出未带回线索和下局练习方向。",
+    },
+  ];
+}
+
 function intentLabel(move) {
   const parts = [];
   if (move.damage) parts.push(`${move.damage}${move.hits ? `×${move.hits}` : ""}`);
@@ -2742,6 +2778,16 @@ function ChapterScreen({ profile, onBack, onChoose }) {
   const previewFoundEpilogues = previewEpilogues.filter((epilogue) => (profile.unlockedEpilogues || []).includes(epilogue.id)).length;
   const previewDifficulty = chapterDifficultyProfile(previewChapter.id, selectedTribulation);
   const previewRouteBeats = CHAPTER_ROUTE_COPY[previewChapter.id]?.beats || [];
+  const previewStarterBriefing = chapterStarterBriefing({
+    chapter: previewChapter,
+    difficulty: previewDifficulty,
+    foundEvidence: previewFoundEvidence,
+    evidenceTotal: previewEvidenceTotal,
+    foundEpilogues: previewFoundEpilogues,
+    epilogueTotal: previewEpilogues.length,
+    failures: profile.chapterFailures?.[previewChapter.id] || 0,
+    boss: previewBoss,
+  });
   const previewTempoContract = [
     { phase: "序", title: previewRouteBeats[0] || "入局观势", reward: "剧情抉择 · 线索伏笔", energy: "低压铺垫" },
     { phase: "破", title: previewRouteBeats[1] || "分支变局", reward: "战利三选 · 构筑推进", energy: "压力抬升" },
@@ -2820,6 +2866,21 @@ function ChapterScreen({ profile, onBack, onChoose }) {
             <span><b>容错</b>{previewDifficulty.tolerance}</span>
             <span><b>建议</b>{previewDifficulty.advice}</span>
           </div>
+          <section className="chapter-starter-briefing" aria-label="章节开局简报">
+            <header>
+              <span>开局简报 · 四步内决策</span>
+              <strong>进章前只确认 4 件事</strong>
+            </header>
+            <div>
+              {previewStarterBriefing.map((item) => (
+                <article key={item.key}>
+                  <small>{item.label}</small>
+                  <b>{item.title}</b>
+                  <p>{item.text}</p>
+                </article>
+              ))}
+            </div>
+          </section>
           <section className="chapter-tempo-contract" aria-label="章节节奏契约">
             <header>
               <span>节奏契约 · 序破急回</span>

@@ -2195,6 +2195,8 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .device-desktop .casefile-main { align-self: end; padding: 34px; }
 .device-desktop .casefile-main h2 { font-size: 48px; }
 .device-desktop .casefile-main button { max-width: 280px; }
+.device-desktop .chapter-starter-briefing { max-width: 640px; }
+.device-desktop .chapter-starter-briefing > div { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .device-desktop .chapter-tempo-contract { max-width: 560px; }
 .device-desktop .chapter-tempo-contract div { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .device-desktop .casefile-lore {
@@ -2822,6 +2824,63 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   margin-right: 5px;
   color: #e2bd64;
   font-weight: 500;
+}
+.chapter-starter-briefing {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(103,156,125,.2);
+  border-radius: 14px 2px 14px 2px;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(94,145,118,.14), transparent 34%),
+    rgba(4,17,14,.68);
+}
+.chapter-starter-briefing header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.chapter-starter-briefing header span {
+  color: #8fb39e;
+  font-size: 8px;
+  letter-spacing: .14em;
+}
+.chapter-starter-briefing header strong {
+  color: #d9cda9;
+  font-size: 9px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.chapter-starter-briefing > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+.chapter-starter-briefing article {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid rgba(255,255,255,.055);
+  background: rgba(255,255,255,.035);
+}
+.chapter-starter-briefing small,
+.chapter-starter-briefing b,
+.chapter-starter-briefing p { display: block; }
+.chapter-starter-briefing small {
+  color: #759084;
+  font-size: 8px;
+}
+.chapter-starter-briefing b {
+  margin-top: 3px;
+  color: #e6d5aa;
+  font-size: 10px;
+  font-weight: 500;
+}
+.chapter-starter-briefing p {
+  margin: 4px 0 0;
+  color: #82968c;
+  font-size: 8px;
+  line-height: 1.45;
 }
 .chapter-tempo-contract {
   margin-top: 10px;
