@@ -4824,6 +4824,33 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
   const archive = profile.investigationArchive?.[String(chapter)] || [];
   const archiveTotal = investigationEvidence(chapter).length;
   const archiveComplete = archiveTotal > 0 && archive.length === archiveTotal;
+  const chapterEpilogues = CHAPTER_EPILOGUES[chapter] || [];
+  const unlockedEpilogues = chapterEpilogues.filter((item) => (profile.unlockedEpilogues || []).includes(item.id)).length;
+  const tribulationClears = TRIBULATION_LEVELS.slice(1).filter((item) => tribulationRewardStatus(profile, chapter, item.level).claimed).length;
+  const nextTribulation = TRIBULATION_LEVELS.slice(1).find((item) => !tribulationRewardStatus(profile, chapter, item.level).claimed);
+  const replayContract = [
+    {
+      label: "证据",
+      value: `${Math.min(archive.length, archiveTotal)}/${archiveTotal}`,
+      done: archiveComplete,
+      title: archiveComplete ? "宗卷圆满" : `再访异路，补 ${Math.max(0, archiveTotal - archive.length)} 条证词`,
+      hint: archiveComplete ? `已拿满宗卷奖励 · 悟道 +${INVESTIGATION_COMPLETION_REWARD.spirit}` : "换路线节点，优先选择未收录证据。",
+    },
+    {
+      label: "后记",
+      value: `${unlockedEpilogues}/${chapterEpilogues.length}`,
+      done: chapterEpilogues.length > 0 && unlockedEpilogues >= chapterEpilogues.length,
+      title: unlockedEpilogues >= chapterEpilogues.length ? "两种抉择皆已留痕" : "重走关键抉择，补另一份人物后记",
+      hint: "后记会永久收入异闻录，补完人物命运的另一面。",
+    },
+    {
+      label: "劫数",
+      value: `${tribulationClears}/${TRIBULATION_LEVELS.length - 1}`,
+      done: tribulationClears >= TRIBULATION_LEVELS.length - 1,
+      title: nextTribulation ? `下一劫 · ${nextTribulation.name}` : "本章高阶劫数全破",
+      hint: nextTribulation ? `${nextTribulation.risk} · 首破 ${nextTribulation.reward.title}` : "可换职业追求更高评分与构筑熟练。",
+    },
+  ];
   const transition = CHAPTER_TRANSITIONS[chapter];
   const canContinue = runMode === "story" && chapter < CHAPTERS.length;
   const nextChapter = canContinue ? CHAPTERS[chapter] : null;
@@ -4862,6 +4889,22 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
         </div>
         <ChallengeGoalCard goal={nextGoal} compact />
       </section>}
+      <section className="summary-replay-contract" aria-label="本章复玩契约">
+        <header>
+          <span>本章复玩契约 · ARCS 回路</span>
+          <strong>{replayContract.filter((item) => item.done).length}/{replayContract.length} 已完成</strong>
+        </header>
+        <div>
+          {replayContract.map((item) => (
+            <article className={item.done ? "done" : ""} key={item.label}>
+              <small>{item.label}</small>
+              <b>{item.value}</b>
+              <strong>{item.title}</strong>
+              <p>{item.hint}</p>
+            </article>
+          ))}
+        </div>
+      </section>
       {runMode === "daily" && <div className="summary-daily"><span>今日试炼已落印</span><strong>{runTrial?.modifier?.name} · {runSeed}</strong><p>同日重复挑战仍可复盘构筑与评阶，但每日首胜资源不会重复发放。</p></div>}
       {tribulationStatus && <div className="summary-daily summary-tribulation">
         <span>{tribulationStatus.claimed ? "劫数落印" : "劫数复盘"}</span>

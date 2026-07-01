@@ -577,11 +577,30 @@ await run("PC 结算页可滚动复盘且不横溢", { width: 1366, height: 768 
   const summaryBox = await page.locator(".summary-copy").boundingBox();
   const causality = await page.locator(".summary-boss-causality").innerText();
   const nextGoal = await page.locator(".summary-next-goal").innerText();
+  const replayContract = await page.locator(".summary-replay-contract").innerText();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (!summaryBox || summaryBox.width < 500) throw new Error(`PC 结算主体过窄：${summaryBox?.width}`);
   if (!causality.includes("承担遗憾")) throw new Error("PC 结算页没有显示首领因果");
   if (!nextGoal.includes("下一枚印记")) throw new Error("PC 结算页没有展示下一项长期目标");
+  for (const phrase of ["本章复玩契约", "证据", "后记", "劫数", "下一劫"]) {
+    if (!replayContract.includes(phrase)) throw new Error(`PC 结算页复玩契约缺少 ${phrase}`);
+  }
   if (layout.scrollWidth > layout.width) throw new Error(`PC 结算页横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动结算页展示复玩契约且不横溢", { width: 430, height: 932 }, "?screen=summary&chapter=6&runChoices=%E6%89%BF%E6%8B%85%E9%81%97%E6%86%BE&clues=4", async (page) => {
+  await page.locator(".summary-replay-contract").waitFor();
+  const layout = await layoutSnapshot(page);
+  const contractText = await page.locator(".summary-replay-contract").innerText();
+  const contractBox = await page.locator(".summary-replay-contract").boundingBox();
+  const rows = await page.locator(".summary-replay-contract article").evaluateAll((items) => new Set(items.map((item) => Math.round(item.getBoundingClientRect().top))).size);
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["本章复玩契约", "证据", "后记", "劫数"]) {
+    if (!contractText.includes(phrase)) throw new Error(`移动结算页复玩契约缺少 ${phrase}`);
+  }
+  if (!contractBox || contractBox.width > 402) throw new Error(`移动结算复玩契约过宽：${contractBox?.width}`);
+  if (rows !== 3) throw new Error("移动结算复玩契约没有单列展示三个目标");
+  if (layout.scrollWidth > layout.width) throw new Error(`移动结算页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
 await run("PC 失败页显示学习处方", { width: 1366, height: 768 }, "?screen=defeat&chapter=4&stage=2&failures=2&clues=2&pendingRoute=1&pendingNode=elite", async (page) => {
