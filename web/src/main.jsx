@@ -3937,6 +3937,16 @@ function bossCounterLessons(chapter, boss, prelude) {
   ];
 }
 
+function cardRoleTags(card) {
+  const text = `${card.text || ""}${card.combo || ""}`;
+  return {
+    attack: /造成|伤害|燃烧|丹毒|毒|虚弱/.test(text),
+    guard: /护盾|护体|恢复|驱散|净除/.test(text),
+    cycle: /抽|返回手牌|发现|灵气/.test(text),
+    cleanse: /心魔|净除|驱散/.test(text),
+  };
+}
+
 function BossPreludeScreen({ chapter, choices, clues, onBegin }) {
   const prelude = resolveBossPrelude(chapter, choices);
   const [beatIndex, setBeatIndex] = useState(0);
@@ -4558,6 +4568,33 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         : "敌人本式压力较低，优先补资源、抽牌或铺职业组件。",
     };
   })();
+  const handSequenceCue = (() => {
+    const visibleHand = hand.slice(0, 7).map((card, index) => {
+      const cost = effectiveCardCost(card);
+      const synergy = cardSynergyState(card);
+      const playable = !combatBusy && !isCurse(card) && cardRequirementMet(card) && qi >= cost;
+      return { card, index, cost, synergy, playable, roles: cardRoleTags(card) };
+    });
+    const playableCards = visibleHand.filter((item) => item.playable);
+    const enemyThreat = (currentEnemyMove?.damage || 0) * (currentEnemyMove?.hits || 1);
+    const comboCards = playableCards.filter((item) => item.synergy.conditional && item.synergy.active);
+    const guardCards = playableCards.filter((item) => item.roles.guard);
+    const cycleCards = playableCards.filter((item) => item.roles.cycle);
+    const attackCards = playableCards.filter((item) => item.roles.attack);
+    const chosen = (enemyThreat > Math.max(6, shield) && guardCards.length)
+      ? { stance: "先稳血线", title: "先防守，再出伤害", text: `当前威胁 ${enemyThreat}，优先用护体/恢复牌把这一轮扛过去。`, cards: guardCards }
+      : comboCards.length
+        ? { stance: "先吃联动", title: "先打已亮联动牌", text: "发光联动已经满足条件，先把高收益结算掉，再补防御或过牌。", cards: comboCards }
+        : cycleCards.length
+          ? { stance: "先运转", title: "先抽牌或回灵", text: "先用过牌/灵气牌扩大选择面，避免太早把伤害牌打空。", cards: cycleCards }
+          : attackCards.length
+            ? { stance: "先压血线", title: "直接推进斩杀线", text: "本轮没有明显资源牌，先把可用伤害转成首领/敌人的血线压力。", cards: attackCards }
+            : { stance: "无法顺打", title: "考虑结束回合", text: "当前可打牌不足，保留手牌信息，结束回合比乱点更稳。", cards: playableCards };
+    return {
+      ...chosen,
+      picks: chosen.cards.slice(0, 3).map((item) => `${item.index + 1}.${item.card.name}`),
+    };
+  })();
   useEffect(() => {
     if (guideStep === 1 && combatFx?.card) setGuideStep(2);
   }, [combatFx?.card, guideStep]);
@@ -4642,6 +4679,12 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         <small>{learningCue.label}</small>
         <strong>{learningCue.title}</strong>
         <p>{learningCue.text}</p>
+      </aside>
+      <aside className={`hand-sequence-coach ${handSequenceCue.picks.length ? "has-picks" : "empty"}`} aria-label="手牌顺序提示">
+        <small>手牌顺序提示 · {handSequenceCue.stance}</small>
+        <strong>{handSequenceCue.title}</strong>
+        <p>{handSequenceCue.text}</p>
+        <div>{handSequenceCue.picks.length ? handSequenceCue.picks.map((pick) => <b key={pick}>{pick}</b>) : <b>Space · 结束回合</b>}</div>
       </aside>
       <CombatResolutionLedger entries={combatLedger} />
       {drawFx && <DrawSequence fx={drawFx} />}

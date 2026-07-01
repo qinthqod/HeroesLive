@@ -542,6 +542,28 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 }
 .combat-learning-cue.mastery small { color: #d6ad57; }
 .combat-learning-cue.mastery strong { color: #f0d58e; }
+.hand-sequence-coach {
+  position: absolute;
+  z-index: 14;
+  left: 50%;
+  bottom: 316px;
+  width: min(520px, 44vw);
+  padding: 10px 12px;
+  border: 1px solid rgba(128,164,145,.2);
+  background: linear-gradient(135deg, rgba(4,15,13,.88), rgba(16,33,24,.82));
+  box-shadow: 0 16px 38px rgba(0,0,0,.32);
+  text-align: left;
+  transform: translateX(-50%);
+}
+.hand-sequence-coach.has-picks { border-color: rgba(211,169,72,.28); }
+.hand-sequence-coach small,
+.hand-sequence-coach strong,
+.hand-sequence-coach p { display: block; }
+.hand-sequence-coach small { color: #8fc1a7; font-size: 7px; letter-spacing: .12em; }
+.hand-sequence-coach strong { margin-top: 3px; color: #e2cf98; font-family: "STKaiti", serif; font-size: 16px; font-weight: 400; }
+.hand-sequence-coach p { margin: 4px 0 0; color: #83988d; font-size: 8px; line-height: 1.45; }
+.hand-sequence-coach div { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+.hand-sequence-coach b { padding: 3px 6px; border: 1px solid rgba(211,169,72,.18); border-radius: 999px; background: rgba(211,169,72,.08); color: #d7bd75; font-size: 8px; font-weight: 400; }
 .combat-resolution-ledger {
   position: absolute;
   z-index: 7;
@@ -1812,6 +1834,18 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   }
   .combat-learning-cue strong { font-size: 12px; }
   .combat-learning-cue p { display: -webkit-box; overflow: hidden; font-size: 7px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .hand-sequence-coach {
+    left: 12px;
+    right: 82px;
+    bottom: 196px;
+    width: auto;
+    padding: 7px 9px;
+    transform: none;
+  }
+  .hand-sequence-coach strong { font-size: 12px; }
+  .hand-sequence-coach p { display: -webkit-box; overflow: hidden; font-size: 7px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .hand-sequence-coach div { margin-top: 5px; overflow: hidden; max-height: 20px; }
+  .hand-sequence-coach b { font-size: 7px; }
   .combat-resolution-ledger {
     left: 12px;
     right: 82px;

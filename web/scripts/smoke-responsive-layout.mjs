@@ -417,6 +417,8 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   const previewText = await page.locator(".hand .card-preview-yield").first().innerText();
   const controlHints = await page.locator(".desktop-control-hints").innerText();
   const learningCue = await page.locator(".combat-learning-cue").innerText();
+  const sequenceCue = await page.locator(".hand-sequence-coach").innerText();
+  const sequenceBox = await page.locator(".hand-sequence-coach").boundingBox();
   const ledgerEmpty = await page.locator(".combat-resolution-ledger").innerText();
   const intentCycleText = await page.locator(".enemy-intent-cycle").innerText();
   const intentCycleCards = await page.locator(".enemy-intent-cycle article").count();
@@ -429,6 +431,8 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (!cardStates.some((text) => /可出|联动|差|需|心魔/.test(text))) throw new Error("PC 战斗页没有显示卡牌即时状态");
   if (!previewText.includes("预判") || !/[伤护愈抽灵]/.test(previewText)) throw new Error(`PC 战斗卡牌缺少出牌前收益预判：${previewText}`);
   if (!learningCue.includes("本回合目标") || !learningCue.includes("读敌意")) throw new Error(`PC 战斗页缺少本回合学习目标：${learningCue}`);
+  if (!sequenceCue.includes("手牌顺序提示") || !/先|结束回合/.test(sequenceCue)) throw new Error(`PC 战斗页缺少手牌顺序提示：${sequenceCue}`);
+  if (!sequenceBox || sequenceBox.width < 320) throw new Error(`PC 手牌顺序提示过窄：${sequenceBox?.width}`);
   if (intentCycleCards !== 3) throw new Error(`PC 敌招循环预读数量为 ${intentCycleCards}`);
   for (const phrase of ["敌招循环", "三式预读", "当前", "下一", "再后"]) {
     if (!intentCycleText.includes(phrase)) throw new Error(`PC 敌招循环预读缺少 ${phrase}`);
@@ -466,9 +470,13 @@ await run("移动战斗卡牌展示收益预判且不横溢", { width: 430, heig
   const layout = await layoutSnapshot(page);
   const previewBox = await page.locator(".hand .card-preview-yield").first().boundingBox();
   const previewText = await page.locator(".hand .card-preview-yield").first().innerText();
+  const sequenceCue = await page.locator(".hand-sequence-coach").innerText();
+  const sequenceBox = await page.locator(".hand-sequence-coach").boundingBox();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   if (!previewText.includes("预判") || !/[伤护愈抽灵]/.test(previewText)) throw new Error(`移动战斗卡牌缺少收益预判：${previewText}`);
   if (!previewBox || previewBox.width > 106) throw new Error(`移动卡牌收益预判过宽：${previewBox?.width}`);
+  if (!sequenceCue.includes("手牌顺序提示") || !/先|结束回合/.test(sequenceCue)) throw new Error(`移动战斗页缺少手牌顺序提示：${sequenceCue}`);
+  if (!sequenceBox || sequenceBox.width > 340) throw new Error(`移动手牌顺序提示过宽：${sequenceBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
