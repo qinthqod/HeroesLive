@@ -2747,7 +2747,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 }
 .device-desktop .route-choice-grid { gap: 16px; }
 .device-desktop .route-choice-grid.choices-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.device-desktop .route-choice-card { min-height: 315px; }
+.device-desktop .route-choice-card { min-height: 360px; }
 .device-desktop .route-choice-copy h2 { font-size: 23px; }
 .device-desktop .route-choice-copy p { min-height: 46px; }
 .device-desktop .route-forecast { flex-wrap: wrap; }
@@ -4561,6 +4561,40 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .route-space-read small { margin-top: 3px; color: #81978b; font-size: 7px; line-height: 1.35; }
 .route-choice-facts { display: flex; flex-wrap: wrap; gap: 5px; }
 .route-choice-facts b { padding: 4px 6px; border: 1px solid rgba(128,168,147,.22); color: #9fc0af; font-size: 8px; font-weight: 400; }
+.route-payoff-cue {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 7px;
+  align-items: center;
+  margin-top: 7px;
+  padding: 7px 8px;
+  border: 1px solid rgba(218,176,81,.18);
+  border-left: 2px solid rgba(218,176,81,.52);
+  background: rgba(61,42,13,.3);
+}
+.route-payoff-cue span {
+  grid-row: 1 / 3;
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  padding: 0 5px;
+  border: 1px solid rgba(218,176,81,.24);
+  color: #f0cd7f;
+  font-size: 8px;
+  letter-spacing: .08em;
+}
+.route-payoff-cue b,
+.route-payoff-cue em { display: block; min-width: 0; }
+.route-payoff-cue b { color: #d8c59a; font-size: 9px; font-weight: 500; }
+.route-payoff-cue em { color: #7f9287; font-size: 7px; font-style: normal; line-height: 1.35; }
+.route-payoff-cue.cue-稳健,
+.route-payoff-cue.cue-节流,
+.route-payoff-cue.cue-补证据 { border-left-color: #78ad8e; background: rgba(13,55,35,.25); }
+.route-payoff-cue.cue-进取,
+.route-payoff-cue.cue-高危 { border-left-color: #cf7354; background: rgba(75,27,16,.26); }
+.route-payoff-cue.cue-整构筑,
+.route-payoff-cue.cue-精修 { border-left-color: #d7b055; background: rgba(65,49,14,.32); }
 .route-choice-copy small { display: block; margin: 8px 0; color: #756f5d; font-size: 8px; }
 .route-choice-copy > strong { display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid rgba(137,170,151,.18); color: #e2bd69; font-size: 10px; font-weight: 400; }
 .route-choice-copy > strong i { font-size: 18px; font-style: normal; line-height: .6; }
@@ -4610,8 +4644,8 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .combat-build-tracker strong { max-width: 94px; }
   .discard-count, .exhaust-count { left: 76px; }
   .route-choice-grid { gap: 9px; }
-  .route-choice-card { min-height: 294px; }
-  .choices-1 .route-choice-card { min-height: 350px; }
+  .route-choice-card { min-height: 334px; }
+  .choices-1 .route-choice-card { min-height: 374px; }
   .route-choice-copy { left: 11px; right: 11px; bottom: 11px; }
   .route-choice-copy h2 { font-size: 22px; }
   .route-space-read { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; }

@@ -3668,6 +3668,44 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
       ratio: index % 2 === 0 ? "宽视野" : "窄入口",
     };
   };
+  const routeDecisionCue = (node) => {
+    const hpRatio = maxHp > 0 ? hp / maxHp : 1;
+    const buildProgress = build?.progress || 0;
+    if (node.id === "rest") {
+      return hpRatio <= 0.68
+        ? { label: "稳健", payoff: "保命优先", text: "血线已低，先把失败风险降下来。" }
+        : { label: "满意即可", payoff: "安全修整", text: "若不想贪战利，这条路能稳定进首领前。" };
+    }
+    if (node.id === "story" || node.id === "event") {
+      return clues.length < 4
+        ? { label: "补证据", payoff: "真相进度", text: "当前证据未成章，优先带回线索更划算。" }
+        : { label: "探索", payoff: "分支回响", text: "真相已近完整，可用低压节点补人物回响。" };
+    }
+    if (node.id === "elite") {
+      return hpRatio >= 0.72
+        ? { label: "进取", payoff: "上限最高", text: "血线允许冒险，精英奖励最容易抬高牌组上限。" }
+        : { label: "高危", payoff: "慎选", text: "当前血线承压，除非缺关键法宝，否则先避其锋。" };
+    }
+    if (node.id === "market") {
+      return stones >= 24
+        ? { label: "整构筑", payoff: "经济换稳定", text: "灵石充足，适合购牌、删牌或补核心组件。" }
+        : { label: "节流", payoff: "预算紧", text: "灵石有限，只买能推进构筑或救命的选择。" };
+    }
+    if (node.id === "training") {
+      return buildProgress < 4
+        ? { label: "整构筑", payoff: "塑形清晰", text: "当前流派未成卷，修炼能压缩牌组或补灵气。" }
+        : { label: "精修", payoff: "锦上添花", text: "构筑已接近成型，优先精研核心牌。" };
+    }
+    if (node.id === "battle") {
+      return buildProgress < 3
+        ? { label: "稳健", payoff: "补基础牌", text: "普通战风险较低，适合补齐职业核心。" }
+        : { label: "练手", payoff: "读敌意", text: "用低风险战斗验证当前循环是否顺手。" };
+    }
+    if (node.id === "boss") {
+      return { label: "收束", payoff: "章节突破", text: "检查护盾、线索与构筑节奏后进入首领前夜。" };
+    }
+    return { label: "满意即可", payoff: routeMeta[node.id]?.reward || "路线收益", text: "若它解决当前短板，就可以直接选。" };
+  };
   const chooseNode = (node) => {
     const clue = investigation?.routes?.[routeProgress]?.[node.id];
     onChooseNode(node, clue);
@@ -3741,6 +3779,7 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
           {currentChoices.map((node, index) => {
             const meta = routeMeta[node.id];
             const space = routeSpaceProfile(node, index);
+            const cue = routeDecisionCue(node);
             return (
               <button className={`route-choice-card space-${space.stance}`} key={node.id} onClick={() => chooseNode(node)} style={{ "--choice-delay": `${index * 100}ms` }}>
                 <GameImage src={node.art} alt="" />
@@ -3755,6 +3794,11 @@ function MapScreen({ stage, chapter, hp, maxHp, stones, enterCombat, setScreen, 
                     <span><b>{space.ratio}</b><small>{space.tactic}</small></span>
                   </div>
                   <div className="route-choice-facts"><b>{meta.risk}</b><b>{meta.reward}</b></div>
+                  <div className={`route-payoff-cue cue-${cue.label}`}>
+                    <span>{cue.label}</span>
+                    <b>{cue.payoff}</b>
+                    <em>{cue.text}</em>
+                  </div>
                   <small>{meta.consequence}</small>
                   <strong>踏入此处 <i>›</i></strong>
                 </div>

@@ -430,6 +430,7 @@ await run("PC 路线页显示序破急节奏导航", { width: 1366, height: 768 
   const layout = await layoutSnapshot(page);
   const pacingText = await page.locator(".route-pacing").innerText();
   const spaceText = await page.locator(".route-space-read").first().innerText();
+  const payoffText = await page.locator(".route-payoff-cue").first().innerText();
   const journeyBox = await page.locator(".route-journey").boundingBox();
   const notebookBox = await page.locator(".map-notebook").boundingBox();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
@@ -437,6 +438,7 @@ await run("PC 路线页显示序破急节奏导航", { width: 1366, height: 768 
   for (const phrase of ["了望", "庇护", "光", "压"]) {
     if (!spaceText.includes(phrase)) throw new Error(`PC 路线空间读法缺少 ${phrase}：${spaceText}`);
   }
+  if (!payoffText.includes("进取") && !payoffText.includes("高危")) throw new Error(`PC 路线决策签缺少风险收益取向：${payoffText}`);
   if (!journeyBox || journeyBox.width < 560) throw new Error(`PC 路线主体过窄：${journeyBox?.width}`);
   if (!notebookBox || notebookBox.x <= journeyBox.x + journeyBox.width) throw new Error("PC 路线札记没有放在右侧信息栏");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 路线页横向溢出 ${layout.scrollWidth - layout.width}px`);
@@ -448,11 +450,15 @@ await run("移动路线页保留节奏提示且无横溢", { width: 430, height:
   const pacingBox = await page.locator(".route-pacing").boundingBox();
   const spaceBox = await page.locator(".route-space-read").first().boundingBox();
   const spaceText = await page.locator(".route-space-read").first().innerText();
+  const payoffBox = await page.locator(".route-payoff-cue").first().boundingBox();
+  const payoffText = await page.locator(".route-payoff-cue").first().innerText();
   const cardCount = await page.locator(".route-choice-card").count();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   if (!pacingBox || pacingBox.width > 400) throw new Error(`移动节奏提示过宽：${pacingBox?.width}`);
   if (!spaceBox || spaceBox.width > 372) throw new Error(`移动路线空间读法过宽：${spaceBox?.width}`);
+  if (!payoffBox || payoffBox.width > 372) throw new Error(`移动路线决策签过宽：${payoffBox?.width}`);
   if (!spaceText.includes("庇护") && !spaceText.includes("了望")) throw new Error(`移动路线空间读法缺少了望/庇护：${spaceText}`);
+  if (!payoffText.includes("进取") && !payoffText.includes("高危")) throw new Error(`移动路线决策签缺少风险收益取向：${payoffText}`);
   if (cardCount < 2 || cardCount > 3) throw new Error(`移动路线选择数量异常：${cardCount}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动路线页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
