@@ -4653,6 +4653,28 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
       picks: chosen.cards.slice(0, 3).map((item) => `${item.index + 1}.${item.card.name}`),
     };
   })();
+  const endTurnReadiness = (() => {
+    const visibleHand = hand.slice(0, 7).map((card, index) => {
+      const cost = effectiveCardCost(card);
+      const playable = !combatBusy && !isCurse(card) && cardRequirementMet(card) && qi >= cost;
+      return { card, index, playable, roles: cardRoleTags(card) };
+    });
+    const threat = (currentEnemyMove?.damage || 0) * (currentEnemyMove?.hits || 1);
+    const expectedDamage = Math.max(0, threat - shield);
+    const guardOptions = visibleHand.filter((item) => item.playable && item.roles.guard);
+    const cycleOptions = visibleHand.filter((item) => item.playable && item.roles.cycle);
+    if (combatBusy) return { tone: "busy", label: "结算中", title: "等待当前动作完成", detail: "动画、抽牌或敌方行动尚未结束。", metric: "—" };
+    if (expectedDamage >= hp && threat > 0) {
+      return { tone: "danger", label: "交回合风险签", title: guardOptions.length ? "高危 · 先补护盾" : "高危 · 可能倒下", detail: guardOptions.length ? `预计承伤 ${expectedDamage}，先看 ${guardOptions.slice(0, 2).map((item) => `${item.index + 1}.${item.card.name}`).join(" / ")}。` : "没有可用防守牌，考虑消耗品、斩杀或承担失败。", metric: `承${expectedDamage}` };
+    }
+    if (expectedDamage > Math.max(0, Math.floor(maxHp * 0.22))) {
+      return { tone: "warn", label: "交回合风险签", title: guardOptions.length ? "建议先防守" : "可冒险交回合", detail: guardOptions.length ? `敌招仍会穿过护盾 ${expectedDamage} 点，先稳血线更安全。` : `预计承伤 ${expectedDamage}，若要保留手牌节奏可直接交回合。`, metric: `承${expectedDamage}` };
+    }
+    if (threat > 0 && expectedDamage === 0) {
+      return { tone: "safe", label: "交回合风险签", title: "安全交回合", detail: "当前护盾足以覆盖敌招；若没有更好联动，可以结束回合。", metric: "承0" };
+    }
+    return { tone: "safe", label: "交回合风险签", title: cycleOptions.length ? "空窗 · 可先运转" : "低压 · 可以交回合", detail: cycleOptions.length ? "敌人本式无直接伤害，先抽牌/回灵会更赚。" : "敌人当前没有直接伤害，结束回合风险较低。", metric: "低压" };
+  })();
   useEffect(() => {
     if (guideStep === 1 && combatFx?.card) setGuideStep(2);
   }, [combatFx?.card, guideStep]);
@@ -4771,6 +4793,12 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
           return <Card key={`${card.id}-${index}`} card={card} index={index} displayCost={cost} comboReady={synergy.conditional && synergy.active} playable={playable} status={cardPlayStatus(card, cost, synergy, playable)} preview={cardPreviewYield(card, cost, synergy, playable)} casting={combatFx?.index === index} onClick={() => playCard(index)} />;
         })}
       </div>
+      <aside className={`end-turn-readiness ${endTurnReadiness.tone}`} aria-label="交回合风险签">
+        <small>{endTurnReadiness.label}</small>
+        <strong>{endTurnReadiness.title}</strong>
+        <p>{endTurnReadiness.detail}</p>
+        <b>{endTurnReadiness.metric}</b>
+      </aside>
       <button className={`end-turn ${guideStep === 2 ? "guide-focus" : ""}`} disabled={combatBusy} onClick={endTurn}><span className="end-turn-ring" /><strong>结束<br />回合</strong><kbd>Space</kbd></button>
       <div className="pile-status">
         <button className="deck-count" aria-label={`抽牌堆剩余 ${drawPile.length} 张`} onClick={() => setOverlay("deck")}><GameImage src="/card_back_qinglan_trial.png" alt="" /><span>{drawPile.length}</span></button>

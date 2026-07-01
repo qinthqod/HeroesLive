@@ -120,6 +120,7 @@ expect(source.includes("market-economy") && source.includes("economyAdvice") && 
 expect(source.includes("cardPlayStatus") && source.includes("cardRequirementHint") && source.includes("card-play-state"), "战斗卡牌必须公开可出、联动、灵气不足和条件未满等即时状态");
 expect(source.includes("cardPreviewYield") && source.includes("card-preview-yield") && source.includes("基础收益预判") && source.includes("联动已计入"), "战斗卡牌必须展示出牌前收益预判，降低联动理解成本");
 expect(source.includes("handSequenceCue") && source.includes("hand-sequence-coach") && source.includes("手牌顺序提示") && source.includes("先稳血线") && source.includes("先吃联动") && source.includes("先运转"), "战斗必须提供满意即可的手牌顺序提示，降低每回合最优搜索负担");
+expect(source.includes("endTurnReadiness") && source.includes("end-turn-readiness") && source.includes("交回合风险签") && source.includes("预计承伤") && source.includes("安全交回合"), "战斗必须在结束回合前公开交回合风险，减少漏防守的程序错误");
 expect(source.includes("TurnFlowFx") && source.includes("turn-flow") && source.includes("手牌入弃") && source.includes("洗牌后抽取"), "回合结束必须公开敌方行动、弃牌、洗牌与抽牌的流转节奏");
 expect(source.includes("effectBursts") && source.includes("CombatEffectBursts") && source.includes("card.art"), "出牌和抽牌必须展示空间化效果浮字与真实卡图反馈");
 expect(source.includes("combatLedger") && source.includes("CombatResolutionLedger") && source.includes("本回合结算") && source.includes("基础效果已结算"), "战斗必须记录本回合最近出牌结算，解释伤害、资源与联动是否触发");
@@ -138,6 +139,7 @@ expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".a
 expect(styles.includes(".app[data-readability=\"large\"] .game-card p") && styles.includes(".app[data-readability=\"large\"] .card-play-state") && styles.includes(".app[data-readability=\"large\"] .market-fit"), "可读模式必须放大战斗卡牌、状态与高密度决策文本");
 expect(styles.includes(".card-preview-yield") && styles.includes(".card-preview-yield.preview-combo") && styles.includes(".card-preview-yield.preview-locked"), "出牌前收益预判必须拥有普通、联动和锁定状态样式");
 expect(styles.includes(".hand-sequence-coach") && styles.includes(".hand-sequence-coach.has-picks") && styles.includes(".hand-sequence-coach b"), "手牌顺序提示必须拥有移动与PC可读样式和候选牌标签");
+expect(styles.includes(".end-turn-readiness") && styles.includes(".end-turn-readiness.safe") && styles.includes(".end-turn-readiness.warn") && styles.includes(".end-turn-readiness.danger"), "交回合风险签必须拥有安全、警告、高危三态样式");
 expect(styles.includes(".abandon-confirm") && styles.includes(".abandon-run.armed") && styles.includes(".abandon-cancel"), "放弃存档二次确认必须拥有危险提示、确认态与取消按钮样式");
 expect(styles.includes(".mode-rule-contract") && styles.includes(".device-desktop .mode-rule-contract > div"), "模式规则契约必须拥有移动双列与 PC 四列样式");
 expect(styles.includes(".casebook-focus") && styles.includes(".casebook-volume-grid") && styles.includes(".casebook-volume-grid button.active") && styles.includes("scroll-snap-type: x proximity"), "异闻录分卷导航必须具备当前追踪、激活卷和移动横向浏览样式");

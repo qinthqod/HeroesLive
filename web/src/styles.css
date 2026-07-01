@@ -564,6 +564,32 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .hand-sequence-coach p { margin: 4px 0 0; color: #83988d; font-size: 8px; line-height: 1.45; }
 .hand-sequence-coach div { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
 .hand-sequence-coach b { padding: 3px 6px; border: 1px solid rgba(211,169,72,.18); border-radius: 999px; background: rgba(211,169,72,.08); color: #d7bd75; font-size: 8px; font-weight: 400; }
+.end-turn-readiness {
+  position: absolute;
+  z-index: 13;
+  right: 92px;
+  bottom: 116px;
+  width: 178px;
+  padding: 9px 10px;
+  border: 1px solid rgba(128,164,145,.22);
+  border-right: 2px solid rgba(128,164,145,.55);
+  background: rgba(5,18,14,.82);
+  box-shadow: 0 14px 30px rgba(0,0,0,.28);
+  text-align: left;
+}
+.end-turn-readiness small,
+.end-turn-readiness strong,
+.end-turn-readiness p,
+.end-turn-readiness b { display: block; }
+.end-turn-readiness small { color: #8fb8a3; font-size: 7px; letter-spacing: .12em; }
+.end-turn-readiness strong { margin-top: 3px; color: #dfd2aa; font-family: "STKaiti", serif; font-size: 14px; font-weight: 400; }
+.end-turn-readiness p { margin: 4px 0 0; color: #80958a; font-size: 8px; line-height: 1.4; }
+.end-turn-readiness b { position: absolute; right: 8px; top: 8px; color: #d7b765; font-size: 8px; font-weight: 400; }
+.end-turn-readiness.safe { border-color: rgba(116,178,145,.3); border-right-color: #75b28f; }
+.end-turn-readiness.warn { border-color: rgba(218,176,81,.38); border-right-color: #d9ad51; background: rgba(30,24,10,.82); }
+.end-turn-readiness.danger { border-color: rgba(211,94,70,.46); border-right-color: #d1624a; background: rgba(34,13,10,.84); }
+.end-turn-readiness.danger small,
+.end-turn-readiness.danger b { color: #df8b72; }
 .combat-resolution-ledger {
   position: absolute;
   z-index: 7;
@@ -1846,6 +1872,14 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .hand-sequence-coach p { display: -webkit-box; overflow: hidden; font-size: 7px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
   .hand-sequence-coach div { margin-top: 5px; overflow: hidden; max-height: 20px; }
   .hand-sequence-coach b { font-size: 7px; }
+  .end-turn-readiness {
+    right: 74px;
+    bottom: 88px;
+    width: 128px;
+    padding: 6px 7px;
+  }
+  .end-turn-readiness strong { font-size: 11px; }
+  .end-turn-readiness p { display: -webkit-box; overflow: hidden; font-size: 7px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
   .combat-resolution-ledger {
     left: 12px;
     right: 82px;
@@ -3003,6 +3037,11 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   min-width: min(520px, 46vw);
   border: 1px solid rgba(130,162,144,.14);
   border-radius: 999px;
+}
+.device-desktop .end-turn-readiness {
+  right: 122px;
+  bottom: 112px;
+  width: 220px;
 }
 .device-desktop .progress-rail {
   right: 34px;

@@ -438,6 +438,8 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   const learningCue = await page.locator(".combat-learning-cue").innerText();
   const sequenceCue = await page.locator(".hand-sequence-coach").innerText();
   const sequenceBox = await page.locator(".hand-sequence-coach").boundingBox();
+  const readinessText = await page.locator(".end-turn-readiness").innerText();
+  const readinessBox = await page.locator(".end-turn-readiness").boundingBox();
   const ledgerEmpty = await page.locator(".combat-resolution-ledger").innerText();
   const intentCycleText = await page.locator(".enemy-intent-cycle").innerText();
   const intentCycleCards = await page.locator(".enemy-intent-cycle article").count();
@@ -452,6 +454,8 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (!learningCue.includes("本回合目标") || !learningCue.includes("读敌意")) throw new Error(`PC 战斗页缺少本回合学习目标：${learningCue}`);
   if (!sequenceCue.includes("手牌顺序提示") || !/先|结束回合/.test(sequenceCue)) throw new Error(`PC 战斗页缺少手牌顺序提示：${sequenceCue}`);
   if (!sequenceBox || sequenceBox.width < 320) throw new Error(`PC 手牌顺序提示过窄：${sequenceBox?.width}`);
+  if (!readinessText.includes("交回合风险签") || !/承|低压/.test(readinessText)) throw new Error(`PC 战斗页缺少交回合风险签：${readinessText}`);
+  if (!readinessBox || readinessBox.width < 180) throw new Error(`PC 交回合风险签过窄：${readinessBox?.width}`);
   if (intentCycleCards !== 3) throw new Error(`PC 敌招循环预读数量为 ${intentCycleCards}`);
   for (const phrase of ["敌招循环", "三式预读", "当前", "下一", "再后"]) {
     if (!intentCycleText.includes(phrase)) throw new Error(`PC 敌招循环预读缺少 ${phrase}`);
@@ -491,11 +495,15 @@ await run("移动战斗卡牌展示收益预判且不横溢", { width: 430, heig
   const previewText = await page.locator(".hand .card-preview-yield").first().innerText();
   const sequenceCue = await page.locator(".hand-sequence-coach").innerText();
   const sequenceBox = await page.locator(".hand-sequence-coach").boundingBox();
+  const readinessText = await page.locator(".end-turn-readiness").innerText();
+  const readinessBox = await page.locator(".end-turn-readiness").boundingBox();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   if (!previewText.includes("预判") || !/[伤护愈抽灵]/.test(previewText)) throw new Error(`移动战斗卡牌缺少收益预判：${previewText}`);
   if (!previewBox || previewBox.width > 106) throw new Error(`移动卡牌收益预判过宽：${previewBox?.width}`);
   if (!sequenceCue.includes("手牌顺序提示") || !/先|结束回合/.test(sequenceCue)) throw new Error(`移动战斗页缺少手牌顺序提示：${sequenceCue}`);
   if (!sequenceBox || sequenceBox.width > 340) throw new Error(`移动手牌顺序提示过宽：${sequenceBox?.width}`);
+  if (!readinessText.includes("交回合风险签") || !/承|低压/.test(readinessText)) throw new Error(`移动战斗页缺少交回合风险签：${readinessText}`);
+  if (!readinessBox || readinessBox.width > 150) throw new Error(`移动交回合风险签过宽：${readinessBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
