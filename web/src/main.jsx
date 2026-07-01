@@ -3904,11 +3904,45 @@ function EncounterPreludeScreen({ chapter, stage, seen, onBegin }) {
   );
 }
 
+function bossCounterLessons(chapter, boss, prelude) {
+  const moves = BOSS_MOVE_PATTERNS[chapter] || [];
+  const phase = BOSS_PHASES[chapter];
+  const peak = Math.max(0, ...moves.map((move) => (move.damage || 0) * (move.hits || 1)));
+  const taggedMechanics = [
+    moves.some((move) => move.shield) ? "护体窗口" : "",
+    moves.some((move) => move.curse) ? "心魔污染" : "",
+    moves.some((move) => move.drainQi) ? "灵气压制" : "",
+    moves.some((move) => move.drawPenalty) ? "抽牌封锁" : "",
+    moves.some((move) => move.weak) ? "虚弱连击" : "",
+    moves.some((move) => (move.hits || 1) > 1) ? "多段威胁" : "",
+  ].filter(Boolean);
+  const shieldMove = moves.find((move) => move.shield || move.heal);
+  const pressureMove = [...moves].sort((a, b) => ((b.damage || 0) * (b.hits || 1)) - ((a.damage || 0) * (a.hits || 1)))[0];
+  return [
+    {
+      label: "壹 · 读最高压",
+      title: pressureMove ? `${pressureMove.name} · ${peak} 威胁` : `${boss.name} · 节奏试探`,
+      text: peak ? `进战前至少准备 ${Math.max(8, Math.ceil(peak * 0.65))} 点护体、恢复或斩杀线。` : "本战没有纯伤害峰值，优先观察资源压制与转相节奏。",
+    },
+    {
+      label: "贰 · 破核心机制",
+      title: taggedMechanics.join(" / ") || boss.trait,
+      text: boss.counter || prelude?.dossier?.weakness || "保留一张防御牌和一张过牌牌，避免被首领节奏牵走。",
+    },
+    {
+      label: "叁 · 留转相资源",
+      title: phase ? `${phase.name} · ${Math.round(phase.threshold * 100)}% 血线` : "终局转相",
+      text: phase ? `压到转相前别把手牌全交光；${shieldMove ? `「${shieldMove.name}」是主要输出窗口。` : "保留低费牌应对二阶段连动。"}` : "进入二阶段前确认血线和抽牌，不要只押一轮爆发。",
+    },
+  ];
+}
+
 function BossPreludeScreen({ chapter, choices, clues, onBegin }) {
   const prelude = resolveBossPrelude(chapter, choices);
   const [beatIndex, setBeatIndex] = useState(0);
   const startingRef = useRef(false);
   const boss = ENCOUNTER_ENEMIES[chapter][3];
+  const counterLessons = bossCounterLessons(chapter, boss, prelude);
   const beats = prelude?.beats || [];
   const beat = beats[Math.min(beatIndex, Math.max(0, beats.length - 1))];
   const isLast = beatIndex >= beats.length - 1;
@@ -3950,6 +3984,16 @@ function BossPreludeScreen({ chapter, choices, clues, onBegin }) {
           <section><em>执念</em><b>{prelude.dossier.obsession}</b></section>
           <section><em>破绽</em><b>{prelude.dossier.weakness}</b></section>
         </div>}
+        <section className="boss-counter-lessons" aria-label="首领破招札记">
+          <header><em>破招札记</em><b>进战前确认三件事</b></header>
+          {counterLessons.map((lesson) => (
+            <article key={lesson.label}>
+              <small>{lesson.label}</small>
+              <strong>{lesson.title}</strong>
+              <p>{lesson.text}</p>
+            </article>
+          ))}
+        </section>
         <div><em>调查证据</em><b>{clues.length}/5</b></div>
         {prelude.choice && <div className="boss-prelude-choice"><em>将被回应的抉择</em><b>{prelude.choice}</b></div>}
       </aside>

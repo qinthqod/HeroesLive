@@ -372,6 +372,17 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .boss-prelude-dossier .boss-dossier-lore { display: grid; gap: 8px; margin: 12px 0 2px; padding: 11px 0; border-top: 1px solid rgba(201,178,117,.16); border-bottom: 1px solid rgba(128,163,143,.12); }
 .boss-dossier-lore section { display: grid; grid-template-columns: 34px 1fr; gap: 9px; align-items: start; }
 .boss-dossier-lore b { color: #9fac9f; font-size: 8px; line-height: 1.55; }
+.boss-counter-lessons { display: grid; gap: 7px; margin: 11px 0 8px; padding: 11px 0; border-bottom: 1px solid rgba(128,163,143,.12); }
+.boss-counter-lessons header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.boss-counter-lessons header em { color: #c8a65a; font-size: 8px; font-style: normal; letter-spacing: .14em; }
+.boss-counter-lessons header b { color: #8fa296; font-size: 8px; font-weight: 400; }
+.boss-counter-lessons article { padding: 8px; border: 1px solid rgba(255,255,255,.055); background: rgba(255,255,255,.035); }
+.boss-counter-lessons small,
+.boss-counter-lessons strong,
+.boss-counter-lessons p { display: block; }
+.boss-counter-lessons small { color: #72877c; font-size: 7px; }
+.boss-counter-lessons strong { margin-top: 3px; color: #ddc47e; font-family: "STKaiti", serif; font-size: 15px; font-weight: 400; line-height: 1.25; }
+.boss-counter-lessons p { margin: 5px 0 0; color: #84978c; font-size: 8px; line-height: 1.45; }
 .boss-prelude-dossier .boss-prelude-choice { margin-top: 8px; border-color: rgba(207,165,72,.22); }
 .boss-prelude-choice b { color: #e0b85d; }
 .event-art { position: absolute; inset: 0; }
@@ -1707,6 +1718,10 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .boss-prelude-dossier > strong { font-size: 20px; }
   .boss-prelude-dossier .boss-dossier-lore { margin-top: 10px; padding: 9px 0; }
   .boss-dossier-lore section { grid-template-columns: 30px 1fr; }
+  .boss-counter-lessons { gap: 6px; margin: 9px 0 7px; padding: 9px 0; }
+  .boss-counter-lessons article { padding: 7px; }
+  .boss-counter-lessons strong { font-size: 14px; }
+  .boss-counter-lessons p { font-size: 7px; }
   .event-art { position: fixed; }
   .event-art::after { background: rgba(3,10,8,.72); }
   .event-copy {

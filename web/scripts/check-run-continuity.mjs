@@ -154,6 +154,7 @@ expect(styles.includes(".chapter-atlas-showcase") && styles.includes(".device-de
 expect(styles.includes(".chapter-boss-atlas") && styles.includes(".device-desktop .chapter-boss-atlas") && styles.includes(".chapter-boss-atlas em"), "二十五 Boss 因果谱必须拥有移动与PC适配样式和反制提示样式");
 expect(styles.includes(".chapter-starter-briefing") && styles.includes(".device-desktop .chapter-starter-briefing > div") && styles.includes("grid-template-columns: repeat(4, minmax(0, 1fr))"), "章节开局简报必须拥有移动双列与PC四列样式");
 expect(styles.includes(".chapter-tempo-contract") && styles.includes(".device-desktop .chapter-tempo-contract div") && styles.includes("grid-template-columns: repeat(4, minmax(0, 1fr))"), "章节节奏契约必须拥有移动双列与 PC 四段式样式");
+expect(styles.includes(".boss-counter-lessons") && styles.includes(".boss-counter-lessons article") && styles.includes(".boss-counter-lessons header"), "首领破招札记必须拥有移动与PC可读样式");
 expect(styles.includes(".route-causality-strip") && styles.includes(".device-desktop .route-causality-strip"), "路线因果线索条必须拥有移动/PC 样式");
 expect(styles.includes(".route-space-read") && styles.includes(".route-choice-card.space-庇护") && styles.includes(".route-choice-card.space-旷野") && styles.includes(".route-space-read span"), "路线空间读法必须拥有庇护/旷野差异化视觉和移动端可读样式");
 expect(styles.includes(".route-payoff-cue") && styles.includes(".route-payoff-cue.cue-进取") && styles.includes(".route-payoff-cue.cue-整构筑"), "路线风险收益决策签必须拥有稳健、进取和构筑取向样式");
@@ -165,6 +166,7 @@ expect(source.includes("CHAPTER_STORY_CHOICES") && source.includes("effect.refin
 expect(source.includes("BOSS_PHASES[selectedChapter]") && source.includes("phaseShift"), "章节首领必须在半血后进入独立二阶段");
 expect(source.includes("resolveBossChoiceResponse(selectedChapter, runChoices)") && source.includes("choiceEcho"), "首领转相必须识别并展示本局关键剧情抉择");
 expect(source.includes("screen === \"bossPrelude\"") && source.includes("resolveBossPrelude(selectedChapter, runChoices)") && source.includes("enterCombat(3)"), "首领战前必须经过可恢复的章节高潮场景");
+expect(source.includes("bossCounterLessons") && source.includes("boss-counter-lessons") && source.includes("破招札记") && source.includes("读最高压") && source.includes("留转相资源"), "首领前夜必须提供破招札记，帮助玩家在进战前理解最高压、核心机制和转相资源");
 expect(source.includes("\"encounterPrelude\", \"bossPrelude\"") && source.includes("pendingEncounterStage"), "普通、精英与首领登场节点必须进入自动存档并恢复目标阶段");
 expect(source.includes("seenEncounters") && source.includes("再次遭遇时跳过第一段对白"), "重复遭遇必须缩短登场流程");
 expect(source.includes("resolveBattleAftermath(chapter, stage)") && source.includes("battle-aftermath") && source.includes("战利来源"), "普通与精英奖励页必须承接敌人余波、证据和战利来源");
