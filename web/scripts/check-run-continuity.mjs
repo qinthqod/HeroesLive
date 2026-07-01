@@ -119,6 +119,7 @@ expect(source.includes("cardPlayStatus") && source.includes("cardRequirementHint
 expect(source.includes("TurnFlowFx") && source.includes("turn-flow") && source.includes("手牌入弃") && source.includes("洗牌后抽取"), "回合结束必须公开敌方行动、弃牌、洗牌与抽牌的流转节奏");
 expect(source.includes("effectBursts") && source.includes("CombatEffectBursts") && source.includes("card.art"), "出牌和抽牌必须展示空间化效果浮字与真实卡图反馈");
 expect(source.includes("combatLedger") && source.includes("CombatResolutionLedger") && source.includes("本回合结算") && source.includes("基础效果已结算"), "战斗必须记录本回合最近出牌结算，解释伤害、资源与联动是否触发");
+expect(source.includes("intentPressureLabel") && source.includes("enemy-intent-cycle") && source.includes("敌招循环") && source.includes("三式预读"), "战斗必须展示敌招循环预读，帮助玩家规划未来三式攻守");
 expect(source.includes("detectDeviceMode") && source.includes("data-device={deviceMode}") && source.includes("data-layout={deviceMode === \"desktop\" ? \"wide-desktop\" : \"compact-mobile\"}") && source.includes("device-mode-badge"), "页面必须判断 PC/移动设备并公开当前适配模式");
 expect(source.includes("DesktopModePanel") && source.includes("desktop-mode-panel") && source.includes("PC ADAPTIVE"), "PC 非战斗页面必须拥有桌面端专属状态栏");
 expect(source.includes("desktop-control-hints") && source.includes("Space 结束回合") && source.includes("数字 1–7 出对应手牌") && source.includes("单击卡牌立即出牌"), "PC 战斗页必须提供桌面端操作提示");
@@ -126,6 +127,7 @@ expect(styles.includes(".device-desktop .combat-screen") && styles.includes(".de
 expect(styles.includes(".combat-effect-bursts") && styles.includes(".effect-burst") && styles.includes(".draw-ghost article img"), "战斗必须拥有多效果浮字和抽牌翻面真实卡图样式");
 expect(styles.includes(".combat-learning-cue") && styles.includes(".combat-learning-cue.mastery") && styles.includes(".combat-learning-cue p") && styles.includes(".combat-learning-cue strong"), "战斗学习反馈必须拥有目标态、掌握态和移动端可读样式");
 expect(styles.includes(".combat-resolution-ledger") && styles.includes(".combat-resolution-ledger.has-entries") && styles.includes(".device-desktop .combat-resolution-ledger"), "战斗结算记录必须拥有空态、触发态和PC/移动可读样式");
+expect(styles.includes(".enemy-intent-cycle") && styles.includes(".enemy-intent-cycle article.current") && styles.includes(".device-desktop .enemy-intent-cycle"), "敌招循环预读必须拥有当前式高亮、压力态和PC/移动可读样式");
 expect(styles.includes(".deck-balance-radar") && styles.includes(".deck-balance-radar.warning") && styles.includes(".deck-balance-radar > div") && styles.includes(".deck-balance-radar footer"), "牌组平衡雷达必须拥有四轴、警告态和移动端可读样式");
 expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".app[data-motion=\"reduced\"] .impact-streak") && styles.includes(".app[data-motion=\"reduced\"] .reward-cards .game-card:hover"), "低动效模式必须降低全局动画、隐藏强闪烁并保留可读状态反馈");
 expect(styles.includes(".app[data-readability=\"large\"] .game-card p") && styles.includes(".app[data-readability=\"large\"] .card-play-state") && styles.includes(".app[data-readability=\"large\"] .market-fit"), "可读模式必须放大战斗卡牌、状态与高密度决策文本");

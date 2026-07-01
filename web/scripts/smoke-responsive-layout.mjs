@@ -373,6 +373,8 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   const controlHints = await page.locator(".desktop-control-hints").innerText();
   const learningCue = await page.locator(".combat-learning-cue").innerText();
   const ledgerEmpty = await page.locator(".combat-resolution-ledger").innerText();
+  const intentCycleText = await page.locator(".enemy-intent-cycle").innerText();
+  const intentCycleCards = await page.locator(".enemy-intent-cycle article").count();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (layout.layout !== "wide-desktop") throw new Error(`PC 战斗布局标识为 ${layout.layout}`);
   if (!handBox || handBox.width < 760) throw new Error(`PC 手牌区过窄：${handBox?.width}`);
@@ -381,6 +383,10 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (qiBox && trackerBox && !(trackerBox.y + trackerBox.height < qiBox.y || qiBox.y + qiBox.height < trackerBox.y || trackerBox.x + trackerBox.width < qiBox.x || qiBox.x + qiBox.width < trackerBox.x)) throw new Error("PC 流派目标卡压住了灵气球");
   if (!cardStates.some((text) => /可出|联动|差|需|心魔/.test(text))) throw new Error("PC 战斗页没有显示卡牌即时状态");
   if (!learningCue.includes("本回合目标") || !learningCue.includes("读敌意")) throw new Error(`PC 战斗页缺少本回合学习目标：${learningCue}`);
+  if (intentCycleCards !== 3) throw new Error(`PC 敌招循环预读数量为 ${intentCycleCards}`);
+  for (const phrase of ["敌招循环", "三式预读", "当前", "下一", "再后"]) {
+    if (!intentCycleText.includes(phrase)) throw new Error(`PC 敌招循环预读缺少 ${phrase}`);
+  }
   if (!ledgerEmpty.includes("本回合结算") || !ledgerEmpty.includes("等待出牌")) throw new Error("PC 战斗页缺少结算记录空态");
   await page.locator(".hand .game-card.playable").first().click();
   await page.locator(".combat-resolution-ledger.has-entries").waitFor();

@@ -375,6 +375,16 @@ function intentLabel(move) {
   return `${move.name}${parts.length ? ` · ${parts.join(" · ")}` : ""}`;
 }
 
+function intentPressureLabel(move) {
+  const totalDamage = (move.damage || 0) * (move.hits || 1);
+  if (move.curse || move.drawPenalty || move.drainQi) return "扰乱";
+  if (totalDamage >= 18 || (move.hits || 1) >= 3) return "高压";
+  if (move.shield || move.heal) return "蓄势";
+  if (move.weak) return "削弱";
+  if (totalDamage > 0) return "进攻";
+  return "空窗";
+}
+
 function runLocationLabel(run) {
   if (!run) return "";
   if (run.screen === "combat") return `战斗 · 第 ${run.combatTurn || 1} 回合`;
@@ -4220,6 +4230,11 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
   const [guideStep, setGuideStep] = useState(showGuide ? 0 : -1);
   const hpPercent = Math.max(0, (enemy.hp / enemy.max) * 100);
   const currentEnemyMove = enemy.moves[enemy.moveIndex || 0];
+  const enemyForecast = [0, 1, 2].map((offset) => {
+    const moveIndex = ((enemy.moveIndex || 0) + offset) % (enemy.moves?.length || 1);
+    const move = enemy.moves?.[moveIndex] || currentEnemyMove;
+    return { move, offset, pressure: intentPressureLabel(move), label: offset === 0 ? "当前" : offset === 1 ? "下一" : "再后" };
+  });
   const artificerDevices = normalizeDevices(jobState);
   const copperCount = artificerDevices.filter((device) => device.type === "copper").length;
   const thunderCount = artificerDevices.filter((device) => device.type === "thunder").length;
@@ -4328,6 +4343,18 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         {stage === 3 && <div className={`boss-phase phase-${enemy.phase || 1}`}><small>{enemy.phaseName || "第一相 · 守序"}</small>{enemy.choiceEcho && <em>回应 · {enemy.choiceEcho}</em>}<span>{enemy.phaseLine}</span></div>}
         <div className="enemy-health"><span style={{ width: `${hpPercent}%` }} /><strong>{enemy.hp}/{enemy.max}</strong></div>
         <div className={`intent ${guideStep === 0 ? "guide-focus" : ""}`}><small>当前招式</small><strong>{enemy.intent}</strong><b>{currentEnemyMove.note}</b><em>下一式 · {intentLabel(enemy.moves[(enemy.moveIndex + 1) % enemy.moves.length])}</em></div>
+        <section className="enemy-intent-cycle" aria-label="敌招循环预读">
+          <header><span>敌招循环</span><strong>三式预读</strong></header>
+          <div>
+            {enemyForecast.map(({ move, offset, pressure, label }) => (
+              <article className={`pressure-${pressure} ${offset === 0 ? "current" : ""}`} key={`${move.name}-${offset}`}>
+                <small>{label} · {pressure}</small>
+                <b>{move.name}</b>
+                <em>{intentLabel(move).replace(`${move.name} · `, "")}</em>
+              </article>
+            ))}
+          </div>
+        </section>
         <div className="enemy-readout">
           <small>{enemy.archetype}</small>
           <strong>{enemy.trait}</strong>

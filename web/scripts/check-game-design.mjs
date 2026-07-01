@@ -53,6 +53,11 @@ expect(PROFESSIONS.length >= 6, "至少需要 6 个职业");
 expect(ALL_CARDS.length >= 120, "至少需要 120 张职业卡牌");
 expect(DECK_RECIPES.length >= 100, "至少需要 100 套构筑配方");
 expect(CHAPTERS.length >= 25, "扩展版至少需要 25 章主线");
+expect(CHAPTERS.every((chapter) => chapter.art?.startsWith("/generated/chapters/")), "25 章主线必须全部使用 imagegen 生成的章节主视觉");
+expect(new Set(CHAPTERS.map((chapter) => chapter.art)).size === CHAPTERS.length, "25 章主线每章必须拥有不同的章节主视觉");
+for (const chapter of CHAPTERS) {
+  expectAsset(chapter.art, `${chapter.name} 章节主视觉`);
+}
 expect(TRIBULATION_LEVELS.length === 4, "终局劫数必须提供标准、风劫、心劫、命劫四档");
 expect(TRIBULATION_LEVELS[0].level === 0 && TRIBULATION_LEVELS[0].enemyHpMultiplier === 1 && TRIBULATION_LEVELS[0].enemyDamageBonus === 0, "无劫必须保持普通剧情标准数值");
 expect(TRIBULATION_LEVELS.every((item, index, list) => index === 0 || (item.enemyHpMultiplier > list[index - 1].enemyHpMultiplier && item.enemyDamageBonus >= list[index - 1].enemyDamageBonus)), "劫数风险必须随层级清晰递增");
