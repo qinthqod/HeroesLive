@@ -2982,6 +2982,11 @@ function ChapterScreen({ profile, onBack, onChoose }) {
   ].filter(Boolean);
   const completedChapterCount = CHAPTERS.filter((chapter) => (profile.unlockedEndings || []).includes(`chapter_${chapter.id}_ending`)).length;
   const chapterArtCount = new Set(CHAPTERS.map((chapter) => chapter.art)).size;
+  const chapterVisualProgress = CHAPTERS.map((chapter) => {
+    const unlocked = chapter.id === 1 || profile.chapter > chapter.id - 1 || mainComplete;
+    const completed = (profile.unlockedEndings || []).some((ending) => ending === `chapter_${chapter.id}_ending` || (chapter.id === 5 && ["restore_fate", "rewrite_fate"].includes(ending)));
+    return { chapter, unlocked, completed };
+  });
   return (
     <section className="mobile-shell chapter-screen screen-content">
       <MobileTopBar title="云游录" subtitle={`${CHAPTERS.length} 卷主线 · 逐章解锁`} onBack={onBack} profile={profile} />
@@ -3001,6 +3006,30 @@ function ChapterScreen({ profile, onBack, onChoose }) {
             <li><b>{chapterArtCount}</b><small>独立配图</small></li>
             <li><b>{completedChapterCount}</b><small>已结卷</small></li>
           </ul>
+        </div>
+      </section>
+      <section className="chapter-visual-ledger" aria-label="二十五卷图鉴墙">
+        <header>
+          <span>二十五卷图鉴墙</span>
+          <strong>25 章主视觉已全量绘制</strong>
+          <p>每一格都是可预览章节图。点选任意卷，会同步切换下方案卷、Boss 反制与五卷位置；未解锁章节也会保留剪影，让长线目标看得见。</p>
+        </header>
+        <div>
+          {chapterVisualProgress.map(({ chapter, unlocked, completed }) => (
+            <button
+              key={chapter.id}
+              className={`${previewChapterId === chapter.id ? "active" : ""} ${unlocked ? "unlocked" : "locked"} ${completed ? "completed" : ""}`}
+              onClick={() => {
+                setActiveVolumeIndex(Math.min(chapterVolumes.length - 1, Math.floor((chapter.id - 1) / 5)));
+                setPreviewChapterId(chapter.id);
+              }}
+            >
+              <GameImage src={chapter.art} alt="" />
+              <i>{String(chapter.id).padStart(2, "0")}</i>
+              <span>{completed ? "已结卷" : unlocked ? "可进入" : "未解锁"}</span>
+              <strong>{chapter.name}</strong>
+            </button>
+          ))}
         </div>
       </section>
       <section className="chapter-boss-atlas" aria-label="二十五 Boss 因果谱">

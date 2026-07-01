@@ -2592,6 +2592,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 }
 .device-desktop .chapter-heading,
 .device-desktop .chapter-atlas-showcase,
+.device-desktop .chapter-visual-ledger,
 .device-desktop .chapter-boss-atlas,
 .device-desktop .chapter-arc-overview,
 .device-desktop .chapter-casefile,
@@ -2609,6 +2610,27 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .device-desktop .chapter-atlas-showcase img { height: 100%; }
 .device-desktop .chapter-atlas-showcase > div { align-self: end; padding: 26px; }
 .device-desktop .chapter-atlas-showcase ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.device-desktop .chapter-visual-ledger {
+  padding: 16px;
+  margin-bottom: 18px;
+}
+.device-desktop .chapter-visual-ledger header {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: baseline;
+}
+.device-desktop .chapter-visual-ledger header p {
+  justify-self: end;
+  max-width: 560px;
+  text-align: right;
+}
+.device-desktop .chapter-visual-ledger > div {
+  grid-auto-flow: row;
+  grid-auto-columns: initial;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  overflow: visible;
+}
+.device-desktop .chapter-visual-ledger button { min-width: 0; height: 118px; }
 .device-desktop .chapter-boss-atlas {
   display: grid;
   grid-template-columns: minmax(360px, .62fr) minmax(0, 1.38fr);
@@ -3202,6 +3224,131 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .chapter-atlas-showcase li small { display: block; }
 .chapter-atlas-showcase li b { color: #e0bc67; font-family: "STKaiti", serif; font-size: 24px; font-weight: 400; }
 .chapter-atlas-showcase li small { margin-top: 2px; color: #789084; font-size: 8px; }
+.chapter-visual-ledger {
+  margin: 0 18px 14px;
+  padding: 13px;
+  overflow: hidden;
+  border: 1px solid rgba(211,169,72,.22);
+  border-radius: 18px 3px 18px 3px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(211,169,72,.14), transparent 34%),
+    linear-gradient(135deg, rgba(5,18,15,.9), rgba(3,12,10,.86));
+}
+.chapter-visual-ledger header {
+  display: grid;
+  gap: 4px 10px;
+  margin-bottom: 11px;
+}
+.chapter-visual-ledger header span {
+  color: #d1ad60;
+  font-size: 8px;
+  letter-spacing: .16em;
+}
+.chapter-visual-ledger header strong {
+  color: #ead9ad;
+  font-family: "STKaiti", serif;
+  font-size: 22px;
+  font-weight: 400;
+}
+.chapter-visual-ledger header p {
+  margin: 0;
+  color: #7f9489;
+  font-size: 9px;
+  line-height: 1.55;
+}
+.chapter-visual-ledger > div {
+  display: grid;
+  grid-auto-columns: minmax(116px, 38vw);
+  grid-auto-flow: column;
+  gap: 9px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.chapter-visual-ledger > div::-webkit-scrollbar { display: none; }
+.chapter-visual-ledger button {
+  position: relative;
+  min-width: 0;
+  height: 136px;
+  overflow: hidden;
+  scroll-snap-align: start;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 16px 2px 16px 2px;
+  background: #07120f;
+  color: #e8d8b0;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(0,0,0,.22);
+}
+.chapter-visual-ledger button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(3,10,8,.08), rgba(3,10,8,.86)),
+    radial-gradient(circle at 12% 10%, rgba(224,188,103,.16), transparent 30%);
+}
+.chapter-visual-ledger img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(.72) saturate(.82);
+  transform: scale(1.02);
+  transition: transform .28s ease, filter .28s ease;
+}
+.chapter-visual-ledger button.locked img { filter: brightness(.36) saturate(.2) grayscale(.6); }
+.chapter-visual-ledger button.active {
+  border-color: rgba(223,181,82,.62);
+  box-shadow: 0 0 0 1px rgba(223,181,82,.18), 0 18px 36px rgba(0,0,0,.3);
+}
+.chapter-visual-ledger button.active img,
+.chapter-visual-ledger button:hover img { filter: brightness(.86) saturate(.98); transform: scale(1.07); }
+.chapter-visual-ledger i,
+.chapter-visual-ledger span,
+.chapter-visual-ledger strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+.chapter-visual-ledger i {
+  width: max-content;
+  margin: 9px 0 0 9px;
+  padding: 3px 6px;
+  border: 1px solid rgba(223,181,82,.26);
+  background: rgba(4,13,11,.62);
+  color: #e4c675;
+  font-family: "STKaiti", serif;
+  font-size: 15px;
+  font-style: normal;
+}
+.chapter-visual-ledger span {
+  position: absolute;
+  right: 9px;
+  top: 10px;
+  padding: 3px 6px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(4,13,11,.62);
+  color: #8ba296;
+  font-size: 8px;
+}
+.chapter-visual-ledger button.unlocked span { color: #9fc7ad; }
+.chapter-visual-ledger button.completed span { color: #e2c274; }
+.chapter-visual-ledger strong {
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  bottom: 9px;
+  overflow: hidden;
+  color: #f0dfb7;
+  font-family: "STKaiti", serif;
+  font-size: 18px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .chapter-boss-atlas {
   position: relative;
   margin: 0 18px 14px;
