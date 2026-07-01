@@ -4342,6 +4342,111 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
     if (playable) return { kind: "ready", label: "可出", detail: "单击即可立即施放。" };
     return null;
   };
+  const cardPreviewYield = (card, cost, synergy, playable) => {
+    if (!card) return null;
+    const base = card.baseName || card.name.replace("·真解", "");
+    if (isCurse(card)) return { tone: "locked", label: "预判", parts: ["不可出"], detail: "心魔不会结算正向收益。" };
+    if (!cardRequirementMet(card)) return { tone: "locked", label: "预判", parts: [cardRequirementHint(card).label], detail: cardRequirementHint(card).detail };
+    if (qi < cost) return { tone: "locked", label: "预判", parts: [`差${cost - qi}灵`], detail: "灵气不足，先补资源或结束回合。" };
+
+    const text = card.text;
+    const damageMatch = text.match(/造成\s*(\d+)\s*点伤害(?:\s*(\d+)\s*次)?/);
+    const hits = damageMatch?.[2] ? Number(damageMatch[2]) : 1;
+    let damage = damageMatch ? Number(damageMatch[1]) * hits : 0;
+    let block = Number(text.match(/获得\s*(\d+)\s*点护盾/)?.[1] || 0);
+    let heal = Number(text.match(/恢复\s*(\d+)\s*点生命/)?.[1] || 0);
+    let draw = Number(text.match(/抽\s*(\d+)\s*张牌/)?.[1] || 0);
+    let spirit = Number(text.match(/获得\s*(\d+)\s*点灵气/)?.[1] || 0);
+    let resource = "";
+    let status = "";
+
+    if (base === "逐月连斩") damage += edge * 3;
+    if (base === "万剑归岚") {
+      damage = edge * (card.refined ? 8 : 6);
+      if (edge >= 4) spirit += 1;
+      resource = `耗${edge}势`;
+    }
+    if (base === "小五行剑阵" && edge >= 2) {
+      damage += 6;
+      resource = "耗2势";
+    }
+    if (base === "锋芒护身" && edge >= 4) block += 4;
+    if (base === "裂魂剑" && enemyWeak > 0) resource = "+2势";
+    if (base === "火弹符" && enemyWeak > 0) damage += 4;
+    if (base === "玄雷敕令") {
+      damage = jobState.seals * (card.refined ? 8 : 6);
+      if (jobState.seals >= 3) draw += 2;
+      status = `${jobState.seals}印`;
+    }
+    if (base === "阴火符" && jobState.seals > 0) damage += (enemyBurn + Number(text.match(/施加\s*(\d+)\s*层燃烧/)?.[1] || 0)) * jobState.burnMultiplier;
+    if (base === "万符归一") {
+      damage += jobState.seals * 6 + enemyBurn * jobState.burnMultiplier;
+      status = `${jobState.seals}印`;
+    }
+    if (base === "净坛真言" && countCurses({ hand, drawPile, discardPile }) === 0) spirit += 2;
+    if (base === "回春散" && hp < maxHp / 2) heal += 3;
+    if (base === "药炉温养" && !(jobState.cold > 0 && jobState.heat > 0)) draw = 0;
+    if (base === "药炉温养" && jobState.cold > 0 && jobState.heat > 0) block += 6;
+    if (base === "腐脉毒雾" && enemyPoison > 0) damage += 3;
+    if (base === "逆炼血丹") damage += jobState.heat * 3;
+    if (base === "玄狼奔袭" && jobState.lastWasInstruction) damage += 3;
+    if (base === "石猿撼地" && shield > 0) damage += 6;
+    if (base === "百兽同途") {
+      damage = Math.max(1, jobState.contracts.length) * (card.refined ? 6 : 4);
+      if (jobState.contracts.length >= 3) draw += 2;
+      status = `${jobState.contracts.length}契`;
+    }
+    if (base === "山君号令") {
+      damage += ({ 玄狼: 24, 石猿: 28 }[jobState.activeBeast] || 0);
+      if (jobState.activeBeast === "白鹿") block += 16;
+      if (["青鸾", "灵狐"].includes(jobState.activeBeast)) draw += 2;
+      status = jobState.activeBeast;
+    }
+    if (base === "血月兽潮" && moonPhase === "blood") damage += hits * 2;
+    if (base === "山海盟誓") {
+      const contracts = jobState.contracts.length ? jobState.contracts : [jobState.activeBeast];
+      damage += contracts.reduce((sum, name) => sum + ({ 玄狼: card.refined ? 10 : 8, 石猿: card.refined ? 16 : 14 }[name] || 0), 0);
+      block += contracts.length * (card.refined ? 5 : 3) + (contracts.includes("白鹿") ? (card.refined ? 10 : 8) : 0);
+      draw += contracts.filter((name) => ["青鸾", "灵狐"].includes(name)).length;
+    }
+    if (base === "墨轮复位" && artificerDevices.length > 0) {
+      const target = artificerDevices.find((device) => device.type === "thunder") || artificerDevices[0];
+      damage += deviceDamage(target, jobState.cunning);
+      status = "复位";
+    }
+    if (base === "千机连弩") damage += artificerDevices.length * (card.refined ? 6 : 4);
+    if (base === "飞梭穿云" && enemyShield > 0) draw += 1;
+    if (base === "天工开物") {
+      const triggers = card.refined ? 2 : 1;
+      damage += triggerDevices(artificerDevices, jobState.cunning, triggers);
+      block += artificerDevices.length * triggers;
+      status = `${artificerDevices.length}机`;
+    }
+    if (base === "幽灯守魄" && hp < maxHp / 2) block += 5;
+    if (base === "渡厄咒") heal += jobState.lamps * 2;
+    if (base === "魂火焚身") {
+      damage = jobState.lamps * (card.refined ? 9 : 7);
+      if (jobState.lamps >= 3) heal += 8;
+      status = `${jobState.lamps}灯`;
+    }
+    if (base === "百鬼夜行") damage = new Set(discardPile.map((item) => item.baseName || item.name)).size * (card.refined ? 5 : 3);
+
+    if (damage > 0 && playerWeak > 0) damage = Math.max(0, damage - playerWeak * 2);
+    if (origin.id === "sword" && edge >= 3 && card.type === "攻击") damage += 3;
+    const parts = [
+      damage > 0 ? `伤${damage}` : "",
+      block > 0 ? `护${block}` : "",
+      heal > 0 ? `愈${heal}` : "",
+      draw > 0 ? `抽${draw}` : "",
+      spirit > 0 ? `灵+${spirit}` : "",
+      resource,
+      status,
+    ].filter(Boolean).slice(0, 4);
+    const detail = synergy.conditional
+      ? (synergy.active ? `联动已计入：${synergy.reason}` : `未触发联动：${synergy.reason}`)
+      : "基础收益预判；实际结算仍会记录在本回合结算。";
+    return { tone: playable ? (synergy.conditional && synergy.active ? "combo" : "ready") : "locked", label: "预判", parts: parts.length ? parts : ["运转"], detail };
+  };
   const learningCue = (() => {
     if (triggerFx?.combo) {
       return { state: "mastery", label: "模式掌握", title: "连携条件成立", text: triggerFx.combo };
@@ -4477,7 +4582,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
           const cost = effectiveCardCost(card);
           const synergy = cardSynergyState(card);
           const playable = !combatBusy && !isCurse(card) && cardRequirementMet(card) && qi >= cost;
-          return <Card key={`${card.id}-${index}`} card={card} index={index} displayCost={cost} comboReady={synergy.conditional && synergy.active} playable={playable} status={cardPlayStatus(card, cost, synergy, playable)} casting={combatFx?.index === index} onClick={() => playCard(index)} />;
+          return <Card key={`${card.id}-${index}`} card={card} index={index} displayCost={cost} comboReady={synergy.conditional && synergy.active} playable={playable} status={cardPlayStatus(card, cost, synergy, playable)} preview={cardPreviewYield(card, cost, synergy, playable)} casting={combatFx?.index === index} onClick={() => playCard(index)} />;
         })}
       </div>
       <button className={`end-turn ${guideStep === 2 ? "guide-focus" : ""}`} disabled={combatBusy} onClick={endTurn}><span className="end-turn-ring" /><strong>结束<br />回合</strong><kbd>Space</kbd></button>
@@ -4597,9 +4702,9 @@ function Resource({ icon, name, value, className = "" }) {
   return <div className={`resource ${className}`}><GameImage src={icon} alt="" /><span>{name}</span><strong>{value}</strong></div>;
 }
 
-function Card({ card, index, playable, displayCost = card.cost, comboReady = false, casting = false, status = null, onClick }) {
+function Card({ card, index, playable, displayCost = card.cost, comboReady = false, casting = false, status = null, preview = null, onClick }) {
   return (
-    <button className={`game-card rarity-${card.rarity} ${playable ? "playable" : "disabled"} ${comboReady ? "combo-ready" : ""} ${casting ? "casting-card" : ""} type-${card.type}`} disabled={!playable} aria-disabled={!playable} title={status?.detail || status?.label || ""} onClick={onClick}>
+    <button className={`game-card rarity-${card.rarity} ${playable ? "playable" : "disabled"} ${comboReady ? "combo-ready" : ""} ${casting ? "casting-card" : ""} type-${card.type}`} disabled={!playable} aria-disabled={!playable} title={preview?.detail || status?.detail || status?.label || ""} onClick={onClick}>
       <span className={`card-cost ${displayCost < card.cost ? "discounted" : ""}`}>{displayCost}</span>
       <span className="card-key">{index + 1}</span>
       <h3>{card.name}</h3>
@@ -4607,6 +4712,10 @@ function Card({ card, index, playable, displayCost = card.cost, comboReady = fal
       <div className="card-meta"><small>{card.type}</small><b>{card.rarity}</b></div>
       <strong className="card-keyword">{card.keyword}</strong>
       {comboReady && <span className="combo-ready-seal">联</span>}
+      {preview && <span className={`card-preview-yield preview-${preview.tone}`} aria-label={`${preview.label}：${preview.parts.join(" / ")}`}>
+        <b>{preview.label}</b>
+        {preview.parts.map((part) => <i key={part}>{part}</i>)}
+      </span>}
       <p>{card.text}</p>
       {card.combo && <em>{card.combo}</em>}
       {status && <span className={`card-play-state state-${status.kind}`} aria-label={status.detail || status.label}>{status.label}</span>}

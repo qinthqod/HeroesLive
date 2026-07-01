@@ -39,6 +39,7 @@ button:focus-visible { outline: 2px solid var(--amber-light); outline-offset: 3p
 .app[data-readability="large"] { --readable-leading: 1.72; }
 .app[data-readability="large"] .game-card p,
 .app[data-readability="large"] .card-play-state,
+.app[data-readability="large"] .card-preview-yield,
 .app[data-readability="large"] .game-card .card-meta,
 .app[data-readability="large"] .game-card .card-keyword,
 .app[data-readability="large"] .reward-fit span,
@@ -4356,6 +4357,45 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   font-size: 9px;
   letter-spacing: .08em;
 }
+.card-preview-yield {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 18px;
+  margin: 2px 4px 3px;
+  padding: 2px 4px;
+  overflow: hidden;
+  border: 1px solid rgba(50,74,60,.18);
+  background: rgba(205,215,187,.62);
+  color: #2f4639;
+  font-size: 7px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.card-preview-yield b {
+  flex: 0 0 auto;
+  color: #6f654a;
+  font-weight: 600;
+}
+.card-preview-yield i {
+  flex: 0 0 auto;
+  padding: 2px 3px;
+  border-radius: 7px;
+  background: rgba(44,74,58,.12);
+  color: #284c3b;
+  font-style: normal;
+}
+.card-preview-yield.preview-combo {
+  border-color: rgba(189,137,35,.34);
+  background: rgba(229,197,111,.76);
+}
+.card-preview-yield.preview-combo i { background: rgba(94,63,13,.16); color: #573d12; }
+.card-preview-yield.preview-locked {
+  border-color: rgba(94,98,91,.16);
+  background: rgba(169,177,165,.52);
+}
+.card-preview-yield.preview-locked b,
+.card-preview-yield.preview-locked i { color: #5a645b; }
 .game-card p { margin-top: 2px; font-size: 9px; line-height: 1.35; }
 .game-card em {
   display: block;

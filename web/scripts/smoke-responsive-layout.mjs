@@ -370,6 +370,7 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   const qiBox = await page.locator(".qi-orb").boundingBox();
   const trackerBox = await page.locator(".combat-build-tracker").boundingBox();
   const cardStates = await page.locator(".hand .card-play-state").allTextContents();
+  const previewText = await page.locator(".hand .card-preview-yield").first().innerText();
   const controlHints = await page.locator(".desktop-control-hints").innerText();
   const learningCue = await page.locator(".combat-learning-cue").innerText();
   const ledgerEmpty = await page.locator(".combat-resolution-ledger").innerText();
@@ -382,6 +383,7 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (!playerBox || !progressBox || playerBox.right >= enemyBox.x || progressBox.x <= enemyBox.x + enemyBox.width) throw new Error("PC 战斗页没有形成左中右桌面战局");
   if (qiBox && trackerBox && !(trackerBox.y + trackerBox.height < qiBox.y || qiBox.y + qiBox.height < trackerBox.y || trackerBox.x + trackerBox.width < qiBox.x || qiBox.x + qiBox.width < trackerBox.x)) throw new Error("PC 流派目标卡压住了灵气球");
   if (!cardStates.some((text) => /可出|联动|差|需|心魔/.test(text))) throw new Error("PC 战斗页没有显示卡牌即时状态");
+  if (!previewText.includes("预判") || !/[伤护愈抽灵]/.test(previewText)) throw new Error(`PC 战斗卡牌缺少出牌前收益预判：${previewText}`);
   if (!learningCue.includes("本回合目标") || !learningCue.includes("读敌意")) throw new Error(`PC 战斗页缺少本回合学习目标：${learningCue}`);
   if (intentCycleCards !== 3) throw new Error(`PC 敌招循环预读数量为 ${intentCycleCards}`);
   for (const phrase of ["敌招循环", "三式预读", "当前", "下一", "再后"]) {
@@ -413,6 +415,17 @@ await run("PC 首战引导按读敌意出牌交回合推进", { width: 1366, hei
   await page.locator(".combat-guide.guide-2").waitFor();
   guideText = await page.locator(".combat-guide").innerText();
   if (!guideText.includes("结束回合") || !guideText.includes("当前只要做一件事：交")) throw new Error("首战引导未在出牌后推进到交回合步骤");
+});
+
+await run("移动战斗卡牌展示收益预判且不横溢", { width: 430, height: 932 }, "?screen=combat&chapter=6&stage=3&move=0", async (page) => {
+  await page.locator(".combat-screen").waitFor();
+  const layout = await layoutSnapshot(page);
+  const previewBox = await page.locator(".hand .card-preview-yield").first().boundingBox();
+  const previewText = await page.locator(".hand .card-preview-yield").first().innerText();
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  if (!previewText.includes("预判") || !/[伤护愈抽灵]/.test(previewText)) throw new Error(`移动战斗卡牌缺少收益预判：${previewText}`);
+  if (!previewBox || previewBox.width > 106) throw new Error(`移动卡牌收益预判过宽：${previewBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`移动战斗页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
 await run("PC 结束回合显示回合流转节奏", { width: 1366, height: 768 }, "?screen=combat&chapter=6&stage=3&move=0", async (page) => {
