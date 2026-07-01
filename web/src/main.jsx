@@ -8,6 +8,7 @@ import {
   ENCOUNTER_ENEMIES,
   ENCOUNTER_MOVE_PATTERNS,
   CHAPTER_ATLAS_ART,
+  CHAPTER_BOSS_ATLAS_ART,
   CHAPTERS,
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
@@ -2969,6 +2970,16 @@ function ChapterScreen({ profile, onBack, onChoose }) {
     { phase: "急", title: previewRouteBeats[2] || previewChapter.boss, reward: `首领宗卷 · ${previewBoss?.name || previewChapter.boss}`, energy: "爆发决战" },
     { phase: "回", title: previewRouteBeats[3] || "结卷回山", reward: "后记 / 证据 / 下一章桥梁", energy: "回落结算" },
   ];
+  const previewBossMoves = BOSS_MOVE_PATTERNS[previewChapter.id] || [];
+  const previewBossPhase = BOSS_PHASES[previewChapter.id];
+  const previewBossPeak = Math.max(0, ...previewBossMoves.map((move) => (move.damage || 0) * (move.hits || 1)));
+  const previewBossMechanics = [
+    previewBossMoves.some((move) => move.shield) ? "护体" : "",
+    previewBossMoves.some((move) => move.curse) ? "心魔" : "",
+    previewBossMoves.some((move) => move.drainQi) ? "夺灵" : "",
+    previewBossMoves.some((move) => move.drawPenalty) ? "断抽" : "",
+    previewBossMoves.some((move) => move.weak) ? "虚弱" : "",
+  ].filter(Boolean);
   const completedChapterCount = CHAPTERS.filter((chapter) => (profile.unlockedEndings || []).includes(`chapter_${chapter.id}_ending`)).length;
   const chapterArtCount = new Set(CHAPTERS.map((chapter) => chapter.art)).size;
   return (
@@ -2990,6 +3001,20 @@ function ChapterScreen({ profile, onBack, onChoose }) {
             <li><b>{chapterArtCount}</b><small>独立配图</small></li>
             <li><b>{completedChapterCount}</b><small>已结卷</small></li>
           </ul>
+        </div>
+      </section>
+      <section className="chapter-boss-atlas" aria-label="二十五 Boss 因果谱">
+        <GameImage eager src={CHAPTER_BOSS_ATLAS_ART} alt="" />
+        <div>
+          <span>二十五 Boss 因果谱</span>
+          <strong>{previewBoss?.name || previewChapter.boss} · {previewBoss?.trait || "终点威胁"}</strong>
+          <p>{previewDossier?.weakness || previewBoss?.counter || "进章前确认防线、循环与爆发窗口，避免只靠单回合斩杀。"}</p>
+          <ul>
+            <li><b>{previewBossPeak}</b><small>峰值威力</small></li>
+            <li><b>{previewBossPhase ? `${Math.round(previewBossPhase.threshold * 100)}%` : "—"}</b><small>转相血线</small></li>
+            <li><b>{previewBossMechanics.join(" / ") || "节奏"}</b><small>核心机制</small></li>
+          </ul>
+          <em>反制：{previewBoss?.counter || previewDifficulty.advice}</em>
         </div>
       </section>
       <section className="chapter-arc-overview" aria-label="主线五卷弧线">

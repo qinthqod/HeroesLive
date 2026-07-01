@@ -205,6 +205,8 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
   const layout = await layoutSnapshot(page);
   const atlasText = await page.locator(".chapter-atlas-showcase").innerText();
   const atlasBox = await page.locator(".chapter-atlas-showcase").boundingBox();
+  const bossAtlasText = await page.locator(".chapter-boss-atlas").innerText();
+  const bossAtlasBox = await page.locator(".chapter-boss-atlas").boundingBox();
   const arcText = await page.locator(".chapter-arc-overview").innerText();
   const arcCards = await page.locator(".chapter-arc-overview button").count();
   const arcRows = await page.locator(".chapter-arc-overview button").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
@@ -226,6 +228,10 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
     if (!atlasText.includes(phrase)) throw new Error(`PC 主线画卷缺少 ${phrase}`);
   }
   if (!atlasBox || atlasBox.width < 1000 || atlasBox.height < 230) throw new Error(`PC 主线画卷尺寸异常：${atlasBox?.width}×${atlasBox?.height}`);
+  for (const phrase of ["二十五 Boss 因果谱", "峰值威力", "转相血线", "核心机制", "反制"]) {
+    if (!bossAtlasText.includes(phrase)) throw new Error(`PC Boss 因果谱缺少 ${phrase}`);
+  }
+  if (!bossAtlasBox || bossAtlasBox.width < 1000 || bossAtlasBox.height < 210) throw new Error(`PC Boss 因果谱尺寸异常：${bossAtlasBox?.width}×${bossAtlasBox?.height}`);
   if (arcCards !== 5 || arcRows !== 1) throw new Error(`PC 主线五卷弧线没有五列展示：cards=${arcCards}, rows=${arcRows}`);
   for (const phrase of ["主线五卷弧线", "25 章 · 序破急回", "命册启疑", "归墟自在"]) {
     if (!arcText.includes(phrase)) throw new Error(`PC 主线弧线缺少 ${phrase}`);
@@ -256,6 +262,8 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   const layout = await layoutSnapshot(page);
   const atlasText = await page.locator(".chapter-atlas-showcase").innerText();
   const atlasBox = await page.locator(".chapter-atlas-showcase").boundingBox();
+  const bossAtlasText = await page.locator(".chapter-boss-atlas").innerText();
+  const bossAtlasBox = await page.locator(".chapter-boss-atlas").boundingBox();
   const arcText = await page.locator(".chapter-arc-overview").innerText();
   const arcBox = await page.locator(".chapter-arc-overview").boundingBox();
   const arcCards = await page.locator(".chapter-arc-overview button").count();
@@ -277,6 +285,10 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
     if (!atlasText.includes(phrase)) throw new Error(`移动主线画卷缺少 ${phrase}`);
   }
   if (!atlasBox || atlasBox.width > mobilePanelLimit) throw new Error(`移动主线画卷过宽：${atlasBox?.width}`);
+  for (const phrase of ["二十五 Boss 因果谱", "峰值威力", "转相血线", "核心机制", "反制"]) {
+    if (!bossAtlasText.includes(phrase)) throw new Error(`移动 Boss 因果谱缺少 ${phrase}`);
+  }
+  if (!bossAtlasBox || bossAtlasBox.width > mobilePanelLimit) throw new Error(`移动 Boss 因果谱过宽：${bossAtlasBox?.width}`);
   if (arcCards !== 5) throw new Error(`移动主线五卷弧线数量为 ${arcCards}`);
   for (const phrase of ["主线五卷弧线", "命册启疑", "归墟自在"]) {
     if (!arcText.includes(phrase)) throw new Error(`移动主线弧线缺少 ${phrase}`);
