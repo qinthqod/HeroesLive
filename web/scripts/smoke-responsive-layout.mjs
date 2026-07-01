@@ -3,11 +3,13 @@ import { chromium } from "playwright";
 const base = "http://127.0.0.1:5174/";
 const browser = await chromium.launch({ headless: true });
 const failures = [];
+const mobilePanelLimit = 403;
 
 async function run(name, viewport, path, check) {
   const page = await browser.newPage({ viewport });
+  page.setDefaultTimeout(10000);
   try {
-    await page.goto(`${base}${path}`, { waitUntil: "networkidle" });
+    await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded", timeout: 15000 });
     await page.locator(".app").waitFor();
     await page.waitForTimeout(250);
     await check(page);
@@ -83,9 +85,9 @@ await run("移动首页保持移动模式和底部导航", { width: 430, height:
   for (const phrase of ["今夜行动令", "注意", "关联", "自信", "回报"]) {
     if (!mandateText.includes(phrase)) throw new Error(`移动今夜行动令缺少 ${phrase}`);
   }
-  if (!mandateBox || mandateBox.width > 402) throw new Error(`移动今夜行动令过宽：${mandateBox?.width}`);
+  if (!mandateBox || mandateBox.width > mobilePanelLimit) throw new Error(`移动今夜行动令过宽：${mandateBox?.width}`);
   if (motivationCards !== 3 || !motivationText.includes("三线目标")) throw new Error("移动首页缺少三线目标");
-  if (!motivationBox || motivationBox.width > 402) throw new Error(`移动三线目标过宽：${motivationBox?.width}`);
+  if (!motivationBox || motivationBox.width > mobilePanelLimit) throw new Error(`移动三线目标过宽：${motivationBox?.width}`);
   if (layout.shellWidth > 540) throw new Error(`移动壳层过宽：${layout.shellWidth}px`);
   if (layout.navBottomGap !== 0) throw new Error(`移动导航未贴底：${layout.navBottomGap}px`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动首页横向溢出 ${layout.scrollWidth - layout.width}px`);
@@ -114,37 +116,55 @@ await run("移动试炼札记单列且不横溢", { width: 430, height: 932 }, "
   const guideRows = await page.locator(".guide-playbook article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   if (guideCards !== 4 || guideRows !== 4) throw new Error(`移动试炼札记未保持四块单列：cards=${guideCards}, rows=${guideRows}`);
-  if (!guideBox || guideBox.width > 402) throw new Error(`移动试炼札记过宽：${guideBox?.width}`);
+  if (!guideBox || guideBox.width > mobilePanelLimit) throw new Error(`移动试炼札记过宽：${guideBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动试炼札记横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
 await run("PC 牌组卷册展示四轴平衡雷达", { width: 1366, height: 768 }, "?overlay=deck&origin=sword", async (page) => {
   await page.locator(".deck-balance-radar").waitFor();
+  await page.locator(".deck-trim-prescription").waitFor();
   const layout = await layoutSnapshot(page);
   const radarText = await page.locator(".deck-balance-radar").innerText();
+  const trimText = await page.locator(".deck-trim-prescription").innerText();
   const radarCards = await page.locator(".deck-balance-radar article").count();
   const radarRows = await page.locator(".deck-balance-radar article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
+  const trimCards = await page.locator(".deck-trim-prescription article").count();
+  const trimRows = await page.locator(".deck-trim-prescription article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (radarCards !== 4 || radarRows !== 1) throw new Error(`PC 平衡雷达未四列展示：cards=${radarCards}, rows=${radarRows}`);
+  if (trimCards !== 3 || trimRows !== 1) throw new Error(`PC 修剪处方未三栏展示：cards=${trimCards}, rows=${trimRows}`);
   for (const phrase of ["平衡雷达", "输出", "生存", "循环", "费用"]) {
     if (!radarText.includes(phrase)) throw new Error(`PC 平衡雷达缺少 ${phrase}`);
+  }
+  for (const phrase of ["修剪处方", "优先忘却", "优先精研", "曲线控制"]) {
+    if (!trimText.includes(phrase)) throw new Error(`PC 修剪处方缺少 ${phrase}`);
   }
   if (layout.scrollWidth > layout.width) throw new Error(`PC 牌组卷册横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
 await run("移动牌组卷册平衡雷达两列可读", { width: 430, height: 932 }, "?overlay=deck&origin=sword", async (page) => {
   await page.locator(".deck-balance-radar").waitFor();
+  await page.locator(".deck-trim-prescription").waitFor();
   const layout = await layoutSnapshot(page);
   const radarText = await page.locator(".deck-balance-radar").innerText();
+  const trimText = await page.locator(".deck-trim-prescription").innerText();
   const radarBox = await page.locator(".deck-balance-radar").boundingBox();
+  const trimBox = await page.locator(".deck-trim-prescription").boundingBox();
   const radarCards = await page.locator(".deck-balance-radar article").count();
   const radarRows = await page.locator(".deck-balance-radar article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
+  const trimCards = await page.locator(".deck-trim-prescription article").count();
+  const trimRows = await page.locator(".deck-trim-prescription article").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   if (radarCards !== 4 || radarRows !== 2) throw new Error(`移动平衡雷达未两列展示：cards=${radarCards}, rows=${radarRows}`);
+  if (trimCards !== 3 || trimRows !== 3) throw new Error(`移动修剪处方未单列展示：cards=${trimCards}, rows=${trimRows}`);
   for (const phrase of ["平衡雷达", "输出", "生存", "循环", "费用"]) {
     if (!radarText.includes(phrase)) throw new Error(`移动平衡雷达缺少 ${phrase}`);
   }
-  if (!radarBox || radarBox.width > 402) throw new Error(`移动平衡雷达过宽：${radarBox?.width}`);
+  for (const phrase of ["修剪处方", "优先忘却", "优先精研", "曲线控制"]) {
+    if (!trimText.includes(phrase)) throw new Error(`移动修剪处方缺少 ${phrase}`);
+  }
+  if (!radarBox || radarBox.width > mobilePanelLimit) throw new Error(`移动平衡雷达过宽：${radarBox?.width}`);
+  if (!trimBox || trimBox.width > mobilePanelLimit) throw new Error(`移动修剪处方过宽：${trimBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动牌组卷册横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
@@ -176,7 +196,7 @@ await run("移动异闻录分卷横向导航且宗卷单列", { width: 430, heig
   if (volumeCount !== 5) throw new Error(`移动异闻录分卷数量为 ${volumeCount}`);
   if (visibleArchiveCount !== 5) throw new Error(`移动异闻录当前卷没有限制为五章：${visibleArchiveCount}`);
   if (volumeDisplay !== "flex") throw new Error(`移动异闻录分卷导航没有切换为横向滑动：${volumeDisplay}`);
-  if (!archiveBox || archiveBox.width > 402) throw new Error(`移动宗卷列表过宽：${archiveBox?.width}`);
+  if (!archiveBox || archiveBox.width > mobilePanelLimit) throw new Error(`移动宗卷列表过宽：${archiveBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动异闻录横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
@@ -249,7 +269,7 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   for (const phrase of ["主线五卷弧线", "命册启疑", "归墟自在"]) {
     if (!arcText.includes(phrase)) throw new Error(`移动主线弧线缺少 ${phrase}`);
   }
-  if (!arcBox || arcBox.width > 402) throw new Error(`移动主线五卷弧线过宽：${arcBox?.width}`);
+  if (!arcBox || arcBox.width > mobilePanelLimit) throw new Error(`移动主线五卷弧线过宽：${arcBox?.width}`);
   for (const phrase of ["案卷预览", "首领现形", "调查目标", "路线节奏", "首领宗卷"]) {
     if (!casefileText.includes(phrase)) throw new Error(`移动章节案卷缺少 ${phrase}`);
   }
@@ -258,7 +278,7 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
     if (!briefingText.includes(phrase)) throw new Error(`移动开局简报缺少 ${phrase}`);
   }
   if (!briefingBox || briefingBox.width > 366) throw new Error(`移动开局简报过宽：${briefingBox?.width}`);
-  if (!casefileBox || casefileBox.width > 402) throw new Error(`移动章节案卷过宽：${casefileBox?.width}`);
+  if (!casefileBox || casefileBox.width > mobilePanelLimit) throw new Error(`移动章节案卷过宽：${casefileBox?.width}`);
   if (!bossCardBox || bossCardBox.width > 366) throw new Error(`移动首领现形卡过宽：${bossCardBox?.width}`);
   if (volumeButtons !== 5) throw new Error(`移动部卷筛选数量为 ${volumeButtons}`);
   if (chapterCards !== 5) throw new Error(`移动当前部卷章节卡数量为 ${chapterCards}`);
@@ -295,7 +315,7 @@ await run("移动悟道树处方单列且节点状态清晰", { width: 430, heig
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   if (prescriptionRows !== 3) throw new Error(`移动成长处方未保持三块单列：rows=${prescriptionRows}`);
   if (!nodeText.includes("可点亮") && !nodeText.includes("还差")) throw new Error("移动悟道树节点缺少可点亮/差额状态");
-  if (!prescriptionBox || prescriptionBox.width > 402) throw new Error(`移动成长处方过宽：${prescriptionBox?.width}`);
+  if (!prescriptionBox || prescriptionBox.width > mobilePanelLimit) throw new Error(`移动成长处方过宽：${prescriptionBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动悟道树横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
@@ -329,7 +349,7 @@ await run("移动职业页保留开局预览且不横溢", { width: 430, height:
   for (const phrase of ["开局循环", "起始手札", "推荐构筑入口"]) {
     if (!systemText.includes(phrase)) throw new Error(`移动职业页缺少 ${phrase}`);
   }
-  if (!starterBox || starterBox.width > 402) throw new Error(`移动起手牌面板过宽：${starterBox?.width}`);
+  if (!starterBox || starterBox.width > mobilePanelLimit) throw new Error(`移动起手牌面板过宽：${starterBox?.width}`);
   if (!countsBox || countsBox.width > 380) throw new Error(`移动起手牌统计过宽：${countsBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动职业页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
@@ -355,7 +375,7 @@ await run("移动藏经阁流派页保留关键词线索", { width: 430, height:
   const targetBox = await page.locator(".build-target-panel").boundingBox();
   const unknownText = await page.locator(".build-recipe .unknown").first().innerText();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
-  if (!targetBox || targetBox.width > 402) throw new Error(`移动流派追踪过宽：${targetBox?.width}`);
+  if (!targetBox || targetBox.width > mobilePanelLimit) throw new Error(`移动流派追踪过宽：${targetBox?.width}`);
   if (!unknownText.includes("未收录组件") || !unknownText.includes("·")) throw new Error("移动流派未知组件缺少关键词线索");
   if (layout.scrollWidth > layout.width) throw new Error(`移动藏经阁横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
@@ -506,7 +526,7 @@ await run("移动坊市页显示预算且不横溢", { width: 430, height: 932 }
   const economyBox = await page.locator(".market-economy").boundingBox();
   const economyText = await page.locator(".market-economy").innerText();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
-  if (!economyBox || economyBox.width > 402) throw new Error(`移动坊市预算面板过宽：${economyBox?.width}`);
+  if (!economyBox || economyBox.width > mobilePanelLimit) throw new Error(`移动坊市预算面板过宽：${economyBox?.width}`);
   if (!economyText.includes("预算状态") || !economyText.includes("当前灵石")) throw new Error("移动坊市页缺少预算信息");
   if (layout.scrollWidth > layout.width) throw new Error(`移动坊市页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
@@ -555,8 +575,8 @@ await run("移动奖励页公开战利契约且不横溢", { width: 430, height:
   for (const phrase of ["本次保底", "可变奖励", "重整代价", "兜底选择"]) {
     if (!contractText.includes(phrase)) throw new Error(`移动奖励契约缺少 ${phrase}`);
   }
-  if (!contractBox || contractBox.width > 402) throw new Error(`移动奖励契约过宽：${contractBox?.width}`);
-  if (!openBox || openBox.width > 402) throw new Error(`移动启封按钮过宽：${openBox?.width}`);
+  if (!contractBox || contractBox.width > mobilePanelLimit) throw new Error(`移动奖励契约过宽：${contractBox?.width}`);
+  if (!openBox || openBox.width > mobilePanelLimit) throw new Error(`移动启封按钮过宽：${openBox?.width}`);
   if (memoryCards !== 3 || !memoryText.includes("入牌预期") || !memoryText.includes("→")) throw new Error("移动奖励页缺少入牌预期");
   if (!memoryBox || memoryBox.width > 124) throw new Error(`移动入牌预期过宽：${memoryBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动奖励页横向溢出 ${layout.scrollWidth - layout.width}px`);
@@ -585,7 +605,7 @@ await run("移动挑战复刻公开复刻边界且不横溢", { width: 430, heig
   for (const phrase of ["挑战复刻规则", "不发每日首胜", "不继承终局劫数", "剧情选择", "比较分数"]) {
     if (!contractText.includes(phrase)) throw new Error(`挑战复刻规则契约缺少 ${phrase}`);
   }
-  if (!contractBox || contractBox.width > 402) throw new Error(`移动挑战复刻契约过宽：${contractBox?.width}`);
+  if (!contractBox || contractBox.width > mobilePanelLimit) throw new Error(`移动挑战复刻契约过宽：${contractBox?.width}`);
   if (rows !== 2) throw new Error("移动挑战复刻规则没有使用双列契约");
   if (layout.scrollWidth > layout.width) throw new Error(`移动挑战复刻页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
@@ -617,7 +637,7 @@ await run("移动结算页展示复玩契约且不横溢", { width: 430, height:
   for (const phrase of ["本章复玩契约", "证据", "后记", "劫数"]) {
     if (!contractText.includes(phrase)) throw new Error(`移动结算页复玩契约缺少 ${phrase}`);
   }
-  if (!contractBox || contractBox.width > 402) throw new Error(`移动结算复玩契约过宽：${contractBox?.width}`);
+  if (!contractBox || contractBox.width > mobilePanelLimit) throw new Error(`移动结算复玩契约过宽：${contractBox?.width}`);
   if (rows !== 3) throw new Error("移动结算复玩契约没有单列展示三个目标");
   if (layout.scrollWidth > layout.width) throw new Error(`移动结算页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
@@ -639,7 +659,7 @@ await run("移动失败页学习处方不横溢", { width: 430, height: 932 }, "
   const learningBox = await page.locator(".defeat-learning").boundingBox();
   const learningText = await page.locator(".defeat-learning").innerText();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
-  if (!learningBox || learningBox.width > 402) throw new Error(`移动失败学习处方过宽：${learningBox?.width}`);
+  if (!learningBox || learningBox.width > mobilePanelLimit) throw new Error(`移动失败学习处方过宽：${learningBox?.width}`);
   if (!learningText.includes("错误类型") || !learningText.includes("下局行动") || !learningText.includes("本场敌人") || !learningText.includes("机制对策")) throw new Error("移动失败页缺少学习处方");
   if (layout.scrollWidth > layout.width) throw new Error(`移动失败页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });

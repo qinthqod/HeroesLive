@@ -1260,6 +1260,26 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .deck-balance-radar i em { display: block; height: 100%; background: linear-gradient(90deg, #4f846b, #d5aa50); }
 .deck-balance-radar p { margin: 0; color: #84988e; font-size: 7px; line-height: 1.35; }
 .deck-balance-radar footer { margin-top: 9px; color: #9a8a60; font-size: 8px; line-height: 1.45; }
+.deck-trim-prescription {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid rgba(119,154,137,.2);
+  background:
+    linear-gradient(135deg, rgba(18,42,31,.76), rgba(6,17,14,.92)),
+    radial-gradient(circle at 8% 0%, rgba(210,166,70,.13), transparent 38%);
+}
+.deck-trim-prescription.warning { border-color: rgba(210,166,70,.36); box-shadow: inset 2px 0 rgba(126,176,143,.45); }
+.deck-trim-prescription header { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; margin-bottom: 9px; }
+.deck-trim-prescription header span { color: #8fc1a7; font-size: 8px; letter-spacing: .16em; }
+.deck-trim-prescription header strong { color: #e4cf96; font-family: "STKaiti", serif; font-size: 17px; font-weight: 400; }
+.deck-trim-prescription > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.deck-trim-prescription article { min-width: 0; min-height: 86px; padding: 9px; border: 1px solid rgba(255,255,255,.06); background: rgba(1,9,8,.36); }
+.deck-trim-prescription small,
+.deck-trim-prescription b,
+.deck-trim-prescription p { display: block; }
+.deck-trim-prescription small { color: #728f80; font-size: 8px; }
+.deck-trim-prescription b { margin-top: 4px; overflow: hidden; color: #dfc889; font-family: "STKaiti", serif; font-size: 16px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+.deck-trim-prescription p { margin: 6px 0 0; color: #879a91; font-size: 7px; line-height: 1.45; }
 .deck-diagnosis { display: flex; gap: 14px; margin-top: 10px; font-size: 11px; }
 .deck-diagnosis b { min-width: 78px; color: #c6a960; }
 .deck-diagnosis span { color: #8fa198; }
@@ -1956,6 +1976,10 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   .deck-balance-radar > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .deck-balance-radar header { display: block; }
   .deck-balance-radar header strong { display: block; margin-top: 4px; text-align: left; }
+  .deck-trim-prescription > div { grid-template-columns: 1fr; }
+  .deck-trim-prescription header { display: block; }
+  .deck-trim-prescription header strong { display: block; margin-top: 4px; }
+  .deck-trim-prescription article { min-height: 0; }
   .deck-scroll-list { grid-template-columns: 1fr; max-height: 240px; }
   .market-screen { padding: 60px 14px 30px; }
   .market-header { align-items: start; }

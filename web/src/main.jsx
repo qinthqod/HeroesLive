@@ -5238,10 +5238,81 @@ const GUIDE_PLAYBOOK = [
   },
 ];
 
+function deckTrimPrescription(deck, analysis, balance, build) {
+  const recipeNames = new Set((build?.components || []).map((card) => card.baseName));
+  const duplicateNames = deck.reduce((groups, card) => {
+    const name = card.baseName || card.name;
+    groups[name] = groups[name] || [];
+    groups[name].push(card);
+    return groups;
+  }, {});
+  const duplicateCandidates = Object.values(duplicateNames)
+    .filter((cards) => cards.length >= 2)
+    .flatMap((cards) => cards.slice(1))
+    .filter((card) => !recipeNames.has(card.baseName) || cardsWorthTrimming(card, analysis));
+  const weakStandalone = deck
+    .filter((card) => !recipeNames.has(card.baseName))
+    .filter((card) => !card.refined)
+    .sort((a, b) => cardTrimScore(b, analysis) - cardTrimScore(a, analysis));
+  const trimTarget = duplicateCandidates.sort((a, b) => cardTrimScore(b, analysis) - cardTrimScore(a, analysis))[0] || weakStandalone[0] || null;
+  const refineTarget = [...deck]
+    .filter((card) => !card.refined && (recipeNames.has(card.baseName) || (analysis.keywords[card.keyword] || 0) >= 2))
+    .sort((a, b) => cardRefineScore(b, analysis, recipeNames) - cardRefineScore(a, analysis, recipeNames))[0]
+    || [...deck].filter((card) => !card.refined).sort((a, b) => cardRefineScore(b, analysis, recipeNames) - cardRefineScore(a, analysis, recipeNames))[0]
+    || null;
+  const curveIssue = analysis.total >= 18
+    ? { label: "牌组偏厚", text: "下一次坊市或事件优先删一张低贡献牌，让核心牌更常被抽到。" }
+    : analysis.highCost >= Math.ceil(Math.max(1, analysis.total) * 0.38)
+      ? { label: "高费拥堵", text: "少拿 2 费以上牌，补 0-1 费过牌或护盾，把爆发留给关键回合。" }
+      : analysis.draw <= 2 && analysis.total >= 12
+        ? { label: "循环偏慢", text: "优先补抽牌、发现或回手效果，保证核心组件每两回合能回到手里。" }
+        : { label: "曲线稳定", text: "可以继续围绕当前流派补核心牌，奖励页避免被高稀有但不联动的牌诱惑。" };
+  const trimText = trimTarget
+    ? `${trimTarget.cost} 费「${trimTarget.keyword}」${recipeNames.has(trimTarget.baseName) ? "虽属核心，但当前曲线需要压缩。" : "不在当前成卷路线内，适合忘却。"}`
+    : "暂无明显冗余，继续保持每章只强化一个主要组件。";
+  const refineText = refineTarget
+    ? `${recipeNames.has(refineTarget.baseName) ? "成卷核心" : "高频关键词"}，精研后能提高抽到时的回合收益。`
+    : "全牌组已完成精研或缺少核心候选，先通过战利补齐构筑组件。";
+  return {
+    warning: analysis.total >= 18 || balance.dominantRisks.length > 0,
+    stance: analysis.total >= 18 ? "先收束" : balance.lowest.score < 65 ? "先补短" : "可塑形",
+    items: [
+      { label: "优先忘却", title: trimTarget?.name || "暂不删牌", text: trimText },
+      { label: "优先精研", title: refineTarget?.name || "等待核心", text: refineText },
+      { label: "曲线控制", title: curveIssue.label, text: curveIssue.text },
+    ],
+  };
+}
+
+function cardsWorthTrimming(card, analysis) {
+  if (analysis.total >= 20) return true;
+  if (analysis.highCost >= Math.ceil(Math.max(1, analysis.total) * 0.38) && card.cost >= 2) return true;
+  return false;
+}
+
+function cardTrimScore(card, analysis) {
+  let score = card.cost * 2;
+  if (!card.refined) score += 2;
+  if (analysis.highCost >= Math.ceil(Math.max(1, analysis.total) * 0.38) && card.cost >= 2) score += 4;
+  if (/抽|返回手牌|发现|护盾|恢复/.test(`${card.text}${card.combo || ""}`)) score -= 2;
+  if (card.rarity === "传说") score -= 3;
+  return score;
+}
+
+function cardRefineScore(card, analysis, recipeNames) {
+  let score = 0;
+  if (recipeNames.has(card.baseName)) score += 5;
+  score += Math.min(4, analysis.keywords[card.keyword] || 0);
+  if (/抽|返回手牌|发现|造成|伤害|护盾|恢复|毒|燃烧/.test(`${card.text}${card.combo || ""}`)) score += 2;
+  if (card.rarity === "传说") score += 2;
+  return score;
+}
+
 function Overlay({ type, close, deck, origin, profile, setProfile, treasures, savedRun, abandonRun, feedback, claimProgressReward }) {
   const analysis = analyzeDeck(deck);
   const balance = balanceRadar(deck);
   const build = currentBuildState(deck, origin);
+  const trimPrescription = deckTrimPrescription(deck, analysis, balance, build);
   const [abandonArmed, setAbandonArmed] = useState(false);
   const defaultArchiveVolumeIndex = Math.min(4, Math.max(0, Math.floor(((profile.chapter || 1) - 1) / 5)));
   const [archiveVolumeIndex, setArchiveVolumeIndex] = useState(defaultArchiveVolumeIndex);
@@ -5316,6 +5387,18 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
               ))}
             </div>
             <footer>{balance.dominantRisks.length ? balance.dominantRisks.join(" · ") : `最低轴：${balance.lowest.label} · ${balance.lowest.advice}`}</footer>
+          </section>
+          <section className={`deck-trim-prescription ${trimPrescription.warning ? "warning" : ""}`} aria-label="牌组修剪处方">
+            <header><span>修剪处方</span><strong>{trimPrescription.stance}</strong></header>
+            <div>
+              {trimPrescription.items.map((item) => (
+                <article key={item.label}>
+                  <small>{item.label}</small>
+                  <b>{item.title}</b>
+                  <p>{item.text}</p>
+                </article>
+              ))}
+            </div>
           </section>
           <div className="deck-diagnosis"><b>补强优先级</b><span>{analysis.priorities.join(" · ") || "结构健康，继续强化核心组件"}</span></div>
           <div className="deck-diagnosis"><b>成型组件</b><span>{analysis.keyComponents.map(([name, count]) => `${name} ${count}`).join(" · ") || "尚未形成双卡组件"}</span></div>

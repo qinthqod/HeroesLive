@@ -37,6 +37,7 @@ expect(source.includes("combat-learning-cue") && source.includes("模式掌握")
 expect(source.includes("GUIDE_PLAYBOOK") && source.includes("guide-playbook") && source.includes("读局面") && source.includes("选路线") && source.includes("取战利") && source.includes("整牌组"), "可回看的试炼札记必须提供读局面、选路线、取战利和整牌组四步学习框架");
 expect(source.includes("guide-current-run") && source.includes("当前牌组提醒"), "试炼札记必须结合当前牌组或流派给即时建议");
 expect(source.includes("balanceRadar(deck)") && source.includes("deck-balance-radar") && source.includes("平衡雷达") && source.includes("输出") && source.includes("生存") && source.includes("循环") && source.includes("费用"), "牌组卷册必须提供四轴平衡雷达，公开输出、生存、循环和费用短板");
+expect(source.includes("deckTrimPrescription") && source.includes("deck-trim-prescription") && source.includes("修剪处方") && source.includes("优先忘却") && source.includes("优先精研") && source.includes("曲线控制"), "牌组卷册必须提供修剪处方，指导忘却、精研和费用曲线控制");
 expect(source.includes("masteryStarterDeck") && source.includes("masteryOpeningState"), "职业熟练度必须真实改变起始牌组与战斗资源");
 expect(source.includes("mastery >= 25 ? 4 : 0") && source.includes("mastery >= 100"), "熟练度资粮与本命法宝里程碑必须接入新局");
 expect(source.includes("starterDeckSummary") && source.includes("class-system-grid") && source.includes("class-recipe-preview") && source.includes("起始手札"), "职业选择页必须展示真实起始牌组摘要、开局循环与构筑入口");
@@ -131,6 +132,7 @@ expect(styles.includes(".combat-learning-cue") && styles.includes(".combat-learn
 expect(styles.includes(".combat-resolution-ledger") && styles.includes(".combat-resolution-ledger.has-entries") && styles.includes(".device-desktop .combat-resolution-ledger"), "战斗结算记录必须拥有空态、触发态和PC/移动可读样式");
 expect(styles.includes(".enemy-intent-cycle") && styles.includes(".enemy-intent-cycle article.current") && styles.includes(".device-desktop .enemy-intent-cycle"), "敌招循环预读必须拥有当前式高亮、压力态和PC/移动可读样式");
 expect(styles.includes(".deck-balance-radar") && styles.includes(".deck-balance-radar.warning") && styles.includes(".deck-balance-radar > div") && styles.includes(".deck-balance-radar footer"), "牌组平衡雷达必须拥有四轴、警告态和移动端可读样式");
+expect(styles.includes(".deck-trim-prescription") && styles.includes(".deck-trim-prescription.warning") && styles.includes(".deck-trim-prescription > div") && styles.includes(".deck-trim-prescription article"), "牌组修剪处方必须拥有警告态、三栏处方和移动端可读样式");
 expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".app[data-motion=\"reduced\"] .impact-streak") && styles.includes(".app[data-motion=\"reduced\"] .reward-cards .game-card:hover"), "低动效模式必须降低全局动画、隐藏强闪烁并保留可读状态反馈");
 expect(styles.includes(".app[data-readability=\"large\"] .game-card p") && styles.includes(".app[data-readability=\"large\"] .card-play-state") && styles.includes(".app[data-readability=\"large\"] .market-fit"), "可读模式必须放大战斗卡牌、状态与高密度决策文本");
 expect(styles.includes(".card-preview-yield") && styles.includes(".card-preview-yield.preview-combo") && styles.includes(".card-preview-yield.preview-locked"), "出牌前收益预判必须拥有普通、联动和锁定状态样式");
