@@ -10,6 +10,13 @@ for (const chapter of CHAPTERS) {
   const page = await context.newPage();
   try {
     await page.goto(`${base}?screen=story&chapter=${chapter.id}`, { waitUntil: "networkidle" });
+    await page.locator(".story-context").waitFor();
+    const contextText = await page.locator(".story-context").innerText();
+    if (!contextText.includes(chapter.name) || !contextText.includes(chapter.region)) throw new Error("剧情页缺少章节名或地域锚点");
+    const tempoText = await page.locator(".story-tempo-card").innerText();
+    if (!tempoText.includes("序") || !tempoText.includes("入境蓄势")) throw new Error("剧情页缺少序破急节奏提示");
+    const chapterArt = await page.locator(".story-chapter-art").getAttribute("src");
+    if (!chapterArt?.includes(chapter.art.split("/").at(-1))) throw new Error("剧情页幕布未绑定当前章节主视觉");
     const seen = [];
     for (let index = 0; index < CHAPTER_STORIES[chapter.id].length; index += 1) {
       await page.locator(".story-dialogue").waitFor();

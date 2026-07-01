@@ -3260,12 +3260,31 @@ function ClassScreen({ origin, setOrigin, profile, onBack, onStart }) {
   );
 }
 
-function StoryScreen({ scene, index, total, choices, onChoose }) {
+function StoryScreen({ scene, index, total, chapter, choices, onChoose }) {
+  const chapterData = CHAPTERS[chapter - 1] || CHAPTERS[0];
+  const tempo = index === 0
+    ? { phase: "序", title: "入境蓄势", text: "先看清此章的安全处与风险源。" }
+    : index >= total - 1
+      ? { phase: "急", title: "情绪爆点", text: "抉择即将落到路线与首领回应。" }
+      : { phase: "破", title: "旧规开裂", text: "线索开始反转，风险与回报同步抬升。" };
   return (
     <section className="story-screen screen-content">
+      <GameImage eager className="story-chapter-art" src={chapterData.art} alt="" />
       <GameImage eager className="story-art" src={scene.art} alt="" />
       <div className="story-gradient" />
-      <div className="story-progress">{Array.from({ length: total }, (_, step) => <i className={step <= index ? "active" : ""} key={step} />)}</div>
+      <div className="story-context" aria-label="章节剧情节奏">
+        <span>第 {String(chapterData.id).padStart(2, "0")} 章 · {chapterData.region}</span>
+        <strong>{chapterData.name}</strong>
+        <small>{tempo.phase} · {tempo.title} · 第 {index + 1}/{total} 幕</small>
+      </div>
+      <div className="story-tempo-card" aria-label="序破急提示">
+        <b>{tempo.phase}</b>
+        <div><strong>{tempo.title}</strong><small>{tempo.text}</small></div>
+      </div>
+      <div className="story-progress" aria-label={`剧情进度 ${index + 1}/${total}`}>
+        <span>{chapterData.name} · {tempo.phase}</span>
+        {Array.from({ length: total }, (_, step) => <i className={step <= index ? "active" : ""} key={step} />)}
+      </div>
       <div className="story-dialogue">
         <span>{scene.role}</span>
         <h1>{scene.speaker}</h1>
