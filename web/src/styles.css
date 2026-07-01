@@ -460,6 +460,69 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 }
 .combat-learning-cue.mastery small { color: #d6ad57; }
 .combat-learning-cue.mastery strong { color: #f0d58e; }
+.combat-resolution-ledger {
+  position: absolute;
+  z-index: 7;
+  left: 15.5vw;
+  top: 40%;
+  width: 228px;
+  padding: 9px 10px;
+  border: 1px solid rgba(128,160,142,.16);
+  border-left: 2px solid rgba(128,160,142,.42);
+  background: linear-gradient(105deg, rgba(5,18,14,.78), rgba(5,14,12,.32));
+  text-align: left;
+  backdrop-filter: blur(5px);
+}
+.combat-resolution-ledger.has-entries {
+  border-color: rgba(218,176,81,.26);
+  border-left-color: rgba(218,176,81,.66);
+}
+.combat-resolution-ledger header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.combat-resolution-ledger header span {
+  color: #91aa9c;
+  font-size: 7px;
+  letter-spacing: .13em;
+}
+.combat-resolution-ledger header strong {
+  color: #d7c58f;
+  font-size: 8px;
+  font-weight: 500;
+}
+.combat-resolution-ledger > div {
+  display: grid;
+  gap: 5px;
+}
+.combat-resolution-ledger article {
+  padding: 6px 7px;
+  border: 1px solid rgba(255,255,255,.05);
+  background: rgba(255,255,255,.03);
+}
+.combat-resolution-ledger small,
+.combat-resolution-ledger em,
+.combat-resolution-ledger p { display: block; }
+.combat-resolution-ledger small {
+  color: #cbb879;
+  font-size: 8px;
+}
+.combat-resolution-ledger em {
+  margin-top: 2px;
+  color: #8fb8a3;
+  font-size: 7px;
+  font-style: normal;
+}
+.combat-resolution-ledger p {
+  margin: 3px 0 0;
+  color: #82968b;
+  font-size: 7px;
+  line-height: 1.35;
+}
+.combat-resolution-ledger .empty small { color: #778d80; }
 .enemy-art { position: absolute; left: 50%; top: 12%; height: 80%; max-width: 50%; transform: translateX(-50%); object-fit: contain; object-position: center; opacity: .96; filter: drop-shadow(0 30px 38px rgba(0,0,0,.8)) saturate(.82) contrast(1.08); mask-image: radial-gradient(ellipse 48% 58% at 50% 52%, #000 38%, rgba(0,0,0,.92) 56%, transparent 84%); }
 .combat-log { position: absolute; z-index: 4; bottom: 0; left: 50%; transform: translateX(-50%); margin: 0; padding: 8px 16px; color: #91a49a; font-size: 11px; background: rgba(5,14,12,.5); backdrop-filter: blur(6px); }
 .progress-rail { position: absolute; z-index: 6; right: 2.5vw; top: 6%; bottom: 20%; width: 90px; display: flex; flex-direction: column; align-items: center; }
@@ -1553,6 +1616,25 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   }
   .combat-learning-cue strong { font-size: 12px; }
   .combat-learning-cue p { display: -webkit-box; overflow: hidden; font-size: 7px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .combat-resolution-ledger {
+    left: 12px;
+    right: 82px;
+    top: 386px;
+    width: auto;
+    padding: 7px 8px;
+  }
+  .combat-resolution-ledger header { margin-bottom: 4px; }
+  .combat-resolution-ledger > div { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+  .combat-resolution-ledger article:nth-child(n+3) { display: none; }
+  .combat-resolution-ledger article { padding: 5px; }
+  .combat-resolution-ledger small,
+  .combat-resolution-ledger em,
+  .combat-resolution-ledger p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .combat-resolution-ledger p { font-size: 6px; }
   .enemy-art { top: 15%; height: 70%; max-width: 72%; }
   .combat-log { bottom: 1%; width: 78%; padding: 7px 10px; font-size: 9px; }
   .run-notebook.combat-notebook { left: 12px; right: auto; top: 190px; width: 142px; padding: 7px 8px; }
@@ -2658,6 +2740,11 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   top: auto;
   bottom: 336px;
   width: 244px;
+}
+.device-desktop .combat-resolution-ledger {
+  left: max(250px, 17vw);
+  top: 39%;
+  width: 250px;
 }
 .device-desktop .hand {
   bottom: 18px;

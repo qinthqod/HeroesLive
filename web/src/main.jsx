@@ -730,6 +730,7 @@ function App() {
   const [playerFx, setPlayerFx] = useState(null);
   const [triggerFx, setTriggerFx] = useState(null);
   const [turnFlowFx, setTurnFlowFx] = useState(null);
+  const [combatLedger, setCombatLedger] = useState([]);
   const [transition, setTransition] = useState("");
   const timers = useRef([]);
   const feedbackEngine = useRef(null);
@@ -1203,6 +1204,7 @@ function App() {
     setLog(totalOpeningShield > 0 ? `此前的选择与劫数化作压迫：敌人带着 ${totalOpeningShield} 点护体拦住去路。${encounterRead}` : pendingClue ? `若能胜出，便可查证：${pendingClue.text} ${encounterRead}` : latestClue ? `线索仍在耳边：${latestClue} ${encounterRead}` : encounterRead);
     setCombatFx(null);
     setTriggerFx(null);
+    setCombatLedger([]);
     setShield(treasureValue(treasures, "startShield"));
     prepareDeck(runDeck, true, treasureValue(treasures, "firstTurnDraw"), profile.jobMastery[origin] || 0, origin, runSeed, `combat:${selectedChapter}:${nextStage}:${routeProgress}`);
     changeScreen("combat");
@@ -1739,6 +1741,16 @@ function App() {
         ...resolution.note,
       ].filter(Boolean);
       setTriggerFx({ card: card.name, combo: synergy.conditional && synergy.active ? synergy.reason : "", effects: triggered });
+      setCombatLedger((value) => [
+        {
+          turn: combatTurn,
+          card: card.name,
+          combo: synergy.conditional && synergy.active ? synergy.reason : "",
+          effects: triggered.length ? triggered.slice(0, 4) : ["基础效果已结算"],
+          cost,
+        },
+        ...value,
+      ].slice(0, 4));
       later(() => setTriggerFx(null), 1450);
       if (resolution.shield) setShield((value) => value + resolution.shield);
       if (resolution.heal) setHp((value) => Math.min(maxHp, value + resolution.heal));
@@ -1952,6 +1964,7 @@ function App() {
       setDrawPile(source.slice(nextHandSize));
       setDiscardPile(hasEnoughDraw ? turnDiscard : []);
       setCombatTurn((value) => value + 1);
+      setCombatLedger([]);
       playedThisTurnRef.current = [];
       setJobState((value) => ({
         ...value,
@@ -2366,6 +2379,7 @@ function App() {
           playerFx={playerFx}
           triggerFx={triggerFx}
           turnFlowFx={turnFlowFx}
+          combatLedger={combatLedger}
           runTribulation={runTribulation}
           playCard={playCard}
           effectiveCardCost={effectiveCardCost}
@@ -4202,7 +4216,7 @@ function EventScreen({ chapter, origin, deck, hp, maxHp, stones, clues, pendingC
   );
 }
 
-function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, turnFlowFx, runTribulation, playCard, effectiveCardCost, cardRequirementMet, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, moonPhase, useConsumable, setOverlay, showGuide, completeGuide }) {
+function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, maxQi, shield, edge, jobState, stones, enemy, enemyBurn, enemyPoison, enemyWeak, enemyShield, playerWeak, hand, drawPile, discardPile, exhaustPile, drawFx, combatTurn, log, combatFx, combatBusy, playerFx, triggerFx, turnFlowFx, combatLedger, runTribulation, playCard, effectiveCardCost, cardRequirementMet, cardSynergyState, endTurn, consumables, treasures, deck, clues, pendingClue, profile, moonPhase, useConsumable, setOverlay, showGuide, completeGuide }) {
   const [guideStep, setGuideStep] = useState(showGuide ? 0 : -1);
   const hpPercent = Math.max(0, (enemy.hp / enemy.max) * 100);
   const currentEnemyMove = enemy.moves[enemy.moveIndex || 0];
@@ -4349,6 +4363,7 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
         <strong>{learningCue.title}</strong>
         <p>{learningCue.text}</p>
       </aside>
+      <CombatResolutionLedger entries={combatLedger} />
       {drawFx && <DrawSequence fx={drawFx} />}
       <aside className="progress-rail">
         <span>本轮进度</span>
@@ -4429,6 +4444,26 @@ function CombatEffectBursts({ bursts }) {
         </span>
       ))}
     </div>
+  );
+}
+
+function CombatResolutionLedger({ entries }) {
+  return (
+    <aside className={`combat-resolution-ledger ${entries.length ? "has-entries" : ""}`} aria-label="本回合结算记录">
+      <header>
+        <span>本回合结算</span>
+        <strong>{entries.length ? "已触发" : "等待出牌"}</strong>
+      </header>
+      <div>
+        {entries.length ? entries.map((entry, index) => (
+          <article key={`${entry.card}-${entry.turn}-${index}`}>
+            <small>{entry.card} · {entry.cost} 灵</small>
+            {entry.combo && <em>{entry.combo}</em>}
+            <p>{entry.effects.join(" · ")}</p>
+          </article>
+        )) : <article className="empty"><small>单击卡牌后</small><p>这里会记录伤害、护盾、抽牌、资源和联动是否真实触发。</p></article>}
+      </div>
+    </aside>
   );
 }
 
