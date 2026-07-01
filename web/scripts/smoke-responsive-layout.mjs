@@ -203,6 +203,8 @@ await run("移动异闻录分卷横向导航且宗卷单列", { width: 430, heig
 await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, "?screen=chapters", async (page) => {
   await page.locator(".chapter-card").first().waitFor();
   const layout = await layoutSnapshot(page);
+  const atlasText = await page.locator(".chapter-atlas-showcase").innerText();
+  const atlasBox = await page.locator(".chapter-atlas-showcase").boundingBox();
   const arcText = await page.locator(".chapter-arc-overview").innerText();
   const arcCards = await page.locator(".chapter-arc-overview button").count();
   const arcRows = await page.locator(".chapter-arc-overview button").evaluateAll((cards) => new Set(cards.map((card) => Math.round(card.getBoundingClientRect().top))).size);
@@ -220,6 +222,10 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
   const firstBossSigil = await page.locator(".chapter-boss-sigil").first().innerText();
   const firstBossSigilBox = await page.locator(".chapter-boss-sigil").first().boundingBox();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["二十五章主线画卷", "每章一图", "独立配图"]) {
+    if (!atlasText.includes(phrase)) throw new Error(`PC 主线画卷缺少 ${phrase}`);
+  }
+  if (!atlasBox || atlasBox.width < 1000 || atlasBox.height < 230) throw new Error(`PC 主线画卷尺寸异常：${atlasBox?.width}×${atlasBox?.height}`);
   if (arcCards !== 5 || arcRows !== 1) throw new Error(`PC 主线五卷弧线没有五列展示：cards=${arcCards}, rows=${arcRows}`);
   for (const phrase of ["主线五卷弧线", "25 章 · 序破急回", "命册启疑", "归墟自在"]) {
     if (!arcText.includes(phrase)) throw new Error(`PC 主线弧线缺少 ${phrase}`);
@@ -248,6 +254,8 @@ await run("PC 章节页使用三列章节卡片", { width: 1366, height: 768 }, 
 await run("移动章节页显示复玩目标且不横溢", { width: 430, height: 932 }, "?screen=chapters", async (page) => {
   await page.locator(".chapter-card").first().waitFor();
   const layout = await layoutSnapshot(page);
+  const atlasText = await page.locator(".chapter-atlas-showcase").innerText();
+  const atlasBox = await page.locator(".chapter-atlas-showcase").boundingBox();
   const arcText = await page.locator(".chapter-arc-overview").innerText();
   const arcBox = await page.locator(".chapter-arc-overview").boundingBox();
   const arcCards = await page.locator(".chapter-arc-overview button").count();
@@ -265,6 +273,10 @@ await run("移动章节页显示复玩目标且不横溢", { width: 430, height:
   const firstBossSigilBox = await page.locator(".chapter-boss-sigil").first().boundingBox();
   const goalBox = await page.locator(".chapter-replay-goals").first().boundingBox();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["二十五章主线画卷", "每章一图", "独立配图"]) {
+    if (!atlasText.includes(phrase)) throw new Error(`移动主线画卷缺少 ${phrase}`);
+  }
+  if (!atlasBox || atlasBox.width > mobilePanelLimit) throw new Error(`移动主线画卷过宽：${atlasBox?.width}`);
   if (arcCards !== 5) throw new Error(`移动主线五卷弧线数量为 ${arcCards}`);
   for (const phrase of ["主线五卷弧线", "命册启疑", "归墟自在"]) {
     if (!arcText.includes(phrase)) throw new Error(`移动主线弧线缺少 ${phrase}`);

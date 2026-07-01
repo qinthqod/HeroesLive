@@ -2542,6 +2542,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
   overflow-y: auto;
 }
 .device-desktop .chapter-heading,
+.device-desktop .chapter-atlas-showcase,
 .device-desktop .chapter-arc-overview,
 .device-desktop .chapter-casefile,
 .device-desktop .challenge-code-body,
@@ -2549,6 +2550,15 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .device-desktop .mode-rule-contract > div { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .device-desktop .chapter-heading { padding: 0 0 20px; }
 .device-desktop .chapter-heading h1 { font-size: 56px; }
+.device-desktop .chapter-atlas-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(360px, .65fr);
+  min-height: 260px;
+  margin-bottom: 18px;
+}
+.device-desktop .chapter-atlas-showcase img { height: 100%; }
+.device-desktop .chapter-atlas-showcase > div { align-self: end; padding: 26px; }
+.device-desktop .chapter-atlas-showcase ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .device-desktop .chapter-arc-overview { margin-bottom: 18px; padding: 16px; }
 .device-desktop .chapter-arc-overview header {
   grid-template-columns: auto auto 1fr;
@@ -3098,6 +3108,41 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .chapter-heading { padding: 26px 22px 18px; }
 .chapter-heading h1 { margin: 5px 0; font-family: "STKaiti", serif; font-size: 44px; font-weight: 400; }
 .chapter-heading p { margin: 0; color: #7d9085; font-size: 11px; line-height: 1.7; }
+.chapter-atlas-showcase {
+  position: relative;
+  margin: 0 18px 14px;
+  overflow: hidden;
+  border: 1px solid rgba(211,169,72,.28);
+  border-radius: 22px 4px 22px 4px;
+  background: #06100e;
+  box-shadow: 0 20px 50px rgba(0,0,0,.38);
+}
+.chapter-atlas-showcase img {
+  display: block;
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  filter: brightness(.72) saturate(.85);
+}
+.chapter-atlas-showcase > div {
+  position: relative;
+  padding: 15px;
+  background:
+    linear-gradient(180deg, rgba(4,13,11,.78), rgba(4,13,11,.96)),
+    radial-gradient(circle at 0% 100%, rgba(211,169,72,.14), transparent 38%);
+}
+.chapter-atlas-showcase span,
+.chapter-atlas-showcase strong,
+.chapter-atlas-showcase p { display: block; }
+.chapter-atlas-showcase span { color: #d1ad60; font-size: 8px; letter-spacing: .16em; }
+.chapter-atlas-showcase strong { margin-top: 5px; color: #efdfb8; font-family: "STKaiti", serif; font-size: 28px; font-weight: 400; }
+.chapter-atlas-showcase p { margin: 7px 0 0; color: #92a49a; font-size: 10px; line-height: 1.65; }
+.chapter-atlas-showcase ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin: 13px 0 0; padding: 0; list-style: none; }
+.chapter-atlas-showcase li { padding: 9px; border: 1px solid rgba(136,169,150,.16); background: rgba(2,10,8,.5); }
+.chapter-atlas-showcase li b,
+.chapter-atlas-showcase li small { display: block; }
+.chapter-atlas-showcase li b { color: #e0bc67; font-family: "STKaiti", serif; font-size: 24px; font-weight: 400; }
+.chapter-atlas-showcase li small { margin-top: 2px; color: #789084; font-size: 8px; }
 .chapter-arc-overview {
   margin: 0 18px 14px;
   padding: 13px;

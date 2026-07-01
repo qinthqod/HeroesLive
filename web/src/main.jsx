@@ -7,6 +7,7 @@ import {
   BOSS_PHASES,
   ENCOUNTER_ENEMIES,
   ENCOUNTER_MOVE_PATTERNS,
+  CHAPTER_ATLAS_ART,
   CHAPTERS,
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
@@ -2968,6 +2969,8 @@ function ChapterScreen({ profile, onBack, onChoose }) {
     { phase: "急", title: previewRouteBeats[2] || previewChapter.boss, reward: `首领宗卷 · ${previewBoss?.name || previewChapter.boss}`, energy: "爆发决战" },
     { phase: "回", title: previewRouteBeats[3] || "结卷回山", reward: "后记 / 证据 / 下一章桥梁", energy: "回落结算" },
   ];
+  const completedChapterCount = CHAPTERS.filter((chapter) => (profile.unlockedEndings || []).includes(`chapter_${chapter.id}_ending`)).length;
+  const chapterArtCount = new Set(CHAPTERS.map((chapter) => chapter.art)).size;
   return (
     <section className="mobile-shell chapter-screen screen-content">
       <MobileTopBar title="云游录" subtitle={`${CHAPTERS.length} 卷主线 · 逐章解锁`} onBack={onBack} profile={profile} />
@@ -2976,6 +2979,19 @@ function ChapterScreen({ profile, onBack, onChoose }) {
         <h1>循灯而行</h1>
         <p>每一章包含剧情抉择、分支路线、精英事件与最终首领。</p>
       </div>
+      <section className="chapter-atlas-showcase" aria-label="二十五章主线画卷">
+        <GameImage eager src={CHAPTER_ATLAS_ART} alt="" />
+        <div>
+          <span>二十五章主线画卷</span>
+          <strong>每章一图 · 每卷一幕</strong>
+          <p>从青岚雨亭到自在人间，25 章均配置独立章节主视觉；点击下方五卷弧线，可按部卷预览 Boss、路线与宗卷线索。</p>
+          <ul>
+            <li><b>{CHAPTERS.length}</b><small>主线章节</small></li>
+            <li><b>{chapterArtCount}</b><small>独立配图</small></li>
+            <li><b>{completedChapterCount}</b><small>已结卷</small></li>
+          </ul>
+        </div>
+      </section>
       <section className="chapter-arc-overview" aria-label="主线五卷弧线">
         <header>
           <span>主线五卷弧线</span>
