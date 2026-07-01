@@ -46,7 +46,7 @@ for (const source of imageJobs) {
     pipeline = pipeline.resize({ ...resizeBudget, fit: "inside", withoutEnlargement: true });
   }
   await pipeline
-    .webp({ quality: 82, alphaQuality: 92, effort: 5, smartSubsample: true })
+    .webp({ quality: 81, alphaQuality: 92, effort: 5, smartSubsample: true })
     .toFile(temporary);
   const targetSize = (await stat(temporary)).size;
   originalBytes += sourceSize;

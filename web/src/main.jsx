@@ -3332,6 +3332,10 @@ function ClassScreen({ origin, setOrigin, profile, onBack, onStart }) {
 
 function StoryScreen({ scene, index, total, chapter, choices, onChoose }) {
   const chapterData = CHAPTERS[chapter - 1] || CHAPTERS[0];
+  const storyScenes = CHAPTER_STORIES[chapter] || [];
+  const storyChoices = CHAPTER_STORY_CHOICES[chapter] || {};
+  const nextDecisionIndex = Object.keys(storyChoices).map(Number).sort((a, b) => a - b).find((step) => step >= index);
+  const nextDecision = Number.isFinite(nextDecisionIndex) ? storyChoices[nextDecisionIndex] : [];
   const tempo = index === 0
     ? { phase: "序", title: "入境蓄势", text: "先看清此章的安全处与风险源。" }
     : index >= total - 1
@@ -3351,6 +3355,31 @@ function StoryScreen({ scene, index, total, chapter, choices, onChoose }) {
         <b>{tempo.phase}</b>
         <div><strong>{tempo.title}</strong><small>{tempo.text}</small></div>
       </div>
+      <section className="story-arc-ledger" aria-label="本章五幕卷轴">
+        <header>
+          <span>本章五幕卷轴</span>
+          <strong>选择会写入章末因果</strong>
+        </header>
+        <div>
+          {storyScenes.map((beat, step) => {
+            const phase = step === 0 ? "序" : step >= total - 1 ? "急" : "破";
+            const hasChoice = Boolean(storyChoices[step]?.length);
+            return (
+              <i className={`${step === index ? "active" : ""} ${step < index ? "read" : ""} ${hasChoice ? "choice" : ""}`} key={`${beat.speaker}-${step}`}>
+                <b>{phase}</b>
+                <span>{step + 1}</span>
+                <em>{beat.speaker}</em>
+                <small>{hasChoice ? "抉择" : "剧情"}</small>
+              </i>
+            );
+          })}
+        </div>
+      </section>
+      <section className={`story-choice-echo ${choices.length ? "active" : ""}`} aria-label="抉择回响提示">
+        <span>{choices.length ? "当前抉择回响" : nextDecision?.length ? `下一次抉择 · 第 ${nextDecisionIndex + 1} 幕` : "本章回响"}</span>
+        <strong>{choices.length ? "会进入本局命途与首领因果" : nextDecision?.length ? nextDecision.map((choice) => choice.label).join(" / ") : "余下剧情将收束到路线与首领前夜"}</strong>
+        <p>{choices.length ? choices.map((choice) => choice.consequence).join("；") : nextDecision?.length ? nextDecision.map((choice) => choice.consequence).join("；") : "章末会根据关键选择生成后记、Boss 回应与调查落点。"}</p>
+      </section>
       <div className="story-progress" aria-label={`剧情进度 ${index + 1}/${total}`}>
         <span>{chapterData.name} · {tempo.phase}</span>
         {Array.from({ length: total }, (_, step) => <i className={step <= index ? "active" : ""} key={step} />)}

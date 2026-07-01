@@ -157,6 +157,7 @@ expect(styles.includes(".chapter-visual-ledger") && styles.includes(".device-des
 expect(styles.includes(".chapter-boss-atlas") && styles.includes(".device-desktop .chapter-boss-atlas") && styles.includes(".chapter-boss-atlas em"), "二十五 Boss 因果谱必须拥有移动与PC适配样式和反制提示样式");
 expect(styles.includes(".chapter-starter-briefing") && styles.includes(".device-desktop .chapter-starter-briefing > div") && styles.includes("grid-template-columns: repeat(4, minmax(0, 1fr))"), "章节开局简报必须拥有移动双列与PC四列样式");
 expect(styles.includes(".chapter-tempo-contract") && styles.includes(".device-desktop .chapter-tempo-contract div") && styles.includes("grid-template-columns: repeat(4, minmax(0, 1fr))"), "章节节奏契约必须拥有移动双列与 PC 四段式样式");
+expect(styles.includes(".story-arc-ledger") && styles.includes(".story-choice-echo") && styles.includes(".device-desktop .story-arc-ledger") && styles.includes(".device-desktop .story-choice-echo"), "剧情页五幕卷轴与抉择回响必须拥有移动/PC 可读样式");
 expect(styles.includes(".boss-counter-lessons") && styles.includes(".boss-counter-lessons article") && styles.includes(".boss-counter-lessons header"), "首领破招札记必须拥有移动与PC可读样式");
 expect(styles.includes(".route-causality-strip") && styles.includes(".device-desktop .route-causality-strip"), "路线因果线索条必须拥有移动/PC 样式");
 expect(styles.includes(".route-space-read") && styles.includes(".route-choice-card.space-庇护") && styles.includes(".route-choice-card.space-旷野") && styles.includes(".route-space-read span"), "路线空间读法必须拥有庇护/旷野差异化视觉和移动端可读样式");
@@ -196,6 +197,7 @@ expect(source.includes("tribulation-panel") && source.includes("TRIBULATION_LEVE
 expect(source.includes("completedNodes") && source.includes("chapter-1-scene-"), "章节剧情节点必须形成跨局完成进度");
 expect(source.includes("firstChapterScenes >= CHAPTER_STORIES[1].length") && source.includes("shen-handbook-1") && source.includes("unlockHandbook ? 8 : 0"), "第一章五幕剧情完成后必须一次性解锁手札并奖励悟道");
 expect(source.includes("story-chapter-art") && source.includes("story-context") && source.includes("story-tempo-card") && source.includes("序") && source.includes("破") && source.includes("急"), "剧情页必须展示章节主视觉、章节身份和序破急节奏提示");
+expect(source.includes("story-arc-ledger") && source.includes("本章五幕卷轴") && source.includes("story-choice-echo") && source.includes("当前抉择回响") && source.includes("CHAPTER_STORY_CHOICES[chapter]"), "剧情页必须展示五幕结构、抉择节点和即将写入章末因果的选择回响");
 expect(source.includes("lore-scrolls") && source.includes("人物手札"), "异闻录必须展示已解锁与未解锁人物手札");
 
 if (failures.length) {

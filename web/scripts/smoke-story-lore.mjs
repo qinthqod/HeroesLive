@@ -15,6 +15,12 @@ for (const chapter of CHAPTERS) {
     if (!contextText.includes(chapter.name) || !contextText.includes(chapter.region)) throw new Error("剧情页缺少章节名或地域锚点");
     const tempoText = await page.locator(".story-tempo-card").innerText();
     if (!tempoText.includes("序") || !tempoText.includes("入境蓄势")) throw new Error("剧情页缺少序破急节奏提示");
+    const arcLedgerText = await page.locator(".story-arc-ledger").innerText();
+    const arcLedgerBeats = await page.locator(".story-arc-ledger i").count();
+    if (!arcLedgerText.includes("本章五幕卷轴") || !arcLedgerText.includes("选择会写入章末因果")) throw new Error("剧情页缺少五幕卷轴说明");
+    if (arcLedgerBeats !== CHAPTER_STORIES[chapter.id].length) throw new Error(`五幕卷轴数量异常：${arcLedgerBeats}`);
+    const firstEcho = await page.locator(".story-choice-echo").innerText();
+    if (!firstEcho.includes("下一次抉择") && !firstEcho.includes("当前抉择回响")) throw new Error("剧情页缺少抉择回响预告");
     const chapterArt = await page.locator(".story-chapter-art").getAttribute("src");
     if (!chapterArt?.includes(chapter.art.split("/").at(-1))) throw new Error("剧情页幕布未绑定当前章节主视觉");
     const seen = [];
@@ -23,6 +29,8 @@ for (const chapter of CHAPTERS) {
       seen.push(await page.locator(".story-dialogue h1").innerText());
       const choices = CHAPTER_STORY_CHOICES[chapter.id]?.[index] || [];
       if (choices.length) {
+        const echoText = await page.locator(".story-choice-echo").innerText();
+        if (!echoText.includes("当前抉择回响") || !echoText.includes("会进入本局命途与首领因果")) throw new Error(`第 ${index + 1} 幕缺少当前抉择回响`);
         const buttons = page.locator(".story-choices button");
         if (await buttons.count() !== 2) throw new Error(`第 ${index + 1} 幕没有两个抉择`);
         await buttons.first().click();
