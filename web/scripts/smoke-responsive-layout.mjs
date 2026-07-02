@@ -423,6 +423,36 @@ await run("移动藏经阁流派页保留关键词线索", { width: 430, height:
   if (layout.scrollWidth > layout.width) throw new Error(`移动藏经阁横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
+await run("PC 首领前夜公开转相契约", { width: 1366, height: 768 }, "?screen=bossPrelude&chapter=6&runChoices=%E6%89%BF%E6%8B%85%E9%81%97%E6%86%BE&clues=4", async (page) => {
+  await page.locator(".boss-phase-contract").waitFor();
+  const layout = await layoutSnapshot(page);
+  const dossierBox = await page.locator(".boss-prelude-dossier").boundingBox();
+  const contractText = await page.locator(".boss-phase-contract").innerText();
+  const contractCards = await page.locator(".boss-phase-contract article").count();
+  if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["首领转相契约", "第一相", "转相血线", "第二相", "抉择回应", "承担遗憾"]) {
+    if (!contractText.includes(phrase)) throw new Error(`PC 首领转相契约缺少 ${phrase}`);
+  }
+  if (contractCards !== 3) throw new Error(`PC 首领转相契约卡片数异常：${contractCards}`);
+  if (!dossierBox || dossierBox.width < 260 || dossierBox.height > 650) throw new Error(`PC 首领敌情卷尺寸异常：${dossierBox?.width}×${dossierBox?.height}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`PC 首领前夜横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
+await run("移动首领前夜转相契约不横溢", { width: 430, height: 932 }, "?screen=bossPrelude&chapter=6&runChoices=%E6%89%BF%E6%8B%85%E9%81%97%E6%86%BE&clues=4", async (page) => {
+  await page.locator(".boss-phase-contract").waitFor();
+  const layout = await layoutSnapshot(page);
+  const contractBox = await page.locator(".boss-phase-contract").boundingBox();
+  const contractText = await page.locator(".boss-phase-contract").innerText();
+  const contractCards = await page.locator(".boss-phase-contract article").count();
+  if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
+  for (const phrase of ["首领转相契约", "第一相", "转相血线", "第二相", "抉择回应"]) {
+    if (!contractText.includes(phrase)) throw new Error(`移动首领转相契约缺少 ${phrase}`);
+  }
+  if (contractCards !== 3) throw new Error(`移动首领转相契约卡片数异常：${contractCards}`);
+  if (!contractBox || contractBox.width > mobilePanelLimit) throw new Error(`移动首领转相契约过宽：${contractBox?.width}`);
+  if (layout.scrollWidth > layout.width) throw new Error(`移动首领前夜横向溢出 ${layout.scrollWidth - layout.width}px`);
+});
+
 await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, "?screen=combat&chapter=6&stage=3&move=0", async (page) => {
   await page.locator(".combat-screen").waitFor();
   const layout = await layoutSnapshot(page);

@@ -4006,6 +4006,32 @@ function bossCounterLessons(chapter, boss, prelude) {
   ];
 }
 
+function bossPhaseContract(chapter, boss, choices) {
+  const firstMoves = BOSS_MOVE_PATTERNS[chapter] || [];
+  const phase = BOSS_PHASES[chapter];
+  const response = resolveBossChoiceResponse(chapter, choices);
+  const firstPressure = [...firstMoves].sort((a, b) => ((b.damage || 0) * (b.hits || 1)) - ((a.damage || 0) * (a.hits || 1)))[0];
+  const secondPressure = [...(phase?.moves || [])].sort((a, b) => ((b.damage || 0) * (b.hits || 1)) - ((a.damage || 0) * (a.hits || 1)))[0];
+  const phaseShield = Math.max(0, (phase?.shield || 0) + (response?.bossShieldDelta || 0));
+  return [
+    {
+      label: "第一相",
+      title: firstPressure ? firstPressure.name : `${boss.name}试探`,
+      text: firstPressure?.note || "先读三式循环，确认敌人主压力来自伤害、护体还是资源封锁。",
+    },
+    {
+      label: "转相血线",
+      title: phase ? `${Math.round(phase.threshold * 100)}% · 护体 +${phaseShield}` : "半血转相",
+      text: response ? `抉择回应「${response.choice}」：${response.effect}` : "压入转相前保留低费牌、防御牌或清神资源。",
+    },
+    {
+      label: "第二相",
+      title: phase ? `${phase.name} · ${secondPressure?.name || "终律"}` : "终局急式",
+      text: phase?.line || "转相后重新读当前招式，不沿用第一相的固定出牌节奏。",
+    },
+  ];
+}
+
 function cardRoleTags(card) {
   const text = `${card.text || ""}${card.combo || ""}`;
   return {
@@ -4022,6 +4048,7 @@ function BossPreludeScreen({ chapter, choices, clues, onBegin }) {
   const startingRef = useRef(false);
   const boss = ENCOUNTER_ENEMIES[chapter][3];
   const counterLessons = bossCounterLessons(chapter, boss, prelude);
+  const phaseContract = bossPhaseContract(chapter, boss, choices);
   const beats = prelude?.beats || [];
   const beat = beats[Math.min(beatIndex, Math.max(0, beats.length - 1))];
   const isLast = beatIndex >= beats.length - 1;
@@ -4070,6 +4097,16 @@ function BossPreludeScreen({ chapter, choices, clues, onBegin }) {
               <small>{lesson.label}</small>
               <strong>{lesson.title}</strong>
               <p>{lesson.text}</p>
+            </article>
+          ))}
+        </section>
+        <section className="boss-phase-contract" aria-label="首领转相契约">
+          <header><em>首领转相契约</em><b>第一相 → 转相血线 → 第二相</b></header>
+          {phaseContract.map((item) => (
+            <article key={item.label}>
+              <small>{item.label}</small>
+              <strong>{item.title}</strong>
+              <p>{item.text}</p>
             </article>
           ))}
         </section>

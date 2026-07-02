@@ -99,6 +99,7 @@ expect(source.includes("reward-contract") && source.includes("本次保底") && 
 expect(source.includes("rewardDecisionOptions") && source.includes("reward-decision-aid") && source.includes("满意即可 · 四步内决策") && source.includes("构筑契合、当前短板、费用压力"), "战利页必须提供满意即可推荐，降低三选一奖励的认知负担");
 expect(source.includes("rewardPickMemory") && source.includes("reward-pick-memory") && source.includes("入牌预期") && source.includes("deck.length}→${nextDeck.length}") && source.includes("成卷后优先精简/真解"), "战利候选必须展示拿牌后的流派进度、牌组规模和下一步构筑记忆");
 expect(source.includes("boss-revelation") && source.includes("首领最后的证词"), "首领战利必须承接章节真相，而非复用普通战文案");
+expect(source.includes("bossPhaseContract") && source.includes("boss-phase-contract") && source.includes("首领转相契约") && source.includes("第一相 → 转相血线 → 第二相") && source.includes("抉择回应"), "首领前夜必须公开两阶段、转相血线和关键抉择回应");
 expect(source.includes("if (stage < 3) setHp") && source.includes("不取战利 · 直接结卷"), "章末跳过战利不得通过无后续价值的回血抬高评阶");
 expect(source.includes("路线 ${routeStep}/4") && source.includes("routeStep * 25"), "路线顶栏必须与四层章节地图保持一致");
 expect(source.includes("combat-build-tracker") && source.includes("route-build-goal") && source.includes("deck-build-state"), "局内流派目标必须贯穿战斗、路线和牌组卷册");
@@ -166,6 +167,7 @@ expect(styles.includes(".chapter-starter-briefing") && styles.includes(".device-
 expect(styles.includes(".chapter-tempo-contract") && styles.includes(".device-desktop .chapter-tempo-contract div") && styles.includes("grid-template-columns: repeat(4, minmax(0, 1fr))"), "章节节奏契约必须拥有移动双列与 PC 四段式样式");
 expect(styles.includes(".story-arc-ledger") && styles.includes(".story-choice-echo") && styles.includes(".device-desktop .story-arc-ledger") && styles.includes(".device-desktop .story-choice-echo"), "剧情页五幕卷轴与抉择回响必须拥有移动/PC 可读样式");
 expect(styles.includes(".boss-counter-lessons") && styles.includes(".boss-counter-lessons article") && styles.includes(".boss-counter-lessons header"), "首领破招札记必须拥有移动与PC可读样式");
+expect(styles.includes(".boss-phase-contract") && styles.includes(".boss-phase-contract article::before") && styles.includes("max-height: calc(100vh - 16vh)"), "首领转相契约必须拥有卷轴样式和桌面滚动保护");
 expect(styles.includes(".route-causality-strip") && styles.includes(".device-desktop .route-causality-strip"), "路线因果线索条必须拥有移动/PC 样式");
 expect(styles.includes(".route-space-read") && styles.includes(".route-choice-card.space-庇护") && styles.includes(".route-choice-card.space-旷野") && styles.includes(".route-space-read span"), "路线空间读法必须拥有庇护/旷野差异化视觉和移动端可读样式");
 expect(styles.includes(".route-payoff-cue") && styles.includes(".route-payoff-cue.cue-进取") && styles.includes(".route-payoff-cue.cue-整构筑"), "路线风险收益决策签必须拥有稳健、进取和构筑取向样式");
