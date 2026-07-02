@@ -1477,6 +1477,28 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .feedback-settings label { grid-column: 1 / -1; display: grid; grid-template-columns: 42px 1fr 34px; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid rgba(120,151,134,.16); background: rgba(5,18,14,.6); color: #899b91; font-size: 8px; }
 .feedback-settings input { width: 100%; accent-color: #c99d45; }
 .feedback-settings b { color: #c8ae6e; font-size: 8px; font-weight: 400; text-align: right; }
+.feedback-testbench {
+  grid-column: 1 / -1;
+  padding: 11px;
+  border: 1px solid rgba(128,164,145,.18);
+  background: radial-gradient(circle at 100% 0%, rgba(211,169,72,.12), transparent 38%), rgba(4,16,13,.64);
+}
+.feedback-testbench header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.feedback-testbench header span { color: #c9aa62; font-size: 8px; letter-spacing: .14em; }
+.feedback-testbench header small { color: #64786d; font-size: 8px; }
+.feedback-testbench > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.feedback-testbench button { min-width: 0; padding: 9px; border: 1px solid rgba(211,169,72,.2); background: rgba(28,24,12,.5); color: #d5c18b; text-align: left; cursor: pointer; }
+.feedback-testbench button strong,
+.feedback-testbench button small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feedback-testbench button strong { font-size: 10px; font-weight: 500; }
+.feedback-testbench button small { margin-top: 4px; color: #788c81; font-size: 8px; }
+.feedback-testbench p { margin: 8px 0 0; color: #70857a; font-size: 8px; line-height: 1.5; }
 .settings-overlay > p { overflow-wrap: anywhere; }
 .save-summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; border: 1px solid rgba(132,164,146,.18); background: rgba(132,164,146,.16); }
 .save-summary-grid div { min-height: 70px; padding: 12px; background: rgba(5,19,14,.86); }

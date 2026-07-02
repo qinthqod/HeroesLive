@@ -5760,6 +5760,16 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
               setProfile((value) => ({ ...value, feedback: { ...value.feedback, readableText } }));
             }}><strong>可读模式</strong><small>{profile.feedback.readableText ? "大字距" : "标准"}</small></button>
             <label><span>音量</span><input type="range" min="0.1" max="1" step="0.05" value={profile.feedback.volume} onChange={(event) => setProfile((value) => ({ ...value, feedback: { ...value.feedback, volume: Number(event.target.value) } }))} /><b>{Math.round(profile.feedback.volume * 100)}%</b></label>
+            <section className="feedback-testbench" aria-label="反馈试音台">
+              <header><span>反馈试音台</span><small>试听不会改变存档</small></header>
+              <div>
+                <button onClick={() => feedback("tap")}><strong>出牌轻响</strong><small>点击 / 抽牌 / 选择</small></button>
+                <button onClick={() => feedback("guard")}><strong>护盾回声</strong><small>护体 / 净心 / 防守</small></button>
+                <button onClick={() => feedback("impact")}><strong>受击震荡</strong><small>命中 / 敌方行动</small></button>
+                <button onClick={() => feedback("reward")}><strong>战利落袋</strong><small>奖励 / 称号 / 结算</small></button>
+              </div>
+              <p>若关闭音效或触觉，对应反馈会静默；低动效只减少动画，不影响玩法结算。</p>
+            </section>
           </div>
           {savedRun ? <>
             <div className="save-summary-grid">

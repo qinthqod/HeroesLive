@@ -71,6 +71,7 @@ expect(source.includes("createFeedbackEngine") && source.includes("navigator.vib
 expect(source.includes("feedback: { sound: true, haptics: true, reducedMotion: false, readableText: false, volume: 0.55"), "反馈偏好必须具有可持久化默认值");
 expect(source.includes("data-motion={profile.feedback?.reducedMotion ? \"reduced\" : \"full\"}") && source.includes("低动效") && source.includes("reducedMotion"), "设置页必须提供可持久化低动效模式并暴露根节点状态");
 expect(source.includes("data-readability={profile.feedback?.readableText ? \"large\" : \"standard\"}") && source.includes("可读模式") && source.includes("readableText"), "设置页必须提供可持久化可读模式并暴露根节点状态");
+expect(source.includes("feedback-testbench") && source.includes("反馈试音台") && source.includes("出牌轻响") && source.includes("战利落袋") && source.includes("试听不会改变存档"), "设置页必须提供音效/触觉反馈试音台，让玩家理解反馈开关实际影响");
 expect(source.includes("type === \"settings\" ? \"settings-overlay\"") && source.includes("feedback-settings"), "设置弹窗必须挂载专属 settings-overlay 样式类");
 expect(source.includes("function GameImage") && source.includes("loading={eager ? \"eager\" : \"lazy\"}") && source.includes("decoding={eager ? \"sync\" : \"async\"}") && source.includes("fetchPriority={eager ? \"high\" : \"auto\"}"), "图片素材必须统一通过 GameImage 设置首屏优先级、懒加载和异步解码");
 expect(source.includes("<GameImage eager src={currentChapter.art}") && source.includes("<GameImage eager className=\"enemy-art\"") && source.includes("<GameImage src={card.art}") && source.includes("<GameImage src={treasure.art}"), "首屏/战斗关键图必须优先加载，高密度卡牌与法宝图必须走懒加载");
@@ -137,6 +138,7 @@ expect(styles.includes(".deck-balance-radar") && styles.includes(".deck-balance-
 expect(styles.includes(".deck-trim-prescription") && styles.includes(".deck-trim-prescription.warning") && styles.includes(".deck-trim-prescription > div") && styles.includes(".deck-trim-prescription article"), "牌组修剪处方必须拥有警告态、三栏处方和移动端可读样式");
 expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".app[data-motion=\"reduced\"] .impact-streak") && styles.includes(".app[data-motion=\"reduced\"] .reward-cards .game-card:hover"), "低动效模式必须降低全局动画、隐藏强闪烁并保留可读状态反馈");
 expect(styles.includes(".app[data-readability=\"large\"] .game-card p") && styles.includes(".app[data-readability=\"large\"] .card-play-state") && styles.includes(".app[data-readability=\"large\"] .market-fit"), "可读模式必须放大战斗卡牌、状态与高密度决策文本");
+expect(styles.includes(".feedback-testbench") && styles.includes(".feedback-testbench > div") && styles.includes(".feedback-testbench button"), "反馈试音台必须拥有移动端可读的试听按钮样式");
 expect(styles.includes(".card-preview-yield") && styles.includes(".card-preview-yield.preview-combo") && styles.includes(".card-preview-yield.preview-locked"), "出牌前收益预判必须拥有普通、联动和锁定状态样式");
 expect(styles.includes(".hand-sequence-coach") && styles.includes(".hand-sequence-coach.has-picks") && styles.includes(".hand-sequence-coach b"), "手牌顺序提示必须拥有移动与PC可读样式和候选牌标签");
 expect(styles.includes(".end-turn-readiness") && styles.includes(".end-turn-readiness.safe") && styles.includes(".end-turn-readiness.warn") && styles.includes(".end-turn-readiness.danger"), "交回合风险签必须拥有安全、警告、高危三态样式");

@@ -14,6 +14,14 @@ try {
   const initialReadability = await page.locator(".app").getAttribute("data-readability");
   if (initialMotion !== "full") throw new Error(`默认动效状态异常：${initialMotion}`);
   if (initialReadability !== "standard") throw new Error(`默认可读状态异常：${initialReadability}`);
+  const testbenchText = await page.locator(".feedback-testbench").innerText();
+  const testbenchButtons = await page.locator(".feedback-testbench button").count();
+  if (testbenchButtons !== 4) throw new Error(`反馈试音台按钮数量异常：${testbenchButtons}`);
+  for (const phrase of ["反馈试音台", "出牌轻响", "护盾回声", "受击震荡", "战利落袋", "试听不会改变存档"]) {
+    if (!testbenchText.includes(phrase)) throw new Error(`反馈试音台缺少 ${phrase}`);
+  }
+  await page.locator(".feedback-testbench button", { hasText: "出牌轻响" }).click();
+  await page.locator(".feedback-testbench button", { hasText: "战利落袋" }).click();
 
   await page.locator(".feedback-settings button", { hasText: "低动效" }).click();
   const reducedMotion = await page.locator(".app").getAttribute("data-motion");
