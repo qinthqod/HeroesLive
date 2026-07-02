@@ -1473,6 +1473,7 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .codex-treasures img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
 .codex-treasures strong { color: #d1c198; font-size: 10px; }
 .codex-treasures p { margin: 3px 0 0; color: #74877c; font-size: 8px; line-height: 1.45; }
+.codex-treasures em { display: block; margin-top: 3px; color: #b79b58; font-size: 7px; font-style: normal; line-height: 1.35; }
 .codex-treasures article.unknown { filter: grayscale(1); opacity: .42; }
 .codex-marks { display: flex; flex-wrap: wrap; gap: 7px; }
 .codex-marks span { padding: 6px 9px; border: 1px solid rgba(205,161,65,.24); background: rgba(71,48,15,.28); color: #bca66f; font-size: 9px; }
@@ -1662,10 +1663,11 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .market-chapter-4 { background-image: linear-gradient(90deg, rgba(3,12,10,.91), rgba(5,18,14,.68)), url("/bg_dark_forge.png"); }
 .market-chapter-5 { background-image: linear-gradient(90deg, rgba(3,12,10,.91), rgba(5,18,14,.68)), url("/bg_secret_realm.png"); }
 .market-treasure img { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px rgba(215,177,85,.2); }
-.market-treasure small, .market-treasure strong { display: block; }
+.market-treasure small, .market-treasure strong, .market-treasure em { display: block; }
 .market-treasure small { color: #927d4d; font-size: 8px; }
 .market-treasure strong { margin-top: 2px; color: #e1cc94; font-family: "STKaiti", serif; font-size: 16px; }
 .market-treasure p { margin: 3px 0 0; color: #82948a; font-size: 8px; }
+.market-treasure em { margin-top: 4px; color: #b8a36b; font-size: 7px; font-style: normal; line-height: 1.4; }
 .market-treasure button { padding: 8px; border: 1px solid rgba(213,177,84,.4); background: rgba(73,49,15,.68); color: #dfbe6c; cursor: pointer; }
 
 .treasure-strip { position: fixed; z-index: 30; right: 18px; bottom: 18px; display: flex; align-items: center; gap: 6px; max-width: calc(100% - 36px); padding: 7px 9px; border: 1px solid rgba(213,177,84,.24); background: rgba(5,18,14,.9); box-shadow: 0 10px 30px rgba(0,0,0,.35); }
@@ -1678,10 +1680,11 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 
 .reward-treasure { width: min(650px, calc(100% - 36px)); display: grid; grid-template-columns: 62px 1fr auto; align-items: center; gap: 14px; margin: 18px auto 0; padding: 11px 16px; border: 1px solid rgba(213,177,84,.46); background: linear-gradient(100deg, rgba(74,49,14,.8), rgba(7,27,20,.9)); text-align: left; cursor: pointer; box-shadow: 0 12px 35px rgba(0,0,0,.28); }
 .reward-treasure img { width: 62px; height: 62px; object-fit: cover; border-radius: 50%; }
-.reward-treasure small, .reward-treasure strong, .reward-treasure em { display: block; }
+.reward-treasure small, .reward-treasure strong, .reward-treasure em, .reward-treasure i { display: block; }
 .reward-treasure small { color: #a38950; font-size: 8px; letter-spacing: .12em; }
 .reward-treasure strong { margin-top: 3px; color: #e5ce91; font-family: "STKaiti", serif; font-size: 20px; font-weight: 400; }
 .reward-treasure em { margin-top: 3px; color: #84968c; font-size: 9px; font-style: normal; }
+.reward-treasure i { margin-top: 4px; color: #b9a36a; font-size: 8px; font-style: normal; line-height: 1.45; }
 .reward-treasure b { color: #dfbd68; font-size: 10px; font-weight: 400; }
 
 .sanctuary-screen { position: relative; z-index: 2; min-height: 100%; display: grid; grid-template-columns: minmax(300px, 460px) minmax(420px, 680px); align-items: center; justify-content: center; gap: 6vw; padding: 7vh 6vw; background: linear-gradient(90deg, rgba(2,12,9,.92), rgba(3,15,11,.38)), url("/bg_spirit_rift.png") center/cover; }

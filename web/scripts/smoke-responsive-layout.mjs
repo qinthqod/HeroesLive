@@ -612,10 +612,14 @@ await run("PC 坊市页保持双栏交易布局", { width: 1366, height: 768 }, 
   const servicesBox = await page.locator(".market-services").boundingBox();
   const economyText = await page.locator(".market-economy").innerText();
   const offerEconomy = await page.locator(".market-offer-economy").allTextContents();
+  const treasureText = await page.locator(".market-treasure").innerText();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (!stallBox || !servicesBox || servicesBox.x <= stallBox.x + stallBox.width) throw new Error("PC 坊市页没有形成交易双栏");
   if (!economyText.includes("预算状态") || !economyText.includes("最低交易")) throw new Error("PC 坊市页缺少预算状态或最低交易提示");
   if (!offerEconomy.some((text) => text.includes("买后余") || text.includes("尚缺"))) throw new Error("PC 坊市商品缺少买后余量或缺口提示");
+  for (const phrase of ["本次法宝", "触发时机", "适合"]) {
+    if (!treasureText.includes(phrase)) throw new Error(`PC 坊市法宝缺少 ${phrase}`);
+  }
   if (layout.scrollWidth > layout.width) throw new Error(`PC 坊市页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
@@ -624,9 +628,13 @@ await run("移动坊市页显示预算且不横溢", { width: 430, height: 932 }
   const layout = await layoutSnapshot(page);
   const economyBox = await page.locator(".market-economy").boundingBox();
   const economyText = await page.locator(".market-economy").innerText();
+  const treasureText = await page.locator(".market-treasure").innerText();
+  const treasureBox = await page.locator(".market-treasure").boundingBox();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   if (!economyBox || economyBox.width > mobilePanelLimit) throw new Error(`移动坊市预算面板过宽：${economyBox?.width}`);
   if (!economyText.includes("预算状态") || !economyText.includes("当前灵石")) throw new Error("移动坊市页缺少预算信息");
+  if (!treasureText.includes("触发时机") || !treasureText.includes("适合")) throw new Error(`移动坊市法宝缺少触发说明：${treasureText}`);
+  if (!treasureBox || treasureBox.width > mobilePanelLimit) throw new Error(`移动坊市法宝过宽：${treasureBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动坊市页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 
@@ -645,6 +653,7 @@ await run("PC 奖励页保持宽屏三选一", { width: 1366, height: 768 }, "?s
   const memoryText = await page.locator(".reward-pick-memory").first().innerText();
   const memoryCards = await page.locator(".reward-pick-memory").count();
   const sealCount = await page.locator(".reward-card-seal").count();
+  const treasureText = await page.locator(".reward-treasure").innerText();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (rewardCards !== 3) throw new Error(`奖励卡数量为 ${rewardCards}`);
   if (sealCount !== 3 || !revealText.includes("战利已开")) throw new Error("PC 奖励页缺少启封后的翻牌揭示效果");
@@ -654,6 +663,9 @@ await run("PC 奖励页保持宽屏三选一", { width: 1366, height: 768 }, "?s
   if (memoryCards !== 3) throw new Error(`PC 入牌预期数量为 ${memoryCards}`);
   for (const phrase of ["入牌预期", "→"]) {
     if (!memoryText.includes(phrase)) throw new Error(`PC 入牌预期缺少 ${phrase}`);
+  }
+  for (const phrase of ["触发时机", "适合", "选择法宝"]) {
+    if (!treasureText.includes(phrase)) throw new Error(`PC 战利法宝缺少 ${phrase}`);
   }
   if (!cardsBox || cardsBox.width < 700) throw new Error(`PC 奖励卡区过窄：${cardsBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`PC 奖励页横向溢出 ${layout.scrollWidth - layout.width}px`);
@@ -670,6 +682,8 @@ await run("移动奖励页公开战利契约且不横溢", { width: 430, height:
   const memoryText = await page.locator(".reward-pick-memory").first().innerText();
   const memoryBox = await page.locator(".reward-pick-memory").first().boundingBox();
   const memoryCards = await page.locator(".reward-pick-memory").count();
+  const treasureText = await page.locator(".reward-treasure").innerText();
+  const treasureBox = await page.locator(".reward-treasure").boundingBox();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   for (const phrase of ["本次保底", "命中证据", "推荐", "可变奖励", "重整代价", "兜底选择"]) {
     if (!contractText.includes(phrase)) throw new Error(`移动奖励契约缺少 ${phrase}`);
@@ -678,6 +692,8 @@ await run("移动奖励页公开战利契约且不横溢", { width: 430, height:
   if (!openBox || openBox.width > mobilePanelLimit) throw new Error(`移动启封按钮过宽：${openBox?.width}`);
   if (memoryCards !== 3 || !memoryText.includes("入牌预期") || !memoryText.includes("→")) throw new Error("移动奖励页缺少入牌预期");
   if (!memoryBox || memoryBox.width > 124) throw new Error(`移动入牌预期过宽：${memoryBox?.width}`);
+  if (!treasureText.includes("触发时机") || !treasureText.includes("适合")) throw new Error(`移动战利法宝缺少触发说明：${treasureText}`);
+  if (!treasureBox || treasureBox.width > mobilePanelLimit) throw new Error(`移动战利法宝过宽：${treasureBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动奖励页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });
 

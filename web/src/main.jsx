@@ -106,6 +106,22 @@ function treasureValue(treasures, key) {
   return treasures.reduce((sum, treasure) => sum + (treasure[key] || 0), 0);
 }
 
+function treasureDetail(treasure) {
+  if (!treasure) return { timing: "未知触发", role: "待鉴定", tradeoff: "确认来源后再决定是否投入资源。" };
+  if (treasure.firstTurnQi) return { timing: "战斗开局", role: `首回合灵气 +${treasure.firstTurnQi}`, tradeoff: "适合高费核心或需要第一回合铺场的构筑。" };
+  if (treasure.firstAttackDamage) return { timing: "每战首攻", role: `第一张攻击伤害 +${treasure.firstAttackDamage}`, tradeoff: "适合剑修、爆发牌和首回合压血线打法。" };
+  if (treasure.firstSkillDraw) return { timing: "首张法门", role: `额外抽 ${treasure.firstSkillDraw} 张`, tradeoff: "适合依赖法门循环、指令或回收的构筑。" };
+  if (treasure.battleHeal) return { timing: "战后结算", role: `胜利恢复 ${treasure.battleHeal}`, tradeoff: "适合长章续航；低血时价值高于单张进攻牌。" };
+  if (treasure.marketDiscount) return { timing: "坊市交易", role: `价格 -${treasure.marketDiscount}`, tradeoff: "适合多逛坊市、精研和压缩牌组的路线。" };
+  if (treasure.startShield) return { timing: "战斗开局", role: `开局护盾 +${treasure.startShield}`, tradeoff: "适合高压章节或需要撑过首轮的慢热构筑。" };
+  if (treasure.battleConsumable) return { timing: "战后补给", role: "胜利补充 1 件小物", tradeoff: "适合连续战斗，能把不确定性转成容错。" };
+  if (treasure.burnDamage) return { timing: "燃烧结算", role: `燃烧额外 +${treasure.burnDamage}`, tradeoff: "适合符印、燃烧和持续伤害构筑。" };
+  if (treasure.battleStones) return { timing: "战后经济", role: `胜利灵石 +${treasure.battleStones}`, tradeoff: "适合想在坊市精研、购牌或拿法宝的局。" };
+  if (treasure.maxQi) return { timing: "获得立即", role: `灵气上限 +${treasure.maxQi}`, tradeoff: "适合高费终结技；获得后会立刻改变后续战斗曲线。" };
+  if (treasure.firstTurnDraw) return { timing: "战斗起手", role: `起手抽牌 +${treasure.firstTurnDraw}`, tradeoff: "适合寻找核心组件，降低开局卡手。" };
+  return { timing: "被动常驻", role: treasure.effect, tradeoff: "适合作为稳定补强，拿取前确认是否解决当前短板。" };
+}
+
 function addProfileXp(profile, amount) {
   const xp = (profile.xp || 0) + amount;
   return { ...profile, xp, level: Math.max(profile.level || 1, 3 + Math.floor(xp / 100)) };
@@ -4225,6 +4241,7 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
     const pool = TREASURES.filter((treasure) => !treasures.some((owned) => owned.id === treasure.id));
     return pool[Math.floor(seededRandom(randomSeed, `market-treasure:${chapter}:${routeProgress}`) * pool.length)] || null;
   }, [chapter, randomSeed, routeProgress]);
+  const treasureOfferDetail = treasureDetail(treasureOffer);
   const treasurePrice = treasureOffer ? Math.max(12, market.treasureCost - discount) : 0;
   const openOffers = pricedOffers.filter((item) => !item.sold);
   const affordableOffers = openOffers.filter((item) => stones >= item.price);
@@ -4399,7 +4416,12 @@ function MarketScreen({ chapter, origin, deck, setDeck, hp, maxHp, setHp, stones
           </button>
           {treasureOffer && <article className="market-treasure">
             <GameImage src={treasureOffer.art} alt="" />
-            <div><small>本次法宝</small><strong>{treasureOffer.name}</strong><p>{treasureOffer.effect}</p></div>
+            <div>
+              <small>本次法宝 · 触发时机：{treasureOfferDetail.timing}</small>
+              <strong>{treasureOffer.name}</strong>
+              <p>{treasureOffer.effect}</p>
+              <em>{treasureOfferDetail.role} · {treasureOfferDetail.tradeoff}</em>
+            </div>
             <button disabled={treasureBought || stones < Math.max(12, market.treasureCost - discount) || treasures.some((item) => item.id === treasureOffer.id)} onClick={buyTreasure}>{treasureBought || treasures.some((item) => item.id === treasureOffer.id) ? "已购得" : `${Math.max(12, market.treasureCost - discount)} 灵石`}</button>
           </article>}
           <div className="deck-mini-analysis">
@@ -5060,6 +5082,7 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
     const pool = TREASURES.filter((treasure) => !treasures.some((owned) => owned.id === treasure.id));
     return pool[Math.floor(seededRandom(randomSeed, `reward-treasure:${chapter}:${stage}:${routeProgress}:${rerollCount}`) * pool.length)] || null;
   }, [origin, stage, rerollCount, randomSeed, chapter, routeProgress]);
+  const treasureRewardDetail = treasureDetail(treasureReward);
   const rerollPrice = Math.max(4, 6 - Math.min(2, treasureValue(treasures, "marketDiscount")));
   const rewardFits = rewards.map((card) => rewardFit(card, deck, origin));
   const rewardMemories = rewards.map((card) => rewardPickMemory(card, deck, origin));
@@ -5211,7 +5234,12 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
       })}</div>
       {treasureReward && <button className="reward-treasure" onClick={() => claimReward(null, treasureReward)}>
         <GameImage src={treasureReward.art} alt="" />
-        <span><small>{stage === 2 ? "精英战法宝" : "首领遗珍"}</small><strong>{treasureReward.name}</strong><em>{treasureReward.effect}</em></span>
+        <span>
+          <small>{stage === 2 ? "精英战法宝" : "首领遗珍"} · 触发时机：{treasureRewardDetail.timing}</small>
+          <strong>{treasureReward.name}</strong>
+          <em>{treasureReward.effect}</em>
+          <i>{treasureRewardDetail.role} · {treasureRewardDetail.tradeoff}</i>
+        </span>
         <b>选择法宝</b>
       </button>}
       <small className="reward-tip">{isBossReward ? "章末战利 · 选择后进入本章结算" : `第 ${stage} 幕奖励 · 后续章节提高稀有牌和精研牌概率`}</small>
@@ -5782,7 +5810,8 @@ function Overlay({ type, close, deck, origin, profile, setProfile, treasures, sa
           <div className="codex-treasures">
             {TREASURES.map((treasure) => {
               const discovered = profile.discoveredTreasures?.includes(treasure.id) || treasures.some((owned) => owned.id === treasure.id);
-              return <article className={discovered ? "" : "unknown"} key={treasure.id}><GameImage src={treasure.art} alt="" /><div><strong>{discovered ? treasure.name : "未识法器"}</strong><p>{discovered ? treasure.effect : "在精英战、坊市或山中异闻里发现。"}</p></div></article>;
+              const detail = treasureDetail(treasure);
+              return <article className={discovered ? "" : "unknown"} key={treasure.id}><GameImage src={treasure.art} alt="" /><div><strong>{discovered ? treasure.name : "未识法器"}</strong><p>{discovered ? treasure.effect : "在精英战、坊市或山中异闻里发现。"}</p>{discovered && <em>触发时机：{detail.timing} · {detail.role}</em>}</div></article>;
             })}
           </div>
           <h3 className="codex-heading">命途印记</h3>
