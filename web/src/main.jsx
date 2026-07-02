@@ -9,6 +9,7 @@ import {
   ENCOUNTER_MOVE_PATTERNS,
   CHAPTER_ATLAS_ART,
   CHAPTER_BOSS_ATLAS_ART,
+  CHAPTER_CODEX_SCROLL_ART,
   CHAPTERS,
   CHAPTER_ROUTE_COPY,
   CHAPTER_ROUTES,
@@ -3014,6 +3015,20 @@ function ChapterScreen({ profile, onBack, onChoose }) {
     const completed = (profile.unlockedEndings || []).some((ending) => ending === `chapter_${chapter.id}_ending` || (chapter.id === 5 && ["restore_fate", "rewrite_fate"].includes(ending)));
     return { chapter, unlocked, completed };
   });
+  const chapterStoryDirectory = CHAPTERS.map((chapter) => {
+    const stories = CHAPTER_STORIES[chapter.id] || [];
+    const choices = Object.values(CHAPTER_STORY_CHOICES[chapter.id] || {}).flat();
+    const boss = ENCOUNTER_ENEMIES[chapter.id]?.[3];
+    const unlocked = chapter.id === 1 || profile.chapter > chapter.id - 1 || mainComplete;
+    return {
+      chapter,
+      stories,
+      choices,
+      boss,
+      unlocked,
+      active: chapter.id === previewChapterId,
+    };
+  });
   return (
     <section className="mobile-shell chapter-screen screen-content">
       <MobileTopBar title="云游录" subtitle={`${CHAPTERS.length} 卷主线 · 逐章解锁`} onBack={onBack} profile={profile} />
@@ -3023,11 +3038,11 @@ function ChapterScreen({ profile, onBack, onChoose }) {
         <p>每一章包含剧情抉择、分支路线、精英事件与最终首领。</p>
       </div>
       <section className="chapter-atlas-showcase" aria-label="二十五章主线画卷">
-        <GameImage eager src={CHAPTER_ATLAS_ART} alt="" />
+        <GameImage eager src={CHAPTER_CODEX_SCROLL_ART} alt="" />
         <div>
-          <span>二十五章主线画卷</span>
-          <strong>每章一图 · 每卷一幕</strong>
-          <p>从青岚雨亭到自在人间，25 章均配置独立章节主视觉；点击下方五卷弧线，可按部卷预览 Boss、路线与宗卷线索。</p>
+          <span>二十五章命途长卷</span>
+          <strong>二十五章主线画卷 · 25 章全程配图</strong>
+          <p>每章一图、独立配图：新绘制的命途长卷把 25 个章节节点串成一条金线；下方图鉴墙继续保留每章独立主视觉，案卷会同步展示 Boss、路线与宗卷线索。</p>
           <ul>
             <li><b>{CHAPTERS.length}</b><small>主线章节</small></li>
             <li><b>{chapterArtCount}</b><small>独立配图</small></li>
@@ -3055,6 +3070,34 @@ function ChapterScreen({ profile, onBack, onChoose }) {
               <i>{String(chapter.id).padStart(2, "0")}</i>
               <span>{completed ? "已结卷" : unlocked ? "可进入" : "未解锁"}</span>
               <strong>{chapter.name}</strong>
+            </button>
+          ))}
+        </div>
+      </section>
+      <section className="chapter-story-directory" aria-label="二十五章剧情目录">
+        <header>
+          <span>二十五章剧情目录</span>
+          <strong>每章 5 幕剧情 · 2 次抉择 · 1 位首领</strong>
+          <p>这里把整条主线的章节容量直接展开：即使章节尚未解锁，也能看见它的主题、Boss 与剧情规模。</p>
+        </header>
+        <div>
+          {chapterStoryDirectory.map(({ chapter, stories, choices, boss, unlocked, active }) => (
+            <button
+              key={chapter.id}
+              className={`${active ? "active" : ""} ${unlocked ? "unlocked" : "locked"}`}
+              onClick={() => {
+                setActiveVolumeIndex(Math.min(chapterVolumes.length - 1, Math.floor((chapter.id - 1) / 5)));
+                setPreviewChapterId(chapter.id);
+              }}
+            >
+              <GameImage src={chapter.art} alt="" />
+              <i>{String(chapter.id).padStart(2, "0")}</i>
+              <div>
+                <small>{chapter.region} · {unlocked ? "已显卷" : "待解锁"}</small>
+                <strong>{chapter.name}</strong>
+                <p>{chapter.summary}</p>
+                <em>{stories.length} 幕剧情 · {choices.length} 个抉择 · Boss：{boss?.name || chapter.boss}</em>
+              </div>
             </button>
           ))}
         </div>

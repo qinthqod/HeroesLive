@@ -10,6 +10,7 @@ import {
   ENCOUNTER_MOVE_PATTERNS,
   CHAPTER_ATLAS_ART,
   CHAPTER_BOSS_ATLAS_ART,
+  CHAPTER_CODEX_SCROLL_ART,
   CHAPTERS,
   CHAPTER_BOSS_PRELUDES,
   CHAPTER_HOME_STATES,
@@ -64,6 +65,8 @@ expect(CHAPTER_ATLAS_ART?.startsWith("/generated/chapters/"), "二十五章主�
 expectAsset(CHAPTER_ATLAS_ART, "二十五章主线画卷");
 expect(CHAPTER_BOSS_ATLAS_ART?.startsWith("/generated/chapters/"), "二十五 Boss 因果谱必须使用 imagegen 生成素材");
 expectAsset(CHAPTER_BOSS_ATLAS_ART, "二十五 Boss 因果谱");
+expect(CHAPTER_CODEX_SCROLL_ART?.startsWith("/generated/chapters/"), "二十五章命途长卷必须使用 imagegen 生成素材");
+expectAsset(CHAPTER_CODEX_SCROLL_ART, "二十五章命途长卷");
 expect(TRIBULATION_LEVELS.length === 4, "终局劫数必须提供标准、风劫、心劫、命劫四档");
 expect(TRIBULATION_LEVELS[0].level === 0 && TRIBULATION_LEVELS[0].enemyHpMultiplier === 1 && TRIBULATION_LEVELS[0].enemyDamageBonus === 0, "无劫必须保持普通剧情标准数值");
 expect(TRIBULATION_LEVELS.every((item, index, list) => index === 0 || (item.enemyHpMultiplier > list[index - 1].enemyHpMultiplier && item.enemyDamageBonus >= list[index - 1].enemyDamageBonus)), "劫数风险必须随层级清晰递增");

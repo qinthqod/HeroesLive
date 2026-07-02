@@ -1008,6 +1008,7 @@ export const DECK_RECIPES = PROFESSIONS.flatMap(buildDeckRecipes);
 
 export const CHAPTER_ATLAS_ART = "/generated/chapters/chapter_25_atlas.webp";
 export const CHAPTER_BOSS_ATLAS_ART = "/generated/chapters/chapter_boss_atlas.webp";
+export const CHAPTER_CODEX_SCROLL_ART = "/generated/chapters/chapter_25_codex_scroll.webp";
 
 export const CHAPTERS = [
   {
