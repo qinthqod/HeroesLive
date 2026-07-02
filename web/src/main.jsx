@@ -5017,6 +5017,11 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
   const rewardFits = rewards.map((card) => rewardFit(card, deck, origin));
   const rewardMemories = rewards.map((card) => rewardPickMemory(card, deck, origin));
   const guaranteedFit = rewardFits.find((fit) => fit.recipe) || rewardFits[0];
+  const guaranteedIndex = Math.max(0, rewardFits.findIndex((fit) => fit === guaranteedFit));
+  const guaranteedCard = rewards[guaranteedIndex];
+  const guaranteeEvidence = guaranteedCard
+    ? `${guaranteedCard.name} · 推荐${guaranteedFit?.rank || "中"}${guaranteedFit?.recipeProgress ? ` · ${guaranteedFit.recipeProgress}/5` : ""}`
+    : "系统已保留稳定补强位";
   const highFitCount = rewardFits.filter((fit) => fit.rank === "高").length;
   const rewardDecisionOptions = rewards
     .map((card, index) => ({ card, fit: rewardFits[index], index }))
@@ -5112,6 +5117,7 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
           <small>本次保底</small>
           <strong>{guaranteedFit?.recipe ? `推进「${guaranteedFit.recipe.name}」` : "三选一稳定补强"}</strong>
           <span>{highFitCount ? `${highFitCount} 张高契合` : "至少一张可补当前短板"}</span>
+          <em>命中证据：{guaranteeEvidence}</em>
         </article>
         <article>
           <small>可变奖励</small>

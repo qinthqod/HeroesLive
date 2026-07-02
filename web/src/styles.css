@@ -811,10 +811,12 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 }
 .reward-contract small,
 .reward-contract strong,
-.reward-contract span { display: block; }
+.reward-contract span,
+.reward-contract em { display: block; }
 .reward-contract small { color: #8aa293; font-size: 8px; letter-spacing: .12em; }
 .reward-contract strong { margin-top: 5px; color: #e2ce97; font-family: "STKaiti", serif; font-size: 16px; font-weight: 400; line-height: 1.25; }
 .reward-contract span { margin-top: 5px; color: #8c9f95; font-size: 8px; line-height: 1.35; }
+.reward-contract em { margin-top: 6px; color: #d4b367; font-size: 8px; font-style: normal; line-height: 1.35; }
 .reward-decision-aid {
   width: min(650px, calc(100% - 36px));
   margin: 14px auto -6px;

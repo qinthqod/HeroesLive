@@ -608,7 +608,7 @@ await run("PC 奖励页保持宽屏三选一", { width: 1366, height: 768 }, "?s
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (rewardCards !== 3) throw new Error(`奖励卡数量为 ${rewardCards}`);
   if (sealCount !== 3 || !revealText.includes("战利已开")) throw new Error("PC 奖励页缺少启封后的翻牌揭示效果");
-  for (const phrase of ["本次保底", "可变奖励", "重整代价", "兜底选择"]) {
+  for (const phrase of ["本次保底", "命中证据", "推荐", "可变奖励", "重整代价", "兜底选择"]) {
     if (!contractText.includes(phrase)) throw new Error(`PC 奖励契约缺少 ${phrase}`);
   }
   if (memoryCards !== 3) throw new Error(`PC 入牌预期数量为 ${memoryCards}`);
@@ -631,7 +631,7 @@ await run("移动奖励页公开战利契约且不横溢", { width: 430, height:
   const memoryBox = await page.locator(".reward-pick-memory").first().boundingBox();
   const memoryCards = await page.locator(".reward-pick-memory").count();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
-  for (const phrase of ["本次保底", "可变奖励", "重整代价", "兜底选择"]) {
+  for (const phrase of ["本次保底", "命中证据", "推荐", "可变奖励", "重整代价", "兜底选择"]) {
     if (!contractText.includes(phrase)) throw new Error(`移动奖励契约缺少 ${phrase}`);
   }
   if (!contractBox || contractBox.width > mobilePanelLimit) throw new Error(`移动奖励契约过宽：${contractBox?.width}`);
