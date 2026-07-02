@@ -130,6 +130,7 @@ expect(source.includes("handSequenceCue") && source.includes("hand-sequence-coac
 expect(source.includes("endTurnReadiness") && source.includes("end-turn-readiness") && source.includes("交回合风险签") && source.includes("预计承伤") && source.includes("安全交回合"), "战斗必须在结束回合前公开交回合风险，减少漏防守的程序错误");
 expect(source.includes("TurnFlowFx") && source.includes("turn-flow") && source.includes("手牌入弃") && source.includes("洗牌后抽取"), "回合结束必须公开敌方行动、弃牌、洗牌与抽牌的流转节奏");
 expect(source.includes("effectBursts") && source.includes("CombatEffectBursts") && source.includes("card.art"), "出牌和抽牌必须展示空间化效果浮字与真实卡图反馈");
+expect(source.includes("draw-path-ledger") && source.includes("抽牌轨迹") && source.includes("手牌区") && source.includes("fx.detail"), "抽牌动效必须公开抽牌堆到手牌区的空间轨迹和数量说明");
 expect(source.includes("combatLedger") && source.includes("CombatResolutionLedger") && source.includes("本回合结算") && source.includes("基础效果已结算"), "战斗必须记录本回合最近出牌结算，解释伤害、资源与联动是否触发");
 expect(source.includes("intentPressureLabel") && source.includes("enemy-intent-cycle") && source.includes("敌招循环") && source.includes("三式预读"), "战斗必须展示敌招循环预读，帮助玩家规划未来三式攻守");
 expect(source.includes("detectDeviceMode") && source.includes("data-device={deviceMode}") && source.includes("data-layout={deviceMode === \"desktop\" ? \"wide-desktop\" : \"compact-mobile\"}") && source.includes("device-mode-badge"), "页面必须判断 PC/移动设备并公开当前适配模式");
@@ -137,6 +138,7 @@ expect(source.includes("DesktopModePanel") && source.includes("desktop-mode-pane
 expect(source.includes("desktop-control-hints") && source.includes("Space 结束回合") && source.includes("数字 1–7 出对应手牌") && source.includes("单击卡牌立即出牌"), "PC 战斗页必须提供桌面端操作提示");
 expect(styles.includes(".device-desktop .combat-screen") && styles.includes(".device-desktop .player-rail") && styles.includes(".device-desktop .progress-rail") && styles.includes(".device-desktop .hand"), "PC 战斗页必须拥有桌面端左中右战局与宽手牌区");
 expect(styles.includes(".combat-effect-bursts") && styles.includes(".effect-burst") && styles.includes(".draw-ghost article img"), "战斗必须拥有多效果浮字和抽牌翻面真实卡图样式");
+expect(styles.includes(".draw-path-ledger") && styles.includes(".draw-trajectory-line") && styles.includes("draw-path-sweep"), "抽牌动效必须拥有来源、轨迹与终点的空间化样式");
 expect(styles.includes(".combat-learning-cue") && styles.includes(".combat-learning-cue.mastery") && styles.includes(".combat-learning-cue p") && styles.includes(".combat-learning-cue strong"), "战斗学习反馈必须拥有目标态、掌握态和移动端可读样式");
 expect(styles.includes(".run-current-reason") && styles.includes(".run-current-reason article") && styles.includes(".run-notebook.compact .run-current-reason p"), "局内试炼札记当前理由必须拥有普通态与紧凑态可读样式");
 expect(styles.includes(".combat-resolution-ledger") && styles.includes(".combat-resolution-ledger.has-entries") && styles.includes(".device-desktop .combat-resolution-ledger"), "战斗结算记录必须拥有空态、触发态和PC/移动可读样式");

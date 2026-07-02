@@ -1145,7 +1145,14 @@ function App() {
     setEdge(runOrigin === "sword" && mastery >= 75 ? 1 : 0);
     setJobState(masteryOpeningState(runOrigin, mastery));
     if (showDraw) {
-      setDrawFx({ cards: openingHand, source: "开局手牌", nonce: Date.now() });
+      setDrawFx({
+        cards: openingHand,
+        source: "开局手牌",
+        detail: `抽牌堆 → 手牌区 · ${openingHand.length} 张`,
+        from: "抽牌堆",
+        to: "手牌区",
+        nonce: Date.now(),
+      });
       later(() => setDrawFx(null), 1250);
     }
   }
@@ -1905,7 +1912,14 @@ function App() {
       }
       if (drawn.length) {
         feedback("draw");
-        setDrawFx({ cards: drawn, source: `${source} · 抽牌`, nonce: Date.now() });
+        setDrawFx({
+          cards: drawn,
+          source: `${source} · 抽牌`,
+          detail: `术法/法门抽取 ${drawn.length} 张进入手牌区`,
+          from: pool.length < amount && discardPile.length ? "洗回牌堆" : "抽牌堆",
+          to: "手牌区",
+          nonce: Date.now(),
+        });
         later(() => setDrawFx(null), 1050);
       }
       return [...currentHand, ...drawn];
@@ -2020,7 +2034,14 @@ function App() {
         return { ...value, moveIndex: nextIndex, intent: intentLabel(value.moves[nextIndex]) };
       });
       setQi(Math.max(0, maxQi - (currentMove.drainQi || 0)));
-      setDrawFx({ cards: nextHand, source: hasEnoughDraw ? "抽牌" : "洗牌后抽取", nonce: Date.now() });
+      setDrawFx({
+        cards: nextHand,
+        source: hasEnoughDraw ? "抽牌" : "洗牌后抽取",
+        detail: flowDetail,
+        from: hasEnoughDraw ? "抽牌堆" : "弃牌堆洗回",
+        to: "手牌区",
+        nonce: Date.now(),
+      });
       setTurnFlowFx({ phase: "draw", title: hasEnoughDraw ? "序 · 抽取新手牌" : "序 · 洗牌后抽取", detail: flowDetail, nonce: Date.now() });
       feedback("draw");
       setCombatFx(null);
@@ -4947,10 +4968,20 @@ function CombatScreen({ origin, stage, chapter, routeProgress, hp, maxHp, qi, ma
 }
 
 function DrawSequence({ fx }) {
+  const visibleCards = fx.cards.slice(0, 5);
+  const overflowCount = Math.max(0, fx.cards.length - visibleCards.length);
+  const from = fx.from || "抽牌堆";
+  const to = fx.to || "手牌区";
   return (
-    <div className="draw-sequence" key={fx.nonce}>
+    <div className="draw-sequence" key={fx.nonce} aria-label="抽牌轨迹">
+      <div className="draw-path-ledger">
+        <span>{from}</span>
+        <i className="draw-trajectory-line"><b /></i>
+        <span>{to}</span>
+        <small>{fx.detail || `${fx.source} · ${fx.cards.length} 张入手`}{overflowCount > 0 ? ` · 另有 ${overflowCount} 张入手` : ""}</small>
+      </div>
       <div className="draw-source"><GameImage src="/card_back_qinglan_trial.png" alt="" /><span>{fx.source}</span></div>
-      {fx.cards.map((card, index) => (
+      {visibleCards.map((card, index) => (
         <div className={`draw-ghost draw-ghost-${index}`} style={{ "--draw-index": index }} key={`${card.id}-${index}`}>
           <GameImage src="/card_back_qinglan_trial.png" alt="" />
           <article>

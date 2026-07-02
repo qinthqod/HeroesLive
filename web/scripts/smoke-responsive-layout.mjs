@@ -547,6 +547,15 @@ await run("PC 结束回合显示回合流转节奏", { width: 1366, height: 768 
   const flowSteps = await page.locator(".turn-flow li").count();
   if (!flowText.includes("回合流转") || !flowText.includes("敌方行动")) throw new Error("结束回合没有显示敌方行动节奏");
   if (flowSteps !== 4) throw new Error(`回合流转步骤数异常：${flowSteps}`);
+  await page.waitForFunction(() => {
+    const text = document.querySelector(".draw-path-ledger")?.innerText || "";
+    return text.includes("手牌区") && /抽取|洗牌/.test(text);
+  });
+  const drawPathText = await page.locator(".draw-path-ledger").innerText();
+  const drawPathBox = await page.locator(".draw-path-ledger").boundingBox();
+  if (!drawPathText.includes("抽牌堆") && !drawPathText.includes("弃牌堆洗回")) throw new Error(`抽牌轨迹缺少来源：${drawPathText}`);
+  if (!drawPathText.includes("手牌区")) throw new Error(`抽牌轨迹缺少终点：${drawPathText}`);
+  if (!drawPathBox || drawPathBox.width > 560) throw new Error(`抽牌轨迹过宽：${drawPathBox?.width}`);
 });
 
 await run("PC 路线页显示序破急节奏导航", { width: 1366, height: 768 }, "?screen=map&chapter=4&routeProgress=2&clues=3", async (page) => {

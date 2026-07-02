@@ -5047,6 +5047,77 @@ kbd { font: 10px ui-monospace, monospace; padding: 3px 6px; border: 1px solid rg
 .draw-sequence { position: absolute; z-index: 110; inset: 0; pointer-events: none; }
 .draw-sequence::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 64%, rgba(101,181,151,.18), transparent 28%); animation: draw-veil 1.2s ease both; }
 @keyframes draw-veil { 0%,100% { opacity: 0; } 24%,72% { opacity: 1; } }
+.draw-path-ledger {
+  position: absolute;
+  left: 50%;
+  bottom: min(28%, 220px);
+  display: grid;
+  grid-template-columns: auto minmax(118px, 220px) auto;
+  align-items: center;
+  gap: 10px;
+  width: min(520px, calc(100% - 44px));
+  padding: 10px 13px;
+  border: 1px solid rgba(120,190,155,.32);
+  border-radius: 18px 2px 18px 2px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(124,214,177,.22), transparent 46%),
+    rgba(4,18,14,.82);
+  box-shadow: 0 16px 36px rgba(0,0,0,.36), inset 0 0 0 1px rgba(219,190,104,.08);
+  transform: translateX(-50%);
+  animation: draw-ledger-in 1.2s ease both;
+}
+.draw-path-ledger span {
+  min-width: 58px;
+  color: #d9c27d;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-align: center;
+  white-space: nowrap;
+}
+.draw-path-ledger small {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: #9bb8aa;
+  font-size: 8px;
+  letter-spacing: .04em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.draw-trajectory-line {
+  position: relative;
+  display: block;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(117,168,143,.12), rgba(212,177,85,.44), rgba(117,168,143,.12));
+}
+.draw-trajectory-line::before,
+.draw-trajectory-line::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(223,190,101,.58);
+  border-radius: 50%;
+  background: rgba(6,23,18,.95);
+  transform: translateY(-50%);
+}
+.draw-trajectory-line::before { left: 0; }
+.draw-trajectory-line::after { right: 0; }
+.draw-trajectory-line b {
+  position: absolute;
+  inset-block: -5px;
+  left: -18px;
+  width: 18px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(233,214,137,.95), rgba(118,218,177,.38) 48%, transparent 70%);
+  filter: blur(.2px);
+  animation: draw-path-sweep .9s var(--ease-snap) both;
+}
+@keyframes draw-ledger-in { 0%,100% { opacity: 0; transform: translate(-50%, 8px) scale(.96); } 20%,78% { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+@keyframes draw-path-sweep { from { transform: translateX(0); } to { transform: translateX(260px); } }
 .draw-source {
   position: absolute;
   left: 50%;
