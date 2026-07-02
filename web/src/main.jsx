@@ -461,14 +461,25 @@ function evaluateRun(stats, hp, maxHp) {
   const pace = Math.max(0, Math.min(1, 1 - Math.max(0, stats.turns - expectedTurns) / 12));
   const endurance = Math.max(0, Math.min(1, 1 - stats.damageTaken / Math.max(1, maxHp * 1.5)));
   const completion = Math.min(1, stats.combatsWon / 3);
-  const score = Math.round(hpRatio * 35 + pace * 20 + endurance * 20 + completion * 25);
+  const factors = [
+    { id: "hp", label: "余命", current: hp, target: maxHp, weight: 35, ratio: hpRatio, hint: hpRatio >= .75 ? "血线稳定，容错保留充足。" : "余命偏低，下局优先补护盾、恢复或虚弱。" },
+    { id: "pace", label: "节奏", current: Math.max(0, expectedTurns - Math.max(0, stats.turns - expectedTurns)), target: expectedTurns, weight: 20, ratio: pace, hint: pace >= .8 ? "回合数紧凑，构筑循环已经成形。" : "战斗拖长，补稳定伤害或过牌会更提分。" },
+    { id: "endurance", label: "承伤", current: Math.max(0, Math.round(maxHp * 1.5 - stats.damageTaken)), target: Math.round(maxHp * 1.5), weight: 20, ratio: endurance, hint: endurance >= .75 ? "承伤控制良好，敌意读取有效。" : "承伤偏高，交回合前多看风险签。" },
+    { id: "completion", label: "完成", current: stats.combatsWon, target: 3, weight: 25, ratio: completion, hint: completion >= 1 ? "三战完成，章节推进完整。" : "战斗完成度不足，仍需补齐章节推进。" },
+  ];
+  const breakdown = factors.map((item) => ({
+    ...item,
+    percent: Math.round(item.ratio * 100),
+    points: Math.round(item.ratio * item.weight),
+  }));
+  const score = Math.round(breakdown.reduce((sum, item) => sum + item.ratio * item.weight, 0));
   const grade = score >= 90 ? "甲上" : score >= 80 ? "甲" : score >= 68 ? "乙上" : score >= 55 ? "乙" : "丙";
   const title = hpRatio >= .75
     ? "道心稳固"
     : stats.damageTaken <= maxHp
       ? "险中求胜"
       : "浴血破局";
-  return { score, grade, title };
+  return { score, grade, title, breakdown };
 }
 
 function resolveChapterEpilogue(chapter, choices) {
@@ -5247,6 +5258,19 @@ function SummaryScreen({ chapter, origin, hp, maxHp, stones, treasures, deck, pr
         <div><small>出牌 / 伤害</small><strong>{runStats.cardsPlayed} / {runStats.damageDealt}</strong></div>
         <div><small>牌组 / 法宝</small><strong>{deck.length} / {treasures.length}</strong></div>
       </div>
+      <section className="summary-score-breakdown" aria-label="评阶拆解">
+        <header><span>评阶拆解</span><strong>{evaluation.grade} · {evaluation.score} 分</strong></header>
+        <div>
+          {evaluation.breakdown.map((item) => (
+            <article className={`score-factor factor-${item.id}`} key={item.id}>
+              <small>{item.label}</small>
+              <b>{item.points}/{item.weight}</b>
+              <i><em style={{ width: `${item.percent}%` }} /></i>
+              <p>{item.hint}</p>
+            </article>
+          ))}
+        </div>
+      </section>
       <div className="summary-rewards"><span>本章所得</span><b>修为 +{runStats.xpGained}</b><b>悟道 +{runStats.spiritGained}</b><b>灵玉 +{runStats.jadeGained}</b><b>灵石结余 {stones}</b></div>
       {nextGoal && <section className={`summary-next-goal ${nextGoal.claimable ? "claimable" : ""}`}>
         <div>

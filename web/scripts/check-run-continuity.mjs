@@ -79,6 +79,7 @@ for (const feedbackKind of ["cast", "impact", "draw", "enemy", "hurt", "reward"]
   expect(source.includes(`feedback("${feedbackKind}")`), `缺少 ${feedbackKind} 战斗反馈触点`);
 }
 expect(source.includes("freshRunStats") && source.includes("evaluateRun"), "章末结算必须基于整局表现动态评阶");
+expect(source.includes("breakdown = factors.map") && source.includes("summary-score-breakdown") && source.includes("评阶拆解") && source.includes("交回合前多看风险签"), "章末评阶必须展示余命、节奏、承伤和完成度的真实拆解");
 for (const stat of ["cardsPlayed", "damageDealt", "damageTaken", "turns", "combatsWon", "xpGained", "spiritGained", "jadeGained"]) {
   expect(source.includes(stat), `整局统计缺少 ${stat}`);
 }
@@ -134,6 +135,7 @@ expect(styles.includes(".combat-effect-bursts") && styles.includes(".effect-burs
 expect(styles.includes(".combat-learning-cue") && styles.includes(".combat-learning-cue.mastery") && styles.includes(".combat-learning-cue p") && styles.includes(".combat-learning-cue strong"), "战斗学习反馈必须拥有目标态、掌握态和移动端可读样式");
 expect(styles.includes(".combat-resolution-ledger") && styles.includes(".combat-resolution-ledger.has-entries") && styles.includes(".device-desktop .combat-resolution-ledger"), "战斗结算记录必须拥有空态、触发态和PC/移动可读样式");
 expect(styles.includes(".enemy-intent-cycle") && styles.includes(".enemy-intent-cycle article.current") && styles.includes(".device-desktop .enemy-intent-cycle"), "敌招循环预读必须拥有当前式高亮、压力态和PC/移动可读样式");
+expect(styles.includes(".summary-score-breakdown") && styles.includes(".summary-score-breakdown > div") && styles.includes(".summary-score-breakdown i em"), "章末评阶拆解必须拥有进度条、四项因子和移动端可读样式");
 expect(styles.includes(".deck-balance-radar") && styles.includes(".deck-balance-radar.warning") && styles.includes(".deck-balance-radar > div") && styles.includes(".deck-balance-radar footer"), "牌组平衡雷达必须拥有四轴、警告态和移动端可读样式");
 expect(styles.includes(".deck-trim-prescription") && styles.includes(".deck-trim-prescription.warning") && styles.includes(".deck-trim-prescription > div") && styles.includes(".deck-trim-prescription article"), "牌组修剪处方必须拥有警告态、三栏处方和移动端可读样式");
 expect(styles.includes(".app[data-motion=\"reduced\"] *") && styles.includes(".app[data-motion=\"reduced\"] .impact-streak") && styles.includes(".app[data-motion=\"reduced\"] .reward-cards .game-card:hover"), "低动效模式必须降低全局动画、隐藏强闪烁并保留可读状态反馈");
