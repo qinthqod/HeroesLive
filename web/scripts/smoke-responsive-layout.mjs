@@ -473,6 +473,7 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   const ledgerEmpty = await page.locator(".combat-resolution-ledger").innerText();
   const intentCycleText = await page.locator(".enemy-intent-cycle").innerText();
   const intentCycleCards = await page.locator(".enemy-intent-cycle article").count();
+  const notebookText = await page.locator(".combat-notebook").innerText();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (layout.layout !== "wide-desktop") throw new Error(`PC 战斗布局标识为 ${layout.layout}`);
   if (!handBox || handBox.width < 760) throw new Error(`PC 手牌区过窄：${handBox?.width}`);
@@ -482,6 +483,7 @@ await run("PC 战斗页保持桌面战场布局", { width: 1366, height: 768 }, 
   if (!cardStates.some((text) => /可出|联动|差|需|心魔/.test(text))) throw new Error("PC 战斗页没有显示卡牌即时状态");
   if (!previewText.includes("预判") || !/[伤护愈抽灵]/.test(previewText)) throw new Error(`PC 战斗卡牌缺少出牌前收益预判：${previewText}`);
   if (!learningCue.includes("本回合目标") || !learningCue.includes("读敌意")) throw new Error(`PC 战斗页缺少本回合学习目标：${learningCue}`);
+  if (!notebookText.includes("当前理由") || !notebookText.includes("当前与下一式")) throw new Error(`PC 战斗札记缺少当前理由：${notebookText}`);
   if (!sequenceCue.includes("手牌顺序提示") || !/先|结束回合/.test(sequenceCue)) throw new Error(`PC 战斗页缺少手牌顺序提示：${sequenceCue}`);
   if (!sequenceBox || sequenceBox.width < 320) throw new Error(`PC 手牌顺序提示过窄：${sequenceBox?.width}`);
   if (!readinessText.includes("交回合风险签") || !/承|低压/.test(readinessText)) throw new Error(`PC 战斗页缺少交回合风险签：${readinessText}`);
@@ -555,12 +557,16 @@ await run("PC 路线页显示序破急节奏导航", { width: 1366, height: 768 
   const payoffText = await page.locator(".route-payoff-cue").first().innerText();
   const journeyBox = await page.locator(".route-journey").boundingBox();
   const notebookBox = await page.locator(".map-notebook").boundingBox();
+  const notebookText = await page.locator(".map-notebook").innerText();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
   if (!pacingText.includes("破") || !pacingText.includes("路线张力")) throw new Error("PC 路线页没有显示序破急节奏");
   for (const phrase of ["了望", "庇护", "光", "压"]) {
     if (!spaceText.includes(phrase)) throw new Error(`PC 路线空间读法缺少 ${phrase}：${spaceText}`);
   }
   if (!payoffText.includes("进取") && !payoffText.includes("高危")) throw new Error(`PC 路线决策签缺少风险收益取向：${payoffText}`);
+  for (const phrase of ["当前理由", "长线钩子", "下一枚印记"]) {
+    if (!notebookText.includes(phrase)) throw new Error(`PC 路线札记缺少 ${phrase}`);
+  }
   if (!journeyBox || journeyBox.width < 560) throw new Error(`PC 路线主体过窄：${journeyBox?.width}`);
   if (!notebookBox || notebookBox.x <= journeyBox.x + journeyBox.width) throw new Error("PC 路线札记没有放在右侧信息栏");
   if (layout.scrollWidth > layout.width) throw new Error(`PC 路线页横向溢出 ${layout.scrollWidth - layout.width}px`);
@@ -574,6 +580,8 @@ await run("移动路线页保留节奏提示且无横溢", { width: 430, height:
   const spaceText = await page.locator(".route-space-read").first().innerText();
   const payoffBox = await page.locator(".route-payoff-cue").first().boundingBox();
   const payoffText = await page.locator(".route-payoff-cue").first().innerText();
+  const notebookText = await page.locator(".map-notebook").innerText();
+  const notebookBox = await page.locator(".map-notebook").boundingBox();
   const cardCount = await page.locator(".route-choice-card").count();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
   if (!pacingBox || pacingBox.width > 400) throw new Error(`移动节奏提示过宽：${pacingBox?.width}`);
@@ -581,6 +589,8 @@ await run("移动路线页保留节奏提示且无横溢", { width: 430, height:
   if (!payoffBox || payoffBox.width > 372) throw new Error(`移动路线决策签过宽：${payoffBox?.width}`);
   if (!spaceText.includes("庇护") && !spaceText.includes("了望")) throw new Error(`移动路线空间读法缺少了望/庇护：${spaceText}`);
   if (!payoffText.includes("进取") && !payoffText.includes("高危")) throw new Error(`移动路线决策签缺少风险收益取向：${payoffText}`);
+  if (!notebookText.includes("当前理由") || !notebookText.includes("长线钩子")) throw new Error(`移动路线札记缺少当前理由/长线钩子：${notebookText}`);
+  if (!notebookBox || notebookBox.width > mobilePanelLimit) throw new Error(`移动路线札记过宽：${notebookBox?.width}`);
   if (cardCount < 2 || cardCount > 3) throw new Error(`移动路线选择数量异常：${cardCount}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动路线页横向溢出 ${layout.scrollWidth - layout.width}px`);
 });

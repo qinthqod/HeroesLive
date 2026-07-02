@@ -3710,6 +3710,16 @@ function RunNotebook({ notebook, compact = false, className = "" }) {
         <strong>{notebook.title}</strong>
         <small>{notebook.subtitle}</small>
       </header>
+      {notebook.currentReason && <section className="run-current-reason" aria-label="当前理由与长线钩子">
+        <article>
+          <b>当前理由</b>
+          <p>{notebook.currentReason.reason}</p>
+        </article>
+        {!compact && <article>
+          <b>长线钩子</b>
+          <p>{notebook.currentReason.longHook}</p>
+        </article>}
+      </section>}
       <div className="notebook-lines">
         {shownItems.map((item) => (
           <article key={item.key}>
