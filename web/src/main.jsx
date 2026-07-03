@@ -37,7 +37,7 @@ import {
   resolveBattleAftermath,
   resolveEncounterPrelude,
 } from "./gameData";
-import { analyzeDeck, balanceRadar, currentBuildState, generateRewardChoices, rewardFit, rewardRecipeTarget } from "./deckStrategy";
+import { analyzeDeck, balanceRadar, currentBuildState, generateRewardChoices, recipeMatches, rewardFit, rewardRecipeTarget } from "./deckStrategy";
 import { createPendingClue, settlePendingClue } from "./investigationState";
 import { INVESTIGATION_COMPLETION_REWARD, investigationEvidence, mergeInvestigationArchive } from "./investigationArchive";
 import { retrySupportFor } from "./retrySupport";
@@ -5101,22 +5101,37 @@ function rewardPickMemory(card, deck, origin) {
   const nextDeck = [...deck, card];
   const beforeBuild = currentBuildState(deck, origin);
   const afterBuild = currentBuildState(nextDeck, origin);
+  const afterMatches = recipeMatches(nextDeck, origin);
+  const afterTrackedBuild = beforeBuild
+    ? afterMatches.find((match) => match.recipe.id === beforeBuild.recipe.id) || afterBuild
+    : afterBuild;
   const beforeAnalysis = analyzeDeck(deck);
   const afterAnalysis = analyzeDeck(nextDeck);
   const afterBalance = balanceRadar(nextDeck);
-  const progressed = afterBuild && beforeBuild && afterBuild.recipe.id === beforeBuild.recipe.id && afterBuild.progress > beforeBuild.progress;
+  const beforeProgress = beforeBuild?.progress || 0;
+  const afterProgress = afterTrackedBuild?.progress || 0;
+  const progressed = afterProgress > beforeProgress;
+  const complete = Boolean(afterTrackedBuild?.complete);
   const newKeywordCount = afterAnalysis.keywords[card.keyword] || 0;
   const highCostDelta = afterAnalysis.highCost - beforeAnalysis.highCost;
   return {
     build: afterBuild
       ? `${afterBuild.recipe.name} ${afterBuild.progress}/5${progressed ? " ↑" : ""}`
       : "暂不追流派",
+    gradient: progressed
+      ? `目标梯度 ${beforeProgress}/5→${afterProgress}/5${complete ? " · 成卷" : ""}`
+      : `目标梯度保持 ${beforeProgress}/5`,
+    beforeProgress,
+    afterProgress,
+    progressDelta: Math.max(0, afterProgress - beforeProgress),
+    complete,
+    targetName: beforeBuild?.recipe.name || afterBuild?.recipe.name || "当前流派",
     pressure: `${afterBalance.lowest.label} · ${afterBalance.lowest.advice}`,
     deckSize: `${deck.length}→${nextDeck.length} 张 · ${card.cost} 费${highCostDelta > 0 ? " · 费用压力+1" : ""}`,
-    next: afterBuild?.complete
+    next: complete
       ? "成卷后优先精简/真解"
-      : afterBuild?.nextCard
-        ? `下找「${afterBuild.nextCard.keyword}」`
+      : afterTrackedBuild?.missing?.[0]
+        ? `下找「${afterTrackedBuild.missing[0].keyword}」`
         : newKeywordCount >= 2 ? `${card.keyword} 已成组件` : "保持三轴均衡",
   };
 }
@@ -5176,6 +5191,7 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
       || a.card.cost - b.card.cost
     );
   const recommendedReward = rewardDecisionOptions[0];
+  const recommendedMemory = recommendedReward ? rewardMemories[recommendedReward.index] : null;
   const decisionAction = !rewardRevealed
     ? "先启封"
     : recommendedReward?.fit.rank === "高"
@@ -5186,7 +5202,7 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
   const decisionReason = !rewardRevealed
     ? "启封后按构筑契合、当前短板、费用压力三步给出一个够好选择。"
     : recommendedReward?.fit.recipe
-      ? `优先补「${recommendedReward.fit.recipe.name}」${recommendedReward.fit.recipeProgress}/5。`
+      ? `优先补「${recommendedReward.fit.recipe.name}」${recommendedReward.fit.recipeProgress}/5；${recommendedMemory?.gradient || "目标梯度可见"}。`
       : recommendedReward?.fit.reason || "独立强度稳定，可作为保守补强。";
   const decisionFallback = !rewardRevealed
     ? "不用记三张牌细节，先看推荐条，再决定是否深读。"
@@ -5295,6 +5311,10 @@ function RewardScreen({ stage, chapter, routeProgress, origin, hp, maxHp, deck, 
           <div className="reward-pick-memory" aria-label={`${card.name} 入牌预期`}>
             <span>入牌预期</span>
             <b>{memory.build}</b>
+            <div className={`reward-goal-gradient ${memory.progressDelta > 0 ? "advanced" : "steady"} ${memory.complete ? "complete" : ""}`} aria-label={`${card.name} 目标梯度`}>
+              <small>{memory.gradient}</small>
+              <i><b style={{ width: `${Math.max(4, Math.min(100, memory.afterProgress * 20))}%` }} /></i>
+            </div>
             <small>{memory.pressure}</small>
             <em>{memory.deckSize}</em>
             <i>{memory.next}</i>

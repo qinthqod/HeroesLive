@@ -661,6 +661,8 @@ await run("PC 奖励页保持宽屏三选一", { width: 1366, height: 768 }, "?s
   const contractText = await page.locator(".reward-contract").innerText();
   const memoryText = await page.locator(".reward-pick-memory").first().innerText();
   const memoryCards = await page.locator(".reward-pick-memory").count();
+  const goalGradientText = await page.locator(".reward-goal-gradient").first().innerText();
+  const goalGradientCount = await page.locator(".reward-goal-gradient").count();
   const sealCount = await page.locator(".reward-card-seal").count();
   const treasureText = await page.locator(".reward-treasure").innerText();
   if (layout.device !== "desktop") throw new Error(`设备模式为 ${layout.device}`);
@@ -673,6 +675,7 @@ await run("PC 奖励页保持宽屏三选一", { width: 1366, height: 768 }, "?s
   for (const phrase of ["入牌预期", "→"]) {
     if (!memoryText.includes(phrase)) throw new Error(`PC 入牌预期缺少 ${phrase}`);
   }
+  if (goalGradientCount !== 3 || !goalGradientText.includes("目标梯度") || !/\/5/.test(goalGradientText)) throw new Error(`PC 奖励页缺少三张牌的目标梯度：${goalGradientText}`);
   for (const phrase of ["触发时机", "适合", "选择法宝"]) {
     if (!treasureText.includes(phrase)) throw new Error(`PC 战利法宝缺少 ${phrase}`);
   }
@@ -691,6 +694,8 @@ await run("移动奖励页公开战利契约且不横溢", { width: 430, height:
   const memoryText = await page.locator(".reward-pick-memory").first().innerText();
   const memoryBox = await page.locator(".reward-pick-memory").first().boundingBox();
   const memoryCards = await page.locator(".reward-pick-memory").count();
+  const goalGradientText = await page.locator(".reward-goal-gradient").first().innerText();
+  const goalGradientBox = await page.locator(".reward-goal-gradient").first().boundingBox();
   const treasureText = await page.locator(".reward-treasure").innerText();
   const treasureBox = await page.locator(".reward-treasure").boundingBox();
   if (layout.device !== "mobile") throw new Error(`设备模式为 ${layout.device}`);
@@ -701,6 +706,8 @@ await run("移动奖励页公开战利契约且不横溢", { width: 430, height:
   if (!openBox || openBox.width > mobilePanelLimit) throw new Error(`移动启封按钮过宽：${openBox?.width}`);
   if (memoryCards !== 3 || !memoryText.includes("入牌预期") || !memoryText.includes("→")) throw new Error("移动奖励页缺少入牌预期");
   if (!memoryBox || memoryBox.width > 124) throw new Error(`移动入牌预期过宽：${memoryBox?.width}`);
+  if (!goalGradientText.includes("目标梯度") || !/\/5/.test(goalGradientText)) throw new Error(`移动奖励页缺少目标梯度：${goalGradientText}`);
+  if (!goalGradientBox || goalGradientBox.width > 112) throw new Error(`移动目标梯度过宽：${goalGradientBox?.width}`);
   if (!treasureText.includes("触发时机") || !treasureText.includes("适合")) throw new Error(`移动战利法宝缺少触发说明：${treasureText}`);
   if (!treasureBox || treasureBox.width > mobilePanelLimit) throw new Error(`移动战利法宝过宽：${treasureBox?.width}`);
   if (layout.scrollWidth > layout.width) throw new Error(`移动奖励页横向溢出 ${layout.scrollWidth - layout.width}px`);
